@@ -1,4 +1,4 @@
-.PHONY: proto build docker test
+.PHONY: proto build docker test u
 
 proto:
 	cls
@@ -12,3 +12,8 @@ docker: build
 
 test:
 	go test ./... -v
+
+u:
+	cls
+	go get -u all
+	go mod tidy

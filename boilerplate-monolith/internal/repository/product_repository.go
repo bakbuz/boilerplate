@@ -32,11 +32,11 @@ type ProductRepository interface {
 }
 
 type productRepository struct {
-	db *pgxpool.Pool
+	db *database.DB
 }
 
 // NewProductRepository ...
-func NewProductRepository(db *pgxpool.Pool) ProductRepository {
+func NewProductRepository(db *database.DB) ProductRepository {
 	return &productRepository{db: db}
 }
 
