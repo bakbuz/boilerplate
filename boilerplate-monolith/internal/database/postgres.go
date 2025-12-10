@@ -2,7 +2,10 @@ package database
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -10,7 +13,11 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func NewPool(ctx context.Context, connString string) (*pgxpool.Pool, error) {
+type DB struct {
+	pool *pgxpool.Pool
+}
+
+func NewPool(ctx context.Context, connString string) (*DB, error) {
 	// Config parse et
 	config, err := pgxpool.ParseConfig(connString)
 	if err != nil {
@@ -45,8 +52,105 @@ func NewPool(ctx context.Context, connString string) (*pgxpool.Pool, error) {
 		return nil, fmt.Errorf("ping error: %w", err)
 	}
 
-	return pool, nil
+	return &DB{pool: pool}, nil
 }
+
+// Close
+func (db *DB) Close() {
+	db.pool.Close()
+}
+
+// Ping
+func (db *DB) Ping(ctx context.Context) error {
+	return db.pool.Ping(ctx)
+}
+
+// Pool'a erişim gerekirse
+func (db *DB) Pool() *pgxpool.Pool {
+	return db.pool
+}
+
+func (db *DB) Version(ctx context.Context) string {
+	var version string
+	err := db.pool.QueryRow(ctx, "SELECT version()").Scan(&version)
+	if err != nil {
+		return err.Error()
+	}
+	return version
+}
+
+func (db *DB) VersionWithErr(ctx context.Context) (string, error) {
+	var version string
+	err := db.pool.QueryRow(ctx, "SELECT version()").Scan(&version)
+	if err != nil {
+		return "", err
+	}
+	return version, nil
+}
+
+/**************************************************************************/
+/***************************** BASE FUNCTIONS *****************************/
+/**************************************************************************/
+
+func GetDatabaseName(connectionString string) string {
+	var dbName string
+	var strs = strings.Split(connectionString, ";")
+	for _, str := range strs {
+		if strings.HasPrefix(strings.TrimSpace(str), "database") {
+			dbName = strings.Split(str, "=")[1]
+			break
+		}
+	}
+	return dbName
+}
+
+func (db *DB) GetInt(ctx context.Context, stmt string, args ...any) (int, error) {
+	var value int
+	row := db.pool.QueryRow(ctx, stmt, args...)
+	if err := row.Scan(&value); err != nil {
+		if err == sql.ErrNoRows { // sql: no rows in result set
+			return -1, errors.New("no rows")
+		}
+		return -1, err
+	}
+	return value, nil
+}
+
+func (db *DB) GetString(ctx context.Context, stmt string, args ...any) (string, error) {
+	var str string
+	row := db.pool.QueryRow(ctx, stmt, args...)
+	if err := row.Scan(&str); err != nil {
+		if err == sql.ErrNoRows { // sql: no rows in result set
+			return "", errors.New("no rows")
+		}
+		return "", err
+	}
+
+	return str, nil
+}
+
+func (db *DB) Count(ctx context.Context, stmt string) (int64, error) {
+	var count int64
+
+	row := db.QueryRowContext(ctx, stmt)
+	if err := row.Scan(&count); err != nil {
+		return -1, err
+	}
+
+	return count, nil
+}
+
+func (db *DB) Get(result any, stmt string, args ...any) error {
+	row := db.QueryRow(stmt, args)
+
+	err := row.Scan(result)
+
+	return err
+}
+
+/**************************************************************************/
+/****************************** QUERY TRACER ******************************/
+/**************************************************************************/
 
 // queryTracer for logging slow queries
 type queryTracer struct{}
