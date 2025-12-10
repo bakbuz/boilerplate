@@ -1,7 +1,8 @@
 syntax = "proto3";
-package shop.v1;
 
-option go_package = "codegen/api/gen;gen";
+package catalog.v1;
+
+option go_package = ".;pb";
 
 import "google/protobuf/timestamp.proto";
 
@@ -15,9 +16,7 @@ message Product {
   google.protobuf.Timestamp created_at = 7;
 }
 
-message CreateProductRequest {
-  Product product = 1;
-}
+message CreateProductRequest { Product product = 1; }
 message CreateProductResponse { Product product = 1; }
 message GetProductRequest { int64 id = 1; }
 message GetProductResponse { Product product = 1; }
@@ -48,6 +47,7 @@ service ProductService {
   rpc UpdateProduct(UpdateProductRequest) returns (UpdateProductResponse);
   rpc DeleteProduct(DeleteProductRequest) returns (DeleteProductResponse);
 }
+
 service OrderService {
   rpc CreateOrder(CreateOrderRequest) returns (CreateOrderResponse);
   rpc GetOrder(GetOrderRequest) returns (GetOrderResponse);

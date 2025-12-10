@@ -1,10 +1,10 @@
-shop/
+catalog/
 ├── cmd/
 │   └── server/
 │       └── main.go
 ├── api/
 │   ├── proto/
-│   │   └── shop.proto
+│   │   └── catalog.proto
 │   └── gen/                # protoc çıktıları (gitignore veya CI'de generate)
 ├── internal/
 │   ├── config/
@@ -42,4 +42,4 @@ shop/
 ├── Makefile
 ├── .env.example
 └── systemd/
-    └── shop.service
+    └── catalog.service

@@ -1,12 +1,12 @@
 [Unit]
-Description=Shop gRPC Service
+Description=catalog gRPC Service
 After=network.target
 
 [Service]
-EnvironmentFile=/etc/shop/shop.env
-ExecStart=/usr/local/bin/shop
-User=shop
-Group=shop
+EnvironmentFile=/etc/catalog/catalog.env
+ExecStart=/usr/local/bin/catalog
+User=catalog
+Group=catalog
 Restart=on-failure
 LimitNOFILE=65536
 
