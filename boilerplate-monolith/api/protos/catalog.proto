@@ -16,10 +16,10 @@ message Product {
   google.protobuf.Timestamp created_at = 7;
 }
 
-message CreateProductRequest { Product product = 1; }
-message CreateProductResponse { Product product = 1; }
 message GetProductRequest { int64 id = 1; }
 message GetProductResponse { Product product = 1; }
+message CreateProductRequest { Product product = 1; }
+message CreateProductResponse { Product product = 1; }
 message UpdateProductRequest { Product product = 1; }
 message UpdateProductResponse { Product product = 1; }
 message DeleteProductRequest { int64 id = 1; }
