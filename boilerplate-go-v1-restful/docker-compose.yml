@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: user
+      POSTGRES_DB: db
+    ports:
+      - 5432:5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  flyway:
+    image: flyway/flyway:9
+    restart: on-failure:3
+    environment:
+      - FLYWAY_URL=jdbc:postgresql://db:5432/db
+      - FLYWAY_USER=user
+      - FLYWAY_PASSWORD=password
+    command: migrate
+    volumes:
+      - ./migrations:/flyway/sql
+    depends_on:
+      - db
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+
+  app:
+    build: .
+    restart: always
+    environment:
+      - GIN_MODE=release
+      - ENV=docker
+    ports:
+      - 8000:4000
+    depends_on:
+      - db
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  pgdata:

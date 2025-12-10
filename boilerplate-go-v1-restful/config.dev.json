@@ -1,0 +1,20 @@
+{
+  "DataSources": {
+    "Default1": "Server=flora.db.elephantsql.com;Port=5432;Database=gpvaxhai;User ID=gpvaxhai;Password=R8O-nrcrWOGDhJRRndnPlZcimsrYczil",
+    "Default": "Server=127.0.0.1;Database=CodegenZero;User=sa;Password=123qwe..;TrustServerCertificate=True;MultipleActiveResultSets=true",
+    "Default2": "/data.db"
+  },
+  "App": {
+    "Port": 1919,
+    "ClientUrl": "http://localhost:4200",
+    "CorsOrigins": "https://*.knowyourx.io,http://localhost:4200",
+    "RedirectAllowedUrls": ""
+  },
+  "ClientApp": {
+    "RootUrl": "http://localhost:4200",
+    "PasswordResetUrl": "account/reset-password"
+  },
+  "JWT": {
+    "SigningKey": "123qwe"
+  }
+}

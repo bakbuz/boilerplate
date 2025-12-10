@@ -1,0 +1,231 @@
+basePath: /
+definitions:
+  entity.Product:
+    properties:
+      brandId:
+        type: integer
+      id:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+      sku:
+        type: string
+      stockQuantity:
+        type: integer
+      storyline:
+        type: string
+      summary:
+        type: string
+    type: object
+  pkg.ErrorResponse:
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+    type: object
+  pkg.HealthResponse:
+    properties:
+      status:
+        type: string
+    type: object
+  pkg.IdResult-uuid_UUID:
+    properties:
+      id:
+        type: string
+    type: object
+  pkg.ProductCreateUpdateReq:
+    properties:
+      brandId:
+        type: integer
+      name:
+        maxLength: 100
+        type: string
+      price:
+        type: number
+      sku:
+        maxLength: 50
+        type: string
+      stockQuantity:
+        type: integer
+      storyline:
+        type: string
+      summary:
+        maxLength: 500
+        type: string
+    required:
+    - brandId
+    - name
+    - price
+    - stockQuantity
+    type: object
+  pkg.ProductResponse:
+    properties:
+      product:
+        $ref: '#/definitions/entity.Product'
+    type: object
+  pkg.ProductsResponse:
+    properties:
+      count:
+        type: integer
+      products:
+        items:
+          $ref: '#/definitions/entity.Product'
+        type: array
+    type: object
+info:
+  contact:
+    name: Bayram Akbuz
+    url: https://github.com/bakbuz
+  description: Codegen service.
+  title: Codegen API
+  version: "1.0"
+paths:
+  /api/products:
+    get:
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pkg.ProductsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/pkg.ErrorResponse'
+      tags:
+      - Products
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: query params
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/pkg.ProductCreateUpdateReq'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/pkg.IdResult-uuid_UUID'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/pkg.ErrorResponse'
+      tags:
+      - Products
+  /api/products/{id}:
+    delete:
+      parameters:
+      - description: Product Identifier
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/pkg.ErrorResponse'
+      tags:
+      - Products
+    get:
+      parameters:
+      - description: Product Identifier
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pkg.ProductResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/pkg.ErrorResponse'
+      tags:
+      - Products
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Product Identifier
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: query params
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/pkg.ProductCreateUpdateReq'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/pkg.ErrorResponse'
+      tags:
+      - Products
+  /api/products/search:
+    get:
+      parameters:
+      - description: Name
+        in: query
+        name: name
+        type: string
+      - description: Page
+        in: query
+        name: page
+        type: integer
+      - description: Limit (max=100)
+        in: query
+        name: limit
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pkg.ProductsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/pkg.ErrorResponse'
+      tags:
+      - Products
+  /health:
+    get:
+      consumes:
+      - application/json
+      description: health check
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/pkg.HealthResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/pkg.ErrorResponse'
+      summary: health check
+      tags:
+      - Health
+swagger: "2.0"

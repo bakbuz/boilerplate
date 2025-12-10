@@ -1,0 +1,20 @@
+[Unit]
+Description=Go gRPC Catalog Backend
+After=network.target
+
+[Service]
+User=ubuntu
+# Binary konumu
+ExecStart=/home/ubuntu/catalog/server
+# Otomatik restart
+Restart=always
+RestartSec=5s
+# Environment variables
+EnvironmentFile=/home/ubuntu/catalog/.env
+# Kaynak Limitleri (t2.micro koruması)
+MemoryLimit=800M
+# Go Runtime ayarı (ÖNEMLİ: OOM Killer'ı engellemek için)
+Environment=GOMEMLIMIT=700MiB
+
+[Install]
+WantedBy=multi-user.target

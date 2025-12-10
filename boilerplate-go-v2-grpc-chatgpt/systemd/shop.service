@@ -1,0 +1,14 @@
+[Unit]
+Description=Shop gRPC Service
+After=network.target
+
+[Service]
+EnvironmentFile=/etc/shop/shop.env
+ExecStart=/usr/local/bin/shop
+User=shop
+Group=shop
+Restart=on-failure
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

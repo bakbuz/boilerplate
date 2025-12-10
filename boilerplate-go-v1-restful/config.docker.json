@@ -1,0 +1,10 @@
+{
+  "DataSources": {
+    "Default": "Server=flora.db.elephantsql.com;Port=5432;Database=gpvaxhai;User ID=gpvaxhai;Password=R8O-nrcrWOGDhJRRndnPlZcimsrYczil"
+  },
+  "App": {
+    "Port": 1919,
+    "ClientUrl": "http://localhost:4200",
+    "CorsOrigins": "https://*.knowyourx.io,http://localhost:4200"
+  }
+}
