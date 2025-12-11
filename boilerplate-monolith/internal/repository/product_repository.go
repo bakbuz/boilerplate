@@ -1,34 +1,31 @@
 package repository
 
 import (
-	"context"
-	"database/sql"
-	"fmt"
-	"log"
-	"strings"
-	"time"
-
-	"github.com/google/uuid"
-	"github.com/pkg/errors"
-
 	"codegen/internal/database"
 	"codegen/internal/entity"
 	"codegen/internal/repository/dto"
+	"context"
+	"fmt"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+	"github.com/pkg/errors"
 )
 
 // ProductRepository ...
 type ProductRepository interface {
-	Search(ctx context.Context, filter *dto.ProductFilter) (int, []*entity.Product, error)
 	GetAll(ctx context.Context) ([]*entity.Product, error)
 	GetByIds(ctx context.Context, ids []uuid.UUID) ([]*entity.Product, error)
 	GetById(ctx context.Context, id uuid.UUID) (*entity.Product, error)
 	Insert(ctx context.Context, e *entity.Product) (int64, error)
 	Update(ctx context.Context, e *entity.Product) (int64, error)
 	Delete(ctx context.Context, id uuid.UUID) (int64, error)
-	SoftDelete(ctx context.Context, id uuid.UUID, deletedBy any) (int64, error)
+	SoftDelete(ctx context.Context, id uuid.UUID, deletedBy uuid.UUID) (int64, error)
 	Count(ctx context.Context) (int64, error)
 
 	BulkInsert(ctx context.Context, list []*entity.Product) error
+	Search(ctx context.Context, filter *dto.ProductSearchFilter) (*dto.ProductSearchResult, error)
 }
 
 type productRepository struct {
@@ -40,31 +37,11 @@ func NewProductRepository(db *database.DB) ProductRepository {
 	return &productRepository{db: db}
 }
 
-func mapToProducts(cursor *sql.Rows) ([]*entity.Product, error) {
-	var entities []*entity.Product
-	for cursor.Next() {
-		e := &entity.Product{}
-
-		err := cursor.Scan(&e.Id, &e.BrandId, &e.Name, &e.Sku, &e.Summary, &e.Storyline, &e.StockQuantity, &e.Price, &e.Deleted, &e.CreatedBy, &e.CreatedAt, &e.UpdatedBy, &e.UpdatedAt, &e.DeletedBy, &e.DeletedAt)
-		if err != nil {
-			return nil, errors.WithMessage(err, "cursor scan error")
-		}
-
-		entities = append(entities, e)
-	}
-
-	if err := cursor.Err(); err != nil {
-		return nil, errors.WithMessage(err, "cursor iteration error")
-	}
-
-	return entities, nil
-}
-
-func mapToProduct(row *sql.Row) (*entity.Product, error) {
+func mapToProduct(row pgx.Row) (*entity.Product, error) {
 	e := &entity.Product{}
 
 	err := row.Scan(&e.Id, &e.BrandId, &e.Name, &e.Sku, &e.Summary, &e.Storyline, &e.StockQuantity, &e.Price, &e.Deleted, &e.CreatedBy, &e.CreatedAt, &e.UpdatedBy, &e.UpdatedAt, &e.DeletedBy, &e.DeletedAt)
-	if err == sql.ErrNoRows { // sql: no rows in result set
+	if err == pgx.ErrNoRows { // sql: no rows in result set
 		return nil, nil
 	}
 	if err != nil {
@@ -73,42 +50,19 @@ func mapToProduct(row *sql.Row) (*entity.Product, error) {
 	return e, nil
 }
 
-// Search ...
-func (repo *productRepository) Search(ctx context.Context, filter *dto.ProductFilter) (int, []*entity.Product, error) {
-	const query = "SELECT * FROM Products WHERE Deleted=0"
-
-	cursor, err := repo.db.QueryContext(ctx, query)
-	if err != nil {
-		return -1, nil, errors.WithMessage(err, "list query row returned an error")
-	}
-	defer cursor.Close()
-
-	var list []*entity.Product
-
-	total := 0
-	if total > 0 {
-		list, err = mapToProducts(cursor)
-		if err != nil {
-			return -1, nil, errors.WithStack(err)
-		}
-	}
-
-	return total, list, nil
-}
-
 // GetAll ...
 func (repo *productRepository) GetAll(ctx context.Context) ([]*entity.Product, error) {
-	const query = "SELECT * FROM Products WHERE Deleted=0"
+	const stmt string = "SELECT * FROM products WHERE deleted=false"
 
-	cursor, err := repo.db.QueryContext(ctx, query)
+	rows, err := repo.db.Pool().Query(ctx, stmt)
 	if err != nil {
-		return nil, errors.WithMessage(err, "list query row returned an error")
+		return nil, errors.WithMessage(err, listQueryRowError)
 	}
-	defer cursor.Close()
+	defer rows.Close()
 
-	list, err := mapToProducts(cursor)
+	list, err := pgx.CollectRows(rows, pgx.RowToAddrOfStructByName[entity.Product])
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.WithMessage(err, failedToCollectRows)
 	}
 
 	return list, nil
@@ -116,18 +70,21 @@ func (repo *productRepository) GetAll(ctx context.Context) ([]*entity.Product, e
 
 // GetByIds ...
 func (repo *productRepository) GetByIds(ctx context.Context, ids []uuid.UUID) ([]*entity.Product, error) {
-	sids := fmt.Sprintf("'%s'", strings.Join(uuid.UUIDs.Strings(ids), "','"))
-	query := fmt.Sprintf("SELECT * FROM Products WHERE Id IN (%s) AND Deleted=0", sids)
-
-	cursor, err := repo.db.QueryContext(ctx, query)
-	if err != nil {
-		return nil, errors.WithMessage(err, "list query row returned an error")
+	if len(ids) == 0 {
+		return []*entity.Product{}, nil
 	}
-	defer cursor.Close()
 
-	list, err := mapToProducts(cursor)
+	const stmt string = "SELECT * FROM products WHERE deleted=false AND id = ANY($1)"
+
+	rows, err := repo.db.Pool().Query(ctx, stmt, ids)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.WithMessage(err, listQueryRowError)
+	}
+	defer rows.Close()
+
+	list, err := pgx.CollectRows(rows, pgx.RowToAddrOfStructByName[entity.Product])
+	if err != nil {
+		return nil, errors.WithMessage(err, failedToCollectRows)
 	}
 
 	return list, nil
@@ -135,15 +92,9 @@ func (repo *productRepository) GetByIds(ctx context.Context, ids []uuid.UUID) ([
 
 // GetById ...
 func (repo *productRepository) GetById(ctx context.Context, id uuid.UUID) (*entity.Product, error) {
-	const query = "SELECT * FROM Products WHERE Id=@Id AND Deleted=0"
+	const stmt string = "SELECT * FROM products WHERE deleted=false AND id=$1"
 
-	row := repo.db.QueryRowContext(ctx, query,
-		sql.Named("Id", id),
-	)
-	if row.Err() != nil {
-		return nil, errors.WithMessage(row.Err(), "single query row returned an error")
-	}
-
+	row := repo.db.Pool().QueryRow(ctx, stmt, id)
 	item, err := mapToProduct(row)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -154,152 +105,195 @@ func (repo *productRepository) GetById(ctx context.Context, id uuid.UUID) (*enti
 
 // Insert ...
 func (repo *productRepository) Insert(ctx context.Context, e *entity.Product) (int64, error) {
-	const query = `INSERT INTO Products (Id,BrandId,Name,Sku,Summary,Storyline,StockQuantity,Price,Deleted,CreatedBy,CreatedAt) VALUES (@Id,@BrandId,@Name,@Sku,@Summary,@Storyline,@StockQuantity,@Price,@Deleted,@CreatedBy,@CreatedAt)`
+	const command string = `
+		INSERT INTO products (id, brand_id, name, sku, summary, storyline, stock_quantity, price, deleted, created_by, created_at) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
 
-	result, err := repo.db.ExecContext(ctx, query,
-		sql.Named("Id", e.Id),
-		sql.Named("BrandId", e.BrandId),
-		sql.Named("Name", e.Name),
-		sql.Named("Sku", e.Sku),
-		sql.Named("Summary", e.Summary),
-		sql.Named("Storyline", e.Storyline),
-		sql.Named("StockQuantity", e.StockQuantity),
-		sql.Named("Price", e.Price),
-		sql.Named("Deleted", e.Deleted),
-		sql.Named("CreatedBy", e.CreatedBy),
-		sql.Named("CreatedAt", e.CreatedAt),
+	result, err := repo.db.Pool().Exec(ctx, command,
+		e.Id,
+		e.BrandId,
+		e.Name,
+		e.Sku,
+		e.Summary,
+		e.Storyline,
+		e.StockQuantity,
+		e.Price,
+		e.Deleted,
+		e.CreatedBy,
+		e.CreatedAt,
 	)
+
 	if err != nil {
-		return -1, errors.WithMessage(err, "insert command has returned an error")
+		return -1, errors.WithMessage(err, failedToInsert)
 	}
 
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return -1, errors.WithMessage(err, "insert command result number of rows affected returned error")
-	}
-	return rowsAffected, nil
+	return result.RowsAffected(), nil
 }
 
 // Update ...
 func (repo *productRepository) Update(ctx context.Context, e *entity.Product) (int64, error) {
-	const query = `UPDATE Products SET BrandId=@BrandId,Name=@Name,Sku=@Sku,Summary=@Summary,Storyline=@Storyline,StockQuantity=@StockQuantity,Price=@Price,UpdatedBy=@UpdatedBy,UpdatedAt=@UpdatedAt WHERE Id=@Id AND Deleted=0`
+	const command string = `
+		UPDATE products 
+		SET brand_id=$2, name=$3, sku=$4, summary=$5, storyline=$6, stock_quantity=$7, price=$8, updated_by=$9, updated_at=$10 
+		WHERE id=$1`
 
-	result, err := repo.db.ExecContext(ctx, query,
-		sql.Named("BrandId", e.BrandId),
-		sql.Named("Name", e.Name),
-		sql.Named("Sku", e.Sku),
-		sql.Named("Summary", e.Summary),
-		sql.Named("Storyline", e.Storyline),
-		sql.Named("StockQuantity", e.StockQuantity),
-		sql.Named("Price", e.Price),
-		sql.Named("UpdatedBy", e.UpdatedBy),
-		sql.Named("UpdatedAt", e.UpdatedAt),
-		sql.Named("Id", e.Id),
+	result, err := repo.db.Pool().Exec(ctx, command,
+		e.Id,
+		e.BrandId,
+		e.Name,
+		e.Sku,
+		e.Summary,
+		e.Storyline,
+		e.StockQuantity,
+		e.Price,
+		e.UpdatedBy,
+		e.UpdatedAt,
 	)
+
 	if err != nil {
-		return -1, errors.WithMessage(err, "update command has returned an error")
+		return -1, errors.WithMessage(err, failedToUpdate)
 	}
 
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return -1, errors.WithMessage(err, "update command result number of rows affected returned error")
-	}
-	return rowsAffected, nil
+	return result.RowsAffected(), nil
 }
 
 // Delete ...
 func (repo *productRepository) Delete(ctx context.Context, id uuid.UUID) (int64, error) {
-	const query = "DELETE FROM Products WHERE Id=@Id AND Deleted=0"
+	const command string = `DELETE FROM products WHERE id=$1`
 
-	result, err := repo.db.ExecContext(ctx, query,
-		sql.Named("Id", id),
-	)
+	result, err := repo.db.Pool().Exec(ctx, command, id)
 	if err != nil {
-		return -1, errors.WithMessage(err, "delete command has returned an error")
+		return -1, errors.WithMessage(err, failedToDelete)
 	}
 
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return -1, errors.WithMessage(err, "delete command result number of rows affected returned error")
-	}
-	return rowsAffected, nil
+	return result.RowsAffected(), nil
 }
 
 // SoftDelete ...
-func (repo *productRepository) SoftDelete(ctx context.Context, id uuid.UUID, deletedBy any) (int64, error) {
-	const query = "UPDATE Products SET Deleted=@Deleted,DeletedBy=@DeletedBy,DeletedAt=@DeletedAt WHERE Id=@Id"
+func (repo *productRepository) SoftDelete(ctx context.Context, id uuid.UUID, deletedBy uuid.UUID) (int64, error) {
+	const command string = `UPDATE products SET deleted=true, deleted_by=$2, deleted_at=$3 WHERE id=$1`
 
-	result, err := repo.db.ExecContext(ctx, query,
-		sql.Named("Id", id),
-		sql.Named("@DeletedBy", deletedBy),
-		sql.Named("@DeletedAt", time.Now().UTC()),
-	)
+	result, err := repo.db.Pool().Exec(ctx, command, id, deletedBy, time.Now().UTC())
 	if err != nil {
-		return -1, errors.WithMessage(err, "update command has returned an error")
+		return -1, errors.WithMessage(err, failedToSoftDelete)
 	}
 
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return -1, errors.WithMessage(err, "update command result number of rows affected returned error")
-	}
-	return rowsAffected, nil
+	return result.RowsAffected(), nil
 }
 
 // Count ...
 func (repo *productRepository) Count(ctx context.Context) (int64, error) {
-	var count int64
-
-	row := repo.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM Products WHERE Deleted=0")
-	if err := row.Scan(&count); err != nil {
-		return -1, errors.WithStack(err)
-	}
-
-	return count, nil
+	return repo.db.Count(ctx, "SELECT COUNT(*) FROM products WHERE deleted=false")
 }
 
-// BulkInsert ...
 func (repo *productRepository) BulkInsert(ctx context.Context, list []*entity.Product) error {
-	bulkOptions := mssql.BulkOptions{RowsPerBatch: 100}
-	query := mssql.CopyIn("Products", bulkOptions, "Id", "BrandId", "Name", "Sku", "Summary", "Storyline", "StockQuantity", "Price", "Deleted", "CreatedBy", "CreatedAt")
-
-	txn, err := repo.db.Begin()
-	if err != nil {
-		return errors.WithMessage(err, "begin wasn't starts a transaction.")
+	if len(list) == 0 {
+		return nil
 	}
 
-	stmt, err := txn.PrepareContext(ctx, query)
-	if err != nil {
-		return errors.WithMessage(err, "txn wasn't prepare")
-	}
+	const command string = `
+		INSERT INTO products (id, brand_id, name, sku, summary, storyline, stock_quantity, price, deleted, created_by, created_at) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
 
+	batch := &pgx.Batch{}
 	for _, e := range list {
-		_, err := stmt.ExecContext(ctx, e.Id, e.BrandId, e.Name, e.Sku, e.Summary, e.Storyline, e.StockQuantity, e.Price, e.Deleted, e.CreatedBy, e.CreatedAt)
+		batch.Queue(command,
+			e.Id,
+			e.BrandId,
+			e.Name,
+			e.Sku,
+			e.Summary,
+			e.Storyline,
+			e.StockQuantity,
+			e.Price,
+			e.Deleted,
+			e.CreatedBy,
+			e.CreatedAt,
+		)
+	}
+
+	batchResults := repo.db.Pool().SendBatch(ctx, batch)
+	defer batchResults.Close()
+
+	for i := 0; i < len(list); i++ {
+		_, err := batchResults.Exec()
 		if err != nil {
-			return errors.WithMessage(err, "statement wasn't execute")
+			return errors.WithMessage(err, failedToBulkInsert)
 		}
 	}
 
-	result, err := stmt.ExecContext(ctx)
-	if err != nil {
-		return errors.WithMessage(err, "statement execute")
-	}
-
-	if err = stmt.Close(); err != nil {
-		return errors.WithMessage(err, "statement close")
-	}
-
-	if err = txn.Commit(); err != nil {
-		return errors.WithMessage(err, "txn commit")
-	}
-
-	rowCount, err := result.RowsAffected()
-	if err != nil {
-		return errors.WithMessage(err, "result rows affected")
-	}
-
-	if len(list) == int(rowCount) {
-		log.Printf("%d row copied\n", rowCount)
-	}
-
 	return nil
+}
+
+func (repo *productRepository) Search(ctx context.Context, filter *dto.ProductSearchFilter) (*dto.ProductSearchResult, error) {
+	query := "SELECT * FROM products WHERE deleted=false"
+	countQuery := "SELECT COUNT(*) FROM products WHERE deleted=false"
+	args := []interface{}{}
+	argIndex := 1
+
+	// Build WHERE clauses dynamically based on filter
+	if filter.Id != nil {
+		query += fmt.Sprintf(" AND id=$%d", argIndex)
+		countQuery += fmt.Sprintf(" AND id=$%d", argIndex)
+		args = append(args, *filter.Id)
+		argIndex++
+	}
+
+	if filter.BrandId > 0 {
+		query += fmt.Sprintf(" AND brand_id=$%d", argIndex)
+		countQuery += fmt.Sprintf(" AND brand_id=$%d", argIndex)
+		args = append(args, filter.BrandId)
+		argIndex++
+	}
+
+	if filter.Name != "" {
+		query += fmt.Sprintf(" AND name ILIKE $%d", argIndex)
+		countQuery += fmt.Sprintf(" AND name ILIKE $%d", argIndex)
+		args = append(args, "%"+filter.Name+"%")
+		argIndex++
+	}
+
+	// Get total count
+	var total int
+	err := repo.db.Pool().QueryRow(ctx, countQuery, args...).Scan(&total)
+	if err != nil {
+		return nil, errors.WithMessage(err, failedToCount)
+	}
+
+	if total == 0 {
+		return &dto.ProductSearchResult{
+			Total: 0,
+			Items: []*entity.Product{},
+		}, nil
+	}
+
+	// Add pagination
+	query += " ORDER BY created_at DESC"
+	if filter.Take > 0 {
+		query += fmt.Sprintf(" LIMIT $%d", argIndex)
+		args = append(args, filter.Take)
+		argIndex++
+	}
+
+	if filter.Skip > 0 {
+		query += fmt.Sprintf(" OFFSET $%d", argIndex)
+		args = append(args, filter.Skip)
+	}
+
+	// Execute query
+	rows, err := repo.db.Pool().Query(ctx, query, args...)
+	if err != nil {
+		return nil, errors.WithMessage(err, listQueryRowError)
+	}
+	defer rows.Close()
+
+	items, err := pgx.CollectRows(rows, pgx.RowToAddrOfStructByName[entity.Product])
+	if err != nil {
+		return nil, errors.WithMessage(err, failedToCollectRows)
+	}
+
+	return &dto.ProductSearchResult{
+		Total: total,
+		Items: items,
+	}, nil
 }

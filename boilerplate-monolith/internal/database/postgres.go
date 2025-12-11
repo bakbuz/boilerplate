@@ -70,7 +70,7 @@ func (db *DB) Pool() *pgxpool.Pool {
 	return db.pool
 }
 
-func (db *DB) Version(ctx context.Context) string {
+func (db *DB) PostgresVersion(ctx context.Context) string {
 	var version string
 	err := db.pool.QueryRow(ctx, "SELECT version()").Scan(&version)
 	if err != nil {
@@ -79,7 +79,7 @@ func (db *DB) Version(ctx context.Context) string {
 	return version
 }
 
-func (db *DB) VersionWithErr(ctx context.Context) (string, error) {
+func (db *DB) PostgresVersionWithErr(ctx context.Context) (string, error) {
 	var version string
 	err := db.pool.QueryRow(ctx, "SELECT version()").Scan(&version)
 	if err != nil {
