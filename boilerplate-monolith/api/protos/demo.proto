@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package demo;
+
+option go_package = ".;pb";
+
+import "common.proto";
+
+message Demo {
+  int32 id = 1;
+  string name = 2;
+  string description = 3;
+}
+
+message DemoIdentifier {
+  int32 id = 1;
+}
+
+message ListDemosResponse {
+  repeated Demo demos = 1;
+}
+
+message GetDemoResponse {
+  repeated Demo demos = 1;
+}
+
+message CreateDemoRequest {
+  string name = 1;
+  string description = 2;
+}
+
+message CreateDemoResponse {
+  Demo demo = 1;
+}
+
+service DemoService {
+  rpc ListDemos (common.Empty) returns (ListDemosResponse) {}
+  rpc GetDemo (DemoIdentifier) returns (GetDemoResponse) {}
+  rpc Create (CreateDemoRequest) returns (CreateDemoResponse) {}
+}

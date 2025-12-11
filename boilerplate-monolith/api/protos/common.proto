@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package common;
+
+option go_package = ".;pb";
+
+message Empty {}
+
+message Lookup {
+  int32 id = 1;
+  string name = 2;
+}
+
+message Identifier {
+  int32 id = 1;
+}
+
+message SuccessResponse {
+    bool success = 1;
+}
+
+enum Gender {
+  Unknown = 0;
+  Male = 1;
+  Female = 2;
+}

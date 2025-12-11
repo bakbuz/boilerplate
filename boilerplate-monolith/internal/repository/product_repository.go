@@ -45,7 +45,7 @@ func mapToProduct(row pgx.Row) (*entity.Product, error) {
 		return nil, nil
 	}
 	if err != nil {
-		return nil, errors.WithMessage(err, "row scan error")
+		return nil, errors.WithMessage(err, rowScanError)
 	}
 	return e, nil
 }
