@@ -15,7 +15,7 @@ type BrandRepository interface {
 	GetAll(ctx context.Context) ([]*entity.Brand, error)
 	GetByIds(ctx context.Context, ids []uuid.UUID) ([]*entity.Brand, error)
 	GetById(ctx context.Context, id uuid.UUID) (*entity.Brand, error)
-	Insert(ctx context.Context, e *entity.Brand) (int64, error)
+	Insert(ctx context.Context, e *entity.Brand) error
 	Update(ctx context.Context, e *entity.Brand) (int64, error)
 	Delete(ctx context.Context, id uuid.UUID) (int64, error)
 	Count(ctx context.Context) (int64, error)
@@ -99,24 +99,25 @@ func (repo *brandRepository) GetById(ctx context.Context, id uuid.UUID) (*entity
 }
 
 // Insert ...
-func (repo *brandRepository) Insert(ctx context.Context, e *entity.Brand) (int64, error) {
+func (repo *brandRepository) Insert(ctx context.Context, e *entity.Brand) error {
 	const command string = `
 		INSERT INTO brands (name, slug, logo, created_by, created_at) 
-		VALUES ($1, $2, $3, $4, $5)`
+		VALUES ($1, $2, $3, $4, $5)
+		RETURNING id`
 
-	result, err := repo.db.Pool().Exec(ctx, command,
+	err := repo.db.Pool().QueryRow(ctx, command,
 		e.Name,
 		e.Slug,
 		e.Logo,
 		e.CreatedBy,
 		e.CreatedAt,
-	)
+	).Scan(&e.Id)
 
 	if err != nil {
-		return -1, errors.WithMessage(err, failedToInsert)
+		return errors.WithMessage(err, failedToInsert)
 	}
 
-	return result.RowsAffected(), nil
+	return nil
 }
 
 // Update ...
