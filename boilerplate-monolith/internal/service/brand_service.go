@@ -8,17 +8,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/pkg/errors"
 )
 
 type BrandService interface {
 	GetAll(ctx context.Context) ([]*entity.Brand, error)
-	GetByIds(ctx context.Context, ids []uuid.UUID) ([]*entity.Brand, error)
-	GetById(ctx context.Context, id uuid.UUID) (*entity.Brand, error)
+	GetByIds(ctx context.Context, ids []int32) ([]*entity.Brand, error)
+	GetById(ctx context.Context, id int32) (*entity.Brand, error)
 	Create(ctx context.Context, e *entity.Brand) error
 	Update(ctx context.Context, e *entity.Brand) (int64, error)
-	Delete(ctx context.Context, id uuid.UUID) (int64, error)
+	Delete(ctx context.Context, id int32) (int64, error)
 	Count(ctx context.Context) (int64, error)
 	BulkInsert(ctx context.Context, list []*entity.Brand) error
 }
@@ -63,7 +62,7 @@ func (s *brandService) GetAll(ctx context.Context) ([]*entity.Brand, error) {
 }
 
 // GetByIds ...
-func (s *brandService) GetByIds(ctx context.Context, ids []uuid.UUID) ([]*entity.Brand, error) {
+func (s *brandService) GetByIds(ctx context.Context, ids []int32) ([]*entity.Brand, error) {
 	if len(ids) == 0 {
 		return []*entity.Brand{}, nil
 	}
@@ -72,8 +71,8 @@ func (s *brandService) GetByIds(ctx context.Context, ids []uuid.UUID) ([]*entity
 }
 
 // GetById ...
-func (s *brandService) GetById(ctx context.Context, id uuid.UUID) (*entity.Brand, error) {
-	if id == uuid.Nil {
+func (s *brandService) GetById(ctx context.Context, id int32) (*entity.Brand, error) {
+	if id == 0 {
 		return nil, grpcerrors.ErrInvalidInput
 	}
 
@@ -116,8 +115,8 @@ func (s *brandService) Update(ctx context.Context, e *entity.Brand) (int64, erro
 }
 
 // Delete ...
-func (s *brandService) Delete(ctx context.Context, id uuid.UUID) (int64, error) {
-	if id == uuid.Nil {
+func (s *brandService) Delete(ctx context.Context, id int32) (int64, error) {
+	if id == 0 {
 		return -1, grpcerrors.ErrInvalidInput
 	}
 

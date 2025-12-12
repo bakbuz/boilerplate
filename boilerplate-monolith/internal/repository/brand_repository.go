@@ -5,7 +5,6 @@ import (
 	"codegen/internal/entity"
 	"context"
 
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/pkg/errors"
 )
@@ -13,11 +12,11 @@ import (
 // BrandRepository ...
 type BrandRepository interface {
 	GetAll(ctx context.Context) ([]*entity.Brand, error)
-	GetByIds(ctx context.Context, ids []uuid.UUID) ([]*entity.Brand, error)
-	GetById(ctx context.Context, id uuid.UUID) (*entity.Brand, error)
+	GetByIds(ctx context.Context, ids []int32) ([]*entity.Brand, error)
+	GetById(ctx context.Context, id int32) (*entity.Brand, error)
 	Insert(ctx context.Context, e *entity.Brand) error
 	Update(ctx context.Context, e *entity.Brand) (int64, error)
-	Delete(ctx context.Context, id uuid.UUID) (int64, error)
+	Delete(ctx context.Context, id int32) (int64, error)
 	Count(ctx context.Context) (int64, error)
 
 	BulkInsert(ctx context.Context, list []*entity.Brand) error
@@ -64,7 +63,7 @@ func (repo *brandRepository) GetAll(ctx context.Context) ([]*entity.Brand, error
 }
 
 // GetByIds ...
-func (repo *brandRepository) GetByIds(ctx context.Context, ids []uuid.UUID) ([]*entity.Brand, error) {
+func (repo *brandRepository) GetByIds(ctx context.Context, ids []int32) ([]*entity.Brand, error) {
 	if len(ids) == 0 {
 		return []*entity.Brand{}, nil
 	}
@@ -86,7 +85,7 @@ func (repo *brandRepository) GetByIds(ctx context.Context, ids []uuid.UUID) ([]*
 }
 
 // GetById ...
-func (repo *brandRepository) GetById(ctx context.Context, id uuid.UUID) (*entity.Brand, error) {
+func (repo *brandRepository) GetById(ctx context.Context, id int32) (*entity.Brand, error) {
 	const stmt string = "SELECT * FROM brands WHERE id=$1"
 
 	row := repo.db.Pool().QueryRow(ctx, stmt, id)
@@ -144,7 +143,7 @@ func (repo *brandRepository) Update(ctx context.Context, e *entity.Brand) (int64
 }
 
 // Delete ...
-func (repo *brandRepository) Delete(ctx context.Context, id uuid.UUID) (int64, error) {
+func (repo *brandRepository) Delete(ctx context.Context, id int32) (int64, error) {
 	const command string = `DELETE FROM brands WHERE id=$1`
 
 	result, err := repo.db.Pool().Exec(ctx, command, id)

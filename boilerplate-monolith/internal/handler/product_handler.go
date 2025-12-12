@@ -84,7 +84,19 @@ func (h *productHandler) ListBrands(ctx context.Context, req *pb.ListBrandsReque
 }
 
 func (h *productHandler) GetBrand(ctx context.Context, req *pb.BrandIdentifier) (*pb.GetBrandResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetBrand not implemented")
+	item, err := h.bsvc.GetById(ctx, req.Id)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to fetch brand: %v", err)
+	}
+
+	return &pb.GetBrandResponse{
+		Brand: &pb.Brand{
+			Id:   item.Id,
+			Name: item.Name,
+			Slug: item.Slug,
+			Logo: item.Logo,
+		},
+	}, nil
 }
 
 func (h *productHandler) CreateBrand(ctx context.Context, req *pb.CreateBrandRequest) (*pb.BrandIdentifier, error) {
