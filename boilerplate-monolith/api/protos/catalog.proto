@@ -30,45 +30,10 @@ message CreateProductResponse { Product product = 1; }
 message UpdateProductRequest { Product product = 1; }
 message UpdateProductResponse { Product product = 1; }
 
-message Brand {
-  int32 id = 1;
-  string name = 2;
-  string slug = 3;
-  string logo = 4;
-  google.protobuf.Timestamp created_at = 5;
-}
-
-message BrandIdentifier {
-  int32 id = 1;
-}
-
-message ListBrandsRequest { }
-message ListBrandsResponse { int32 total = 1; repeated Brand items = 2; }
-message GetBrandResponse { Brand brand = 1; }
-
-message CreateBrandRequest { 
-  string name = 1;
-  string slug = 2;
-  string logo = 3;
-}
-
-message UpdateBrandRequest { 
-  int32 id = 1;
-  string name = 2;
-  string slug = 3;
-  string logo = 4;
-}
-
 service CatalogService {
   rpc GetProducts(ListProductsRequest) returns (ListProductsResponse);
   rpc GetProduct(ProductIdentifier) returns (GetProductResponse);  
   rpc CreateProduct(CreateProductRequest) returns (CreateProductResponse);  
   rpc UpdateProduct(UpdateProductRequest) returns (UpdateProductResponse);
   rpc DeleteProduct(ProductIdentifier) returns (common.SuccessResponse);
-
-  rpc ListBrands(ListBrandsRequest) returns (ListBrandsResponse);
-  rpc GetBrand(BrandIdentifier) returns (GetBrandResponse);
-  rpc CreateBrand(CreateBrandRequest) returns (BrandIdentifier);  
-  rpc UpdateBrand(UpdateBrandRequest) returns (common.SuccessResponse);
-  rpc DeleteBrand(BrandIdentifier) returns (common.SuccessResponse);  
 }

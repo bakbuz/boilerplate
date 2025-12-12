@@ -96,7 +96,7 @@ func run(ctx context.Context, logger *zerolog.Logger) error {
 	// gRPC server instance
 	grpcServer := grpc.NewServer(opts...)
 	pb.RegisterDemoServiceServer(grpcServer, demoHandler)
-	pb.RegisterCatalogServiceServer(grpcServer, brandHandler)
+	pb.RegisterBrandServiceServer(grpcServer, brandHandler)
 	pb.RegisterCatalogServiceServer(grpcServer, productHandler)
 
 	// gRPC server listen

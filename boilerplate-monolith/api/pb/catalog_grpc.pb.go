@@ -24,11 +24,6 @@ const (
 	CatalogService_CreateProduct_FullMethodName = "/catalog.v1.CatalogService/CreateProduct"
 	CatalogService_UpdateProduct_FullMethodName = "/catalog.v1.CatalogService/UpdateProduct"
 	CatalogService_DeleteProduct_FullMethodName = "/catalog.v1.CatalogService/DeleteProduct"
-	CatalogService_ListBrands_FullMethodName    = "/catalog.v1.CatalogService/ListBrands"
-	CatalogService_GetBrand_FullMethodName      = "/catalog.v1.CatalogService/GetBrand"
-	CatalogService_CreateBrand_FullMethodName   = "/catalog.v1.CatalogService/CreateBrand"
-	CatalogService_UpdateBrand_FullMethodName   = "/catalog.v1.CatalogService/UpdateBrand"
-	CatalogService_DeleteBrand_FullMethodName   = "/catalog.v1.CatalogService/DeleteBrand"
 )
 
 // CatalogServiceClient is the client API for CatalogService service.
@@ -40,11 +35,6 @@ type CatalogServiceClient interface {
 	CreateProduct(ctx context.Context, in *CreateProductRequest, opts ...grpc.CallOption) (*CreateProductResponse, error)
 	UpdateProduct(ctx context.Context, in *UpdateProductRequest, opts ...grpc.CallOption) (*UpdateProductResponse, error)
 	DeleteProduct(ctx context.Context, in *ProductIdentifier, opts ...grpc.CallOption) (*SuccessResponse, error)
-	ListBrands(ctx context.Context, in *ListBrandsRequest, opts ...grpc.CallOption) (*ListBrandsResponse, error)
-	GetBrand(ctx context.Context, in *BrandIdentifier, opts ...grpc.CallOption) (*GetBrandResponse, error)
-	CreateBrand(ctx context.Context, in *CreateBrandRequest, opts ...grpc.CallOption) (*BrandIdentifier, error)
-	UpdateBrand(ctx context.Context, in *UpdateBrandRequest, opts ...grpc.CallOption) (*SuccessResponse, error)
-	DeleteBrand(ctx context.Context, in *BrandIdentifier, opts ...grpc.CallOption) (*SuccessResponse, error)
 }
 
 type catalogServiceClient struct {
@@ -105,56 +95,6 @@ func (c *catalogServiceClient) DeleteProduct(ctx context.Context, in *ProductIde
 	return out, nil
 }
 
-func (c *catalogServiceClient) ListBrands(ctx context.Context, in *ListBrandsRequest, opts ...grpc.CallOption) (*ListBrandsResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ListBrandsResponse)
-	err := c.cc.Invoke(ctx, CatalogService_ListBrands_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *catalogServiceClient) GetBrand(ctx context.Context, in *BrandIdentifier, opts ...grpc.CallOption) (*GetBrandResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetBrandResponse)
-	err := c.cc.Invoke(ctx, CatalogService_GetBrand_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *catalogServiceClient) CreateBrand(ctx context.Context, in *CreateBrandRequest, opts ...grpc.CallOption) (*BrandIdentifier, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(BrandIdentifier)
-	err := c.cc.Invoke(ctx, CatalogService_CreateBrand_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *catalogServiceClient) UpdateBrand(ctx context.Context, in *UpdateBrandRequest, opts ...grpc.CallOption) (*SuccessResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(SuccessResponse)
-	err := c.cc.Invoke(ctx, CatalogService_UpdateBrand_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *catalogServiceClient) DeleteBrand(ctx context.Context, in *BrandIdentifier, opts ...grpc.CallOption) (*SuccessResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(SuccessResponse)
-	err := c.cc.Invoke(ctx, CatalogService_DeleteBrand_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // CatalogServiceServer is the server API for CatalogService service.
 // All implementations must embed UnimplementedCatalogServiceServer
 // for forward compatibility.
@@ -164,11 +104,6 @@ type CatalogServiceServer interface {
 	CreateProduct(context.Context, *CreateProductRequest) (*CreateProductResponse, error)
 	UpdateProduct(context.Context, *UpdateProductRequest) (*UpdateProductResponse, error)
 	DeleteProduct(context.Context, *ProductIdentifier) (*SuccessResponse, error)
-	ListBrands(context.Context, *ListBrandsRequest) (*ListBrandsResponse, error)
-	GetBrand(context.Context, *BrandIdentifier) (*GetBrandResponse, error)
-	CreateBrand(context.Context, *CreateBrandRequest) (*BrandIdentifier, error)
-	UpdateBrand(context.Context, *UpdateBrandRequest) (*SuccessResponse, error)
-	DeleteBrand(context.Context, *BrandIdentifier) (*SuccessResponse, error)
 	mustEmbedUnimplementedCatalogServiceServer()
 }
 
@@ -193,21 +128,6 @@ func (UnimplementedCatalogServiceServer) UpdateProduct(context.Context, *UpdateP
 }
 func (UnimplementedCatalogServiceServer) DeleteProduct(context.Context, *ProductIdentifier) (*SuccessResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeleteProduct not implemented")
-}
-func (UnimplementedCatalogServiceServer) ListBrands(context.Context, *ListBrandsRequest) (*ListBrandsResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ListBrands not implemented")
-}
-func (UnimplementedCatalogServiceServer) GetBrand(context.Context, *BrandIdentifier) (*GetBrandResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetBrand not implemented")
-}
-func (UnimplementedCatalogServiceServer) CreateBrand(context.Context, *CreateBrandRequest) (*BrandIdentifier, error) {
-	return nil, status.Error(codes.Unimplemented, "method CreateBrand not implemented")
-}
-func (UnimplementedCatalogServiceServer) UpdateBrand(context.Context, *UpdateBrandRequest) (*SuccessResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method UpdateBrand not implemented")
-}
-func (UnimplementedCatalogServiceServer) DeleteBrand(context.Context, *BrandIdentifier) (*SuccessResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method DeleteBrand not implemented")
 }
 func (UnimplementedCatalogServiceServer) mustEmbedUnimplementedCatalogServiceServer() {}
 func (UnimplementedCatalogServiceServer) testEmbeddedByValue()                        {}
@@ -320,96 +240,6 @@ func _CatalogService_DeleteProduct_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CatalogService_ListBrands_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListBrandsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CatalogServiceServer).ListBrands(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: CatalogService_ListBrands_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CatalogServiceServer).ListBrands(ctx, req.(*ListBrandsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _CatalogService_GetBrand_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(BrandIdentifier)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CatalogServiceServer).GetBrand(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: CatalogService_GetBrand_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CatalogServiceServer).GetBrand(ctx, req.(*BrandIdentifier))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _CatalogService_CreateBrand_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateBrandRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CatalogServiceServer).CreateBrand(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: CatalogService_CreateBrand_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CatalogServiceServer).CreateBrand(ctx, req.(*CreateBrandRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _CatalogService_UpdateBrand_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateBrandRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CatalogServiceServer).UpdateBrand(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: CatalogService_UpdateBrand_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CatalogServiceServer).UpdateBrand(ctx, req.(*UpdateBrandRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _CatalogService_DeleteBrand_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(BrandIdentifier)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CatalogServiceServer).DeleteBrand(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: CatalogService_DeleteBrand_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CatalogServiceServer).DeleteBrand(ctx, req.(*BrandIdentifier))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // CatalogService_ServiceDesc is the grpc.ServiceDesc for CatalogService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -436,26 +266,6 @@ var CatalogService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteProduct",
 			Handler:    _CatalogService_DeleteProduct_Handler,
-		},
-		{
-			MethodName: "ListBrands",
-			Handler:    _CatalogService_ListBrands_Handler,
-		},
-		{
-			MethodName: "GetBrand",
-			Handler:    _CatalogService_GetBrand_Handler,
-		},
-		{
-			MethodName: "CreateBrand",
-			Handler:    _CatalogService_CreateBrand_Handler,
-		},
-		{
-			MethodName: "UpdateBrand",
-			Handler:    _CatalogService_UpdateBrand_Handler,
-		},
-		{
-			MethodName: "DeleteBrand",
-			Handler:    _CatalogService_DeleteBrand_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

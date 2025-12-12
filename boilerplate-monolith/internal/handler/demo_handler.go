@@ -32,7 +32,7 @@ func (h *demoHandler) GetDemo(ctx context.Context, req *pb.DemoIdentifier) (*pb.
 
 func (h *demoHandler) Create(ctx context.Context, req *pb.CreateDemoRequest) (*pb.GetDemoResponse, error) {
 	newId := demos[len(demos)-1].Id + 1
-	newDemo := &pb.Demo{Id: newId, Name: req.Name}
+	newDemo := &pb.Demo{Id: newId, Name: req.Name, Description: req.Description}
 
 	demos = append(demos, newDemo)
 

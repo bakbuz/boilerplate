@@ -14,7 +14,7 @@ import (
 )
 
 type brandHandler struct {
-	pb.UnimplementedCatalogServiceServer
+	pb.UnimplementedBrandServiceServer
 	svc service.BrandService
 }
 
