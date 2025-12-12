@@ -52,7 +52,7 @@ func mapToProduct(row pgx.Row) (*entity.Product, error) {
 
 // GetAll ...
 func (repo *productRepository) GetAll(ctx context.Context) ([]*entity.Product, error) {
-	const stmt string = "SELECT * FROM products WHERE deleted=false"
+	const stmt string = "SELECT * FROM catalog.products WHERE deleted=false"
 
 	rows, err := repo.db.Pool().Query(ctx, stmt)
 	if err != nil {
@@ -74,7 +74,7 @@ func (repo *productRepository) GetByIds(ctx context.Context, ids []uuid.UUID) ([
 		return []*entity.Product{}, nil
 	}
 
-	const stmt string = "SELECT * FROM products WHERE deleted=false AND id = ANY($1)"
+	const stmt string = "SELECT * FROM catalog.products WHERE deleted=false AND id = ANY($1)"
 
 	rows, err := repo.db.Pool().Query(ctx, stmt, ids)
 	if err != nil {
@@ -92,7 +92,7 @@ func (repo *productRepository) GetByIds(ctx context.Context, ids []uuid.UUID) ([
 
 // GetById ...
 func (repo *productRepository) GetById(ctx context.Context, id uuid.UUID) (*entity.Product, error) {
-	const stmt string = "SELECT * FROM products WHERE deleted=false AND id=$1"
+	const stmt string = "SELECT * FROM catalog.products WHERE deleted=false AND id=$1"
 
 	row := repo.db.Pool().QueryRow(ctx, stmt, id)
 	item, err := mapToProduct(row)
@@ -106,7 +106,7 @@ func (repo *productRepository) GetById(ctx context.Context, id uuid.UUID) (*enti
 // Insert ...
 func (repo *productRepository) Insert(ctx context.Context, e *entity.Product) (int64, error) {
 	const command string = `
-		INSERT INTO products (id, brand_id, name, sku, summary, storyline, stock_quantity, price, deleted, created_by, created_at) 
+		INSERT INTO catalog.products (id, brand_id, name, sku, summary, storyline, stock_quantity, price, deleted, created_by, created_at) 
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
 
 	result, err := repo.db.Pool().Exec(ctx, command,
@@ -133,7 +133,7 @@ func (repo *productRepository) Insert(ctx context.Context, e *entity.Product) (i
 // Update ...
 func (repo *productRepository) Update(ctx context.Context, e *entity.Product) (int64, error) {
 	const command string = `
-		UPDATE products 
+		UPDATE catalog.products 
 		SET brand_id=$2, name=$3, sku=$4, summary=$5, storyline=$6, stock_quantity=$7, price=$8, updated_by=$9, updated_at=$10 
 		WHERE id=$1`
 
@@ -159,7 +159,7 @@ func (repo *productRepository) Update(ctx context.Context, e *entity.Product) (i
 
 // Delete ...
 func (repo *productRepository) Delete(ctx context.Context, id uuid.UUID) (int64, error) {
-	const command string = `DELETE FROM products WHERE id=$1`
+	const command string = `DELETE FROM catalog.products WHERE id=$1`
 
 	result, err := repo.db.Pool().Exec(ctx, command, id)
 	if err != nil {
@@ -171,7 +171,7 @@ func (repo *productRepository) Delete(ctx context.Context, id uuid.UUID) (int64,
 
 // SoftDelete ...
 func (repo *productRepository) SoftDelete(ctx context.Context, id uuid.UUID, deletedBy uuid.UUID) (int64, error) {
-	const command string = `UPDATE products SET deleted=true, deleted_by=$2, deleted_at=$3 WHERE id=$1`
+	const command string = `UPDATE catalog.products SET deleted=true, deleted_by=$2, deleted_at=$3 WHERE id=$1`
 
 	result, err := repo.db.Pool().Exec(ctx, command, id, deletedBy, time.Now().UTC())
 	if err != nil {
@@ -183,7 +183,7 @@ func (repo *productRepository) SoftDelete(ctx context.Context, id uuid.UUID, del
 
 // Count ...
 func (repo *productRepository) Count(ctx context.Context) (int64, error) {
-	return repo.db.Count(ctx, "SELECT COUNT(*) FROM products WHERE deleted=false")
+	return repo.db.Count(ctx, "SELECT COUNT(*) FROM catalog.products WHERE deleted=false")
 }
 
 func (repo *productRepository) BulkInsert(ctx context.Context, list []*entity.Product) error {
@@ -192,7 +192,7 @@ func (repo *productRepository) BulkInsert(ctx context.Context, list []*entity.Pr
 	}
 
 	const command string = `
-		INSERT INTO products (id, brand_id, name, sku, summary, storyline, stock_quantity, price, deleted, created_by, created_at) 
+		INSERT INTO catalog.products (id, brand_id, name, sku, summary, storyline, stock_quantity, price, deleted, created_by, created_at) 
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
 
 	batch := &pgx.Batch{}
@@ -226,8 +226,8 @@ func (repo *productRepository) BulkInsert(ctx context.Context, list []*entity.Pr
 }
 
 func (repo *productRepository) Search(ctx context.Context, filter *dto.ProductSearchFilter) (*dto.ProductSearchResult, error) {
-	query := "SELECT * FROM products WHERE deleted=false"
-	countQuery := "SELECT COUNT(*) FROM products WHERE deleted=false"
+	query := "SELECT * FROM catalog.products WHERE deleted=false"
+	countQuery := "SELECT COUNT(*) FROM catalog.products WHERE deleted=false"
 	args := []interface{}{}
 	argIndex := 1
 

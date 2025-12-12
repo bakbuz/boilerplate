@@ -46,7 +46,7 @@ func mapToBrand(row pgx.Row) (*entity.Brand, error) {
 
 // GetAll ...
 func (repo *brandRepository) GetAll(ctx context.Context) ([]*entity.Brand, error) {
-	const stmt string = "SELECT * FROM brands"
+	const stmt string = "SELECT * FROM catalog.brands"
 
 	rows, err := repo.db.Pool().Query(ctx, stmt)
 	if err != nil {
@@ -68,7 +68,7 @@ func (repo *brandRepository) GetByIds(ctx context.Context, ids []int32) ([]*enti
 		return []*entity.Brand{}, nil
 	}
 
-	const stmt string = "SELECT * FROM brands WHERE id = ANY($1)"
+	const stmt string = "SELECT * FROM catalog.brands WHERE id = ANY($1)"
 
 	rows, err := repo.db.Pool().Query(ctx, stmt, ids)
 	if err != nil {
@@ -86,7 +86,7 @@ func (repo *brandRepository) GetByIds(ctx context.Context, ids []int32) ([]*enti
 
 // GetById ...
 func (repo *brandRepository) GetById(ctx context.Context, id int32) (*entity.Brand, error) {
-	const stmt string = "SELECT * FROM brands WHERE id=$1"
+	const stmt string = "SELECT * FROM catalog.brands WHERE id=$1"
 
 	row := repo.db.Pool().QueryRow(ctx, stmt, id)
 	item, err := mapToBrand(row)
@@ -100,7 +100,7 @@ func (repo *brandRepository) GetById(ctx context.Context, id int32) (*entity.Bra
 // Insert ...
 func (repo *brandRepository) Insert(ctx context.Context, e *entity.Brand) error {
 	const command string = `
-		INSERT INTO brands (name, slug, logo, created_by, created_at) 
+		INSERT INTO catalog.brands (name, slug, logo, created_by, created_at) 
 		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id`
 
@@ -122,7 +122,7 @@ func (repo *brandRepository) Insert(ctx context.Context, e *entity.Brand) error 
 // Update ...
 func (repo *brandRepository) Update(ctx context.Context, e *entity.Brand) (int64, error) {
 	const command string = `
-		UPDATE brands 
+		UPDATE catalog.brands 
 		SET name=$2, slug=$3, logo=$4, updated_by=$5, updated_at=$6 
 		WHERE id=$1`
 
@@ -144,7 +144,7 @@ func (repo *brandRepository) Update(ctx context.Context, e *entity.Brand) (int64
 
 // Delete ...
 func (repo *brandRepository) Delete(ctx context.Context, id int32) (int64, error) {
-	const command string = `DELETE FROM brands WHERE id=$1`
+	const command string = `DELETE FROM catalog.brands WHERE id=$1`
 
 	result, err := repo.db.Pool().Exec(ctx, command, id)
 	if err != nil {
@@ -156,7 +156,7 @@ func (repo *brandRepository) Delete(ctx context.Context, id int32) (int64, error
 
 // Count ...
 func (repo *brandRepository) Count(ctx context.Context) (int64, error) {
-	return repo.db.Count(ctx, "SELECT COUNT(*) FROM brands")
+	return repo.db.Count(ctx, "SELECT COUNT(*) FROM catalog.brands")
 }
 
 func (repo *brandRepository) BulkInsert(ctx context.Context, list []*entity.Brand) error {
@@ -165,7 +165,7 @@ func (repo *brandRepository) BulkInsert(ctx context.Context, list []*entity.Bran
 	}
 
 	const command string = `
-		INSERT INTO brands (name, slug, logo, created_by, created_at) 
+		INSERT INTO catalog.brands (name, slug, logo, created_by, created_at) 
 		VALUES ($1, $2, $3, $4, $5)`
 
 	batch := &pgx.Batch{}
