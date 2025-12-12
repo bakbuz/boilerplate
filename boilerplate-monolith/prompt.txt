@@ -1,0 +1,17 @@
+Golang ile gRPC tabanlı, yüksek performanslı ve düşük kaynak tüketen bir backend mimarisi tasarlamama yardımcı ol.
+Aşağıdaki gereksinimlere göre mimari, dizin yapısı, modüller, config şeması, deployment adımları ve örnek kod üret:
+
+– Dil: Go 1.25.5, minimum bağımlılık
+– RPC: gRPC + Protocol Buffers
+– Sunucu: AWS Free Tier EC2 (t2.micro / t3.micro) — düşük CPU/RAM için optimize
+– Veritabanı: Supabase PostgreSQL (public internet erişimli)
+– Şema: örnek ‘Product’ ve ‘Order’ tabloları
+– Bağlantı: secure connection string, connection pooling, retry strategy
+– API: CRUD servisleri (ProductService, OrderService)
+– Repository pattern (interface + PostgreSQL implementation)
+– Oturum: JWT veya supabase auth token
+– Error handling: strongly typed; gRPC status codes
+– Test: unit + integration (postgres + grpc)
+– Deployment çıktı formatı: systemd servis dosyası + Go binary build adımları
+– Ekstra: performans optimizasyonları, bellek tahsisi tavsiyeleri, goroutine yönetimi, connection reuse, zero-allocation gRPC handler örnekleri
+– Son çıktı: proje klasör ağacı + her dosya için kısa örnek içerik + .proto dosyası + Dockerfile + Makefile + env örnekleri
