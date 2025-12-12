@@ -32,12 +32,12 @@ func AuthInterceptor(jwtSecretKey string) grpc.UnaryServerInterceptor {
 		// Extract token
 		md, ok := metadata.FromIncomingContext(ctx)
 		if !ok {
-			return nil, status.Error(codes.Unauthenticated, "missing metadata")
+			return nil, status.Error(codes.Unauthenticated, "metadata is not provided")
 		}
 
 		tokens := md.Get("authorization")
 		if len(tokens) == 0 {
-			return nil, status.Error(codes.Unauthenticated, "missing authorization token")
+			return nil, status.Error(codes.Unauthenticated, "authorization token is not provided")
 		}
 
 		tokenString := strings.TrimPrefix(tokens[0], BearerPrefix)
@@ -45,7 +45,7 @@ func AuthInterceptor(jwtSecretKey string) grpc.UnaryServerInterceptor {
 			return nil, status.Error(codes.Unauthenticated, "invalid token format")
 		}
 
-		// Validate token
+		// Validate token (hmac/rsa)
 		claims, err := validateToken(jwtSecretKey, tokenString)
 		if err != nil {
 			return nil, status.Error(codes.Unauthenticated, "invalid token")
