@@ -14,21 +14,13 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-type ProductHandler interface {
-	GetProducts(context.Context, *pb.ListProductsRequest) (*pb.ListProductsResponse, error)
-	GetProduct(context.Context, *pb.ProductIdentifier) (*pb.GetProductResponse, error)
-	CreateProduct(context.Context, *pb.CreateProductRequest) (*pb.CreateProductResponse, error)
-	UpdateProduct(context.Context, *pb.UpdateProductRequest) (*pb.UpdateProductResponse, error)
-	DeleteProduct(context.Context, *pb.ProductIdentifier) (*pb.SuccessResponse, error)
-}
-
 type productHandler struct {
 	pb.UnimplementedCatalogServiceServer
-	psvc service.ProductService
+	svc service.ProductService
 }
 
-func NewProductHandler(psvc service.ProductService) ProductHandler {
-	return &productHandler{psvc: psvc}
+func NewProductHandler(svc service.ProductService) *productHandler {
+	return &productHandler{svc: svc}
 }
 
 // ============================================================================
@@ -182,7 +174,7 @@ func (h *productHandler) GetProducts(ctx context.Context, req *pb.ListProductsRe
 		return nil, status.Error(codes.Canceled, ctx.Err().Error())
 	}
 
-	list, err := h.psvc.GetAll(ctx)
+	list, err := h.svc.GetAll(ctx)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to fetch products: %v", err)
 	}
@@ -215,7 +207,7 @@ func (h *productHandler) GetProduct(ctx context.Context, req *pb.ProductIdentifi
 		return nil, status.Error(codes.InvalidArgument, "invalid product id format")
 	}
 
-	item, err := h.psvc.GetById(ctx, id)
+	item, err := h.svc.GetById(ctx, id)
 	if err != nil {
 		if errors.Is(err, errx.ErrNotFound) {
 			return nil, status.Errorf(codes.NotFound, "product not found: %s", req.Id)
@@ -241,7 +233,7 @@ func (h *productHandler) CreateProduct(ctx context.Context, req *pb.CreateProduc
 	}
 
 	// 3. Service Call
-	_, err = h.psvc.Create(ctx, domainEntity)
+	_, err = h.svc.Create(ctx, domainEntity)
 	if err != nil {
 		if errors.Is(err, errx.ErrInvalidInput) {
 			return nil, status.Errorf(codes.InvalidArgument, "invalid product: %v", err)
@@ -271,7 +263,7 @@ func (h *productHandler) UpdateProduct(ctx context.Context, req *pb.UpdateProduc
 	}
 
 	// 3. Service Call
-	rowsAffected, err := h.psvc.Update(ctx, domainEntity)
+	rowsAffected, err := h.svc.Update(ctx, domainEntity)
 	if err != nil {
 		if errors.Is(err, errx.ErrNotFound) {
 			return nil, status.Errorf(codes.NotFound, "product not found: %s", req.Product.Id)
@@ -299,7 +291,7 @@ func (h *productHandler) DeleteProduct(ctx context.Context, req *pb.ProductIdent
 		return nil, status.Error(codes.InvalidArgument, "invalid product id format")
 	}
 
-	rowsAffected, err := h.psvc.Delete(ctx, id)
+	rowsAffected, err := h.svc.Delete(ctx, id)
 	if err != nil {
 		if errors.Is(err, errx.ErrNotFound) {
 			return nil, status.Errorf(codes.NotFound, "product not found: %s", req.Id)

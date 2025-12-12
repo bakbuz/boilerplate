@@ -5,17 +5,11 @@ import (
 	"context"
 )
 
-type DemoHandler interface {
-	ListDemos(context.Context, *pb.Empty) (*pb.ListDemosResponse, error)
-	GetDemo(context.Context, *pb.DemoIdentifier) (*pb.GetDemoResponse, error)
-	Create(context.Context, *pb.CreateDemoRequest) (*pb.GetDemoResponse, error)
-}
-
 type demoHandler struct {
 	pb.UnimplementedDemoServiceServer
 }
 
-func NewDemoHandler() DemoHandler {
+func NewDemoHandler() *demoHandler {
 	return &demoHandler{}
 }
 

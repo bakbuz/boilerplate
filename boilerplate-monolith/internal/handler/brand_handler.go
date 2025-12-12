@@ -13,21 +13,13 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-type BrandHandler interface {
-	ListBrands(context.Context, *pb.ListBrandsRequest) (*pb.ListBrandsResponse, error)
-	GetBrand(context.Context, *pb.BrandIdentifier) (*pb.GetBrandResponse, error)
-	CreateBrand(context.Context, *pb.CreateBrandRequest) (*pb.BrandIdentifier, error)
-	UpdateBrand(context.Context, *pb.UpdateBrandRequest) (*pb.SuccessResponse, error)
-	DeleteBrand(context.Context, *pb.BrandIdentifier) (*pb.SuccessResponse, error)
-}
-
 type brandHandler struct {
 	pb.UnimplementedCatalogServiceServer
-	bsvc service.BrandService
+	svc service.BrandService
 }
 
-func NewBrandHandler(bsvc service.BrandService) BrandHandler {
-	return &brandHandler{bsvc: bsvc}
+func NewBrandHandler(svc service.BrandService) *brandHandler {
+	return &brandHandler{svc: svc}
 }
 
 // ============================================================================
@@ -118,7 +110,7 @@ func (h *brandHandler) ListBrands(ctx context.Context, req *pb.ListBrandsRequest
 		return nil, status.Error(codes.Canceled, ctx.Err().Error())
 	}
 
-	list, err := h.bsvc.GetAll(ctx)
+	list, err := h.svc.GetAll(ctx)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to fetch brands: %v", err)
 	}
@@ -145,7 +137,7 @@ func (h *brandHandler) ListBrands(ctx context.Context, req *pb.ListBrandsRequest
 }
 
 func (h *brandHandler) GetBrand(ctx context.Context, req *pb.BrandIdentifier) (*pb.GetBrandResponse, error) {
-	item, err := h.bsvc.GetById(ctx, req.Id)
+	item, err := h.svc.GetById(ctx, req.Id)
 	if err != nil {
 		// Distinguish between NotFound and other errors
 		if errors.Is(err, errx.ErrNotFound) {
@@ -172,7 +164,7 @@ func (h *brandHandler) CreateBrand(ctx context.Context, req *pb.CreateBrandReque
 	domainEntity := brandCreateProtoToEntity(req)
 
 	// 3. Service Call
-	err := h.bsvc.Create(ctx, domainEntity)
+	err := h.svc.Create(ctx, domainEntity)
 	if err != nil {
 		if errors.Is(err, errx.ErrInvalidInput) {
 			return nil, status.Errorf(codes.InvalidArgument, "invalid brand: %v", err)
@@ -199,7 +191,7 @@ func (h *brandHandler) UpdateBrand(ctx context.Context, req *pb.UpdateBrandReque
 	domainEntity := brandUpdateProtoToEntity(req)
 
 	// 3. Service Call
-	rowsAffected, err := h.bsvc.Update(ctx, domainEntity)
+	rowsAffected, err := h.svc.Update(ctx, domainEntity)
 	if err != nil {
 		if errors.Is(err, errx.ErrNotFound) {
 			return nil, status.Errorf(codes.NotFound, "brand not found: %d", req.Id)
@@ -226,7 +218,7 @@ func (h *brandHandler) DeleteBrand(ctx context.Context, req *pb.BrandIdentifier)
 	}
 
 	// Service Call
-	rowsAffected, err := h.bsvc.Delete(ctx, req.Id)
+	rowsAffected, err := h.svc.Delete(ctx, req.Id)
 	if err != nil {
 		if errors.Is(err, errx.ErrNotFound) {
 			return nil, status.Errorf(codes.NotFound, "brand not found: %d", req.Id)
