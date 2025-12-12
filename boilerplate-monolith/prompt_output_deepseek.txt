@@ -1,0 +1,68 @@
+grpc-highperf-backend/
+├── .env.example
+├── .gitignore
+├── Makefile
+├── Dockerfile
+├── docker-compose.yml
+├── go.mod
+├── go.sum
+├── README.md
+├── api/
+│   └── v1/
+│       ├── product_service.proto
+│       ├── order_service.proto
+│       └── auth_service.proto
+├── cmd/
+│   └── server/
+│       └── main.go
+├── configs/
+│   ├── config.go
+│   └── config.yaml
+├── internal/
+│   ├── app/
+│   │   ├── application.go
+│   │   └── server.go
+│   ├── domain/
+│   │   ├── product.go
+│   │   ├── order.go
+│   │   └── repository.go
+│   ├── handler/
+│   │   ├── product_handler.go
+│   │   ├── order_handler.go
+│   │   └── auth_interceptor.go
+│   ├── repository/
+│   │   ├── product_repository.go
+│   │   ├── order_repository.go
+│   │   ├── base_repository.go
+│   │   └── postgres/
+│   │       ├── connection.go
+│   │       └── migrations/
+│   │           ├── 001_init_schema.up.sql
+│   │           └── 001_init_schema.down.sql
+│   ├── service/
+│   │   ├── product_service.go
+│   │   └── order_service.go
+│   └── pkg/
+│       ├── auth/
+│       │   └── jwt.go
+│       ├── database/
+│       │   └── postgres.go
+│       ├── errors/
+│       │   └── grpc_errors.go
+│       ├── logger/
+│       │   └── zerolog.go
+│       └── utils/
+│           └── pool.go
+├── scripts/
+│   ├── build.sh
+│   └── deploy.sh
+├── tests/
+│   ├── integration/
+│   │   └── grpc_test.go
+│   └── unit/
+│       └── service_test.go
+└── deployment/
+    ├── systemd/
+    │   └── grpc-backend.service
+    └── nginx/
+        └── nginx.conf
