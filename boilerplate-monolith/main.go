@@ -21,6 +21,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/pkgerrors"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 func init() {
@@ -69,24 +70,25 @@ func run(ctx context.Context, logger *zerolog.Logger) error {
 	}
 
 	// database
-	db, err := database.NewPool(ctx, cfg.DataSources.Default)
+	dbPool, err := database.NewPool(ctx, cfg.DataSources.Default)
 	if err != nil {
 		return errors.WithMessage(err, "failed to connect the database")
 	}
-	logger.Info().Interface("Version", db.PostgresVersion(ctx)).Msg("database connected")
+	defer dbPool.Close()
+	logger.Info().Interface("Version", dbPool.PostgresVersion(ctx)).Msg("database connected")
 
 	// repositories
-	brandRepo := repository.NewBrandRepository(db)
-	productRepo := repository.NewProductRepository(db)
+	brandRepo := repository.NewBrandRepository(dbPool)
+	productRepo := repository.NewProductRepository(dbPool)
 
 	// services
-	brandService := service.NewBrandService(brandRepo)
-	productService := service.NewProductService(productRepo)
+	brandSvc := service.NewBrandService(brandRepo)
+	productSvc := service.NewProductService(productRepo)
 
 	// handlers
 	demoHandler := handler.NewDemoHandler()
-	brandHandler := handler.NewBrandHandler(brandService)
-	productHandler := handler.NewProductHandler(productService)
+	brandHandler := handler.NewBrandHandler(brandSvc)
+	productHandler := handler.NewProductHandler(productSvc)
 
 	// gRPC server options
 	opts := []grpc.ServerOption{
@@ -98,6 +100,11 @@ func run(ctx context.Context, logger *zerolog.Logger) error {
 	pb.RegisterDemoServiceServer(grpcServer, demoHandler)
 	pb.RegisterBrandServiceServer(grpcServer, brandHandler)
 	pb.RegisterCatalogServiceServer(grpcServer, productHandler)
+
+	// Development modunda Reflection aç (Postman/gRPCurl için)
+	if env != "production" {
+		reflection.Register(grpcServer)
+	}
 
 	// gRPC server listen
 	listener, err := net.Listen("tcp", ":50051")
