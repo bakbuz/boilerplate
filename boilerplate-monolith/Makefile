@@ -2,10 +2,10 @@
 
 proto:
 	cls
-	protoc 
-    	--proto_path=./api/protos 
-		--go_out=./api/pb 
-		--go-grpc_out=./api/pb 
+	protoc \
+    	--proto_path=./api/protos \
+		--go_out=./api/pb \
+		--go-grpc_out=./api/pb \
 		./api/protos/*.proto
 
 build: proto

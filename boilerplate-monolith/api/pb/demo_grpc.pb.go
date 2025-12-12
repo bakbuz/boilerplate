@@ -30,7 +30,7 @@ const (
 type DemoServiceClient interface {
 	ListDemos(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ListDemosResponse, error)
 	GetDemo(ctx context.Context, in *DemoIdentifier, opts ...grpc.CallOption) (*GetDemoResponse, error)
-	Create(ctx context.Context, in *CreateDemoRequest, opts ...grpc.CallOption) (*CreateDemoResponse, error)
+	Create(ctx context.Context, in *CreateDemoRequest, opts ...grpc.CallOption) (*GetDemoResponse, error)
 }
 
 type demoServiceClient struct {
@@ -61,9 +61,9 @@ func (c *demoServiceClient) GetDemo(ctx context.Context, in *DemoIdentifier, opt
 	return out, nil
 }
 
-func (c *demoServiceClient) Create(ctx context.Context, in *CreateDemoRequest, opts ...grpc.CallOption) (*CreateDemoResponse, error) {
+func (c *demoServiceClient) Create(ctx context.Context, in *CreateDemoRequest, opts ...grpc.CallOption) (*GetDemoResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CreateDemoResponse)
+	out := new(GetDemoResponse)
 	err := c.cc.Invoke(ctx, DemoService_Create_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -77,7 +77,7 @@ func (c *demoServiceClient) Create(ctx context.Context, in *CreateDemoRequest, o
 type DemoServiceServer interface {
 	ListDemos(context.Context, *Empty) (*ListDemosResponse, error)
 	GetDemo(context.Context, *DemoIdentifier) (*GetDemoResponse, error)
-	Create(context.Context, *CreateDemoRequest) (*CreateDemoResponse, error)
+	Create(context.Context, *CreateDemoRequest) (*GetDemoResponse, error)
 	mustEmbedUnimplementedDemoServiceServer()
 }
 
@@ -94,7 +94,7 @@ func (UnimplementedDemoServiceServer) ListDemos(context.Context, *Empty) (*ListD
 func (UnimplementedDemoServiceServer) GetDemo(context.Context, *DemoIdentifier) (*GetDemoResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetDemo not implemented")
 }
-func (UnimplementedDemoServiceServer) Create(context.Context, *CreateDemoRequest) (*CreateDemoResponse, error) {
+func (UnimplementedDemoServiceServer) Create(context.Context, *CreateDemoRequest) (*GetDemoResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Create not implemented")
 }
 func (UnimplementedDemoServiceServer) mustEmbedUnimplementedDemoServiceServer() {}

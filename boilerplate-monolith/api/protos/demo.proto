@@ -21,7 +21,7 @@ message ListDemosResponse {
 }
 
 message GetDemoResponse {
-  repeated Demo demos = 1;
+  Demo demo = 1;
 }
 
 message CreateDemoRequest {
@@ -29,12 +29,8 @@ message CreateDemoRequest {
   string description = 2;
 }
 
-message CreateDemoResponse {
-  Demo demo = 1;
-}
-
 service DemoService {
   rpc ListDemos (common.Empty) returns (ListDemosResponse) {}
-  rpc GetDemo (DemoIdentifier) returns (GetDemoResponse) {}
-  rpc Create (CreateDemoRequest) returns (CreateDemoResponse) {}
+  rpc GetDemo (DemoIdentifier) returns (GetDemoResponse ) {}
+  rpc Create (CreateDemoRequest) returns (GetDemoResponse ) {}
 }
