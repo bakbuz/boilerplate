@@ -1,0 +1,13 @@
+{
+    "DataSources": {
+        "Default": "postgresql://postgres.xhbhtpkiwvfcdhbgecya:atAXjWrbfnah7U7U@aws-1-eu-central-1.pooler.supabase.com:6543/postgres?sslmode=verify-full&sslrootcert=cert/supabase/prod-ca-2021.crt"
+    },
+    "Supabase": {
+        "ProjectId": "xhbhtpkiwvfcdhbgecya",
+        "AnonPublicKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhoYmh0cGtpd3ZmY2RoYmdlY3lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI3NTY0MjQsImV4cCI6MjA3ODMzMjQyNH0.4LiEjgIsFqHjpZ8cAfrztSVln1RfcNhFzoEDwz22Uuo",
+        "ServiceRoleKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhoYmh0cGtpd3ZmY2RoYmdlY3lhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2Mjc1NjQyNCwiZXhwIjoyMDc4MzMyNDI0fQ.v7yYhkuOwb5cD0MZylb9kNgOhQOyq6esp9LqnGM3Ot8"
+    },
+    "Jwt": {
+        "SecretKey": "k30B8xMmX3Smvn73v8JtM40D1Ws4t7zW"
+    }
+}
