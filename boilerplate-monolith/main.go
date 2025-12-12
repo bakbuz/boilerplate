@@ -5,6 +5,7 @@ import (
 	"codegen/internal/bootstrap"
 	"codegen/internal/database"
 	"codegen/internal/handler"
+	"codegen/internal/interceptor"
 	"codegen/internal/repository"
 	"codegen/internal/service"
 	"context"
@@ -93,6 +94,7 @@ func run(ctx context.Context, logger *zerolog.Logger) error {
 	// gRPC server options
 	opts := []grpc.ServerOption{
 		grpc.MaxRecvMsgSize(1024 * 1024 * 20), // 20 MB max message size
+		grpc.UnaryInterceptor(interceptor.AuthInterceptor(cfg.Jwt.SecretKey)),
 	}
 
 	// gRPC server instance
