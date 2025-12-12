@@ -3,7 +3,7 @@ package service
 import (
 	"codegen/internal/entity"
 	"codegen/internal/repository"
-	grpcerrors "codegen/pkg/grpc_errors"
+	"codegen/pkg/errx"
 	"context"
 	"strings"
 	"time"
@@ -34,7 +34,7 @@ func NewBrandService(repo repository.BrandRepository) BrandService {
 // validateBrand ...
 func (s *brandService) validateBrand(e *entity.Brand) error {
 	if e == nil {
-		return grpcerrors.ErrInvalidInput
+		return errx.ErrInvalidInput
 	}
 
 	if strings.TrimSpace(e.Name) == "" {
@@ -73,7 +73,7 @@ func (s *brandService) GetByIds(ctx context.Context, ids []int32) ([]*entity.Bra
 // GetById ...
 func (s *brandService) GetById(ctx context.Context, id int32) (*entity.Brand, error) {
 	if id == 0 {
-		return nil, grpcerrors.ErrInvalidInput
+		return nil, errx.ErrInvalidInput
 	}
 
 	brand, err := s.repo.GetById(ctx, id)
@@ -82,7 +82,7 @@ func (s *brandService) GetById(ctx context.Context, id int32) (*entity.Brand, er
 	}
 
 	if brand == nil {
-		return nil, grpcerrors.ErrNotFound
+		return nil, errx.ErrNotFound
 	}
 
 	return brand, nil
@@ -105,7 +105,7 @@ func (s *brandService) Update(ctx context.Context, e *entity.Brand) (int64, erro
 	}
 
 	if e.Id == 0 {
-		return -1, grpcerrors.ErrInvalidInput
+		return -1, errx.ErrInvalidInput
 	}
 
 	now := time.Now()
@@ -117,7 +117,7 @@ func (s *brandService) Update(ctx context.Context, e *entity.Brand) (int64, erro
 // Delete ...
 func (s *brandService) Delete(ctx context.Context, id int32) (int64, error) {
 	if id == 0 {
-		return -1, grpcerrors.ErrInvalidInput
+		return -1, errx.ErrInvalidInput
 	}
 
 	return s.repo.Delete(ctx, id)
@@ -131,7 +131,7 @@ func (s *brandService) Count(ctx context.Context) (int64, error) {
 // BulkInsert ...
 func (s *brandService) BulkInsert(ctx context.Context, list []*entity.Brand) error {
 	if len(list) == 0 {
-		return grpcerrors.ErrInvalidInput
+		return errx.ErrInvalidInput
 	}
 
 	for _, brand := range list {

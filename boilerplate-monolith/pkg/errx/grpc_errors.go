@@ -1,4 +1,4 @@
-package grpcerrors
+package errx
 
 import "errors"
 
