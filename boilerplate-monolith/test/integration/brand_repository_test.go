@@ -1,10 +1,9 @@
-package repository
+package repository_test
 
 import (
-	"codegen/internal/database"
 	"codegen/internal/entity"
+	"codegen/internal/repository"
 	"context"
-	"os"
 	"testing"
 	"time"
 
@@ -13,29 +12,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// setupTestDB sets up a real database connection for integration testing.
-// It requires DATABASE_URL environment variable to be set.
-func setupTestDB(t *testing.T) *database.DB {
-	dsn := os.Getenv("DATABASE_URL")
-	if dsn == "" {
-		t.Skip("Skipping integration test: DATABASE_URL not set")
-	}
-
-	db, err := database.NewPool(context.Background(), dsn)
-	require.NoError(t, err)
-
-	return db
-}
-
 func TestBrandRepository_Integration(t *testing.T) {
 	db := setupTestDB(t)
 	defer db.Close()
 
-	repo := NewBrandRepository(db)
+	repo := repository.NewBrandRepository(db)
 	ctx := context.Background()
 
 	// Clean up before test (optional - depends on test strategy)
-	// _, _ = db.Pool().Exec(ctx, "DELETE FROM catalog.brands")
+	_, err := db.Pool().Exec(ctx, "DELETE FROM catalog.brands")
+	require.NoError(t, err)
 
 	// 1. Insert
 	newBrand := &entity.Brand{
@@ -46,7 +32,7 @@ func TestBrandRepository_Integration(t *testing.T) {
 		CreatedAt: time.Now(),
 	}
 
-	err := repo.Insert(ctx, newBrand)
+	err = repo.Insert(ctx, newBrand)
 	require.NoError(t, err)
 	assert.NotZero(t, newBrand.Id)
 
