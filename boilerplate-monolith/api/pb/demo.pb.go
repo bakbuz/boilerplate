@@ -285,11 +285,12 @@ const file_demo_proto_rawDesc = "" +
 	".demo.DemoR\x04demo\"I\n" +
 	"\x11CreateDemoRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12 \n" +
-	"\vdescription\x18\x02 \x01(\tR\vdescription2\xba\x01\n" +
+	"\vdescription\x18\x02 \x01(\tR\vdescription2\xbe\x01\n" +
 	"\vDemoService\x125\n" +
 	"\tListDemos\x12\r.common.Empty\x1a\x17.demo.ListDemosResponse\"\x00\x128\n" +
-	"\aGetDemo\x12\x14.demo.DemoIdentifier\x1a\x15.demo.GetDemoResponse\"\x00\x12:\n" +
-	"\x06Create\x12\x17.demo.CreateDemoRequest\x1a\x15.demo.GetDemoResponse\"\x00B\x06Z\x04.;pbb\x06proto3"
+	"\aGetDemo\x12\x14.demo.DemoIdentifier\x1a\x15.demo.GetDemoResponse\"\x00\x12>\n" +
+	"\n" +
+	"CreateDemo\x12\x17.demo.CreateDemoRequest\x1a\x15.demo.GetDemoResponse\"\x00B\x06Z\x04.;pbb\x06proto3"
 
 var (
 	file_demo_proto_rawDescOnce sync.Once
@@ -317,10 +318,10 @@ var file_demo_proto_depIdxs = []int32{
 	0, // 1: demo.GetDemoResponse.demo:type_name -> demo.Demo
 	5, // 2: demo.DemoService.ListDemos:input_type -> common.Empty
 	1, // 3: demo.DemoService.GetDemo:input_type -> demo.DemoIdentifier
-	4, // 4: demo.DemoService.Create:input_type -> demo.CreateDemoRequest
+	4, // 4: demo.DemoService.CreateDemo:input_type -> demo.CreateDemoRequest
 	2, // 5: demo.DemoService.ListDemos:output_type -> demo.ListDemosResponse
 	3, // 6: demo.DemoService.GetDemo:output_type -> demo.GetDemoResponse
-	3, // 7: demo.DemoService.Create:output_type -> demo.GetDemoResponse
+	3, // 7: demo.DemoService.CreateDemo:output_type -> demo.GetDemoResponse
 	5, // [5:8] is the sub-list for method output_type
 	2, // [2:5] is the sub-list for method input_type
 	2, // [2:2] is the sub-list for extension type_name

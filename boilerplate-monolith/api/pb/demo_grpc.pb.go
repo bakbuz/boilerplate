@@ -19,9 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	DemoService_ListDemos_FullMethodName = "/demo.DemoService/ListDemos"
-	DemoService_GetDemo_FullMethodName   = "/demo.DemoService/GetDemo"
-	DemoService_Create_FullMethodName    = "/demo.DemoService/Create"
+	DemoService_ListDemos_FullMethodName  = "/demo.DemoService/ListDemos"
+	DemoService_GetDemo_FullMethodName    = "/demo.DemoService/GetDemo"
+	DemoService_CreateDemo_FullMethodName = "/demo.DemoService/CreateDemo"
 )
 
 // DemoServiceClient is the client API for DemoService service.
@@ -30,7 +30,7 @@ const (
 type DemoServiceClient interface {
 	ListDemos(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ListDemosResponse, error)
 	GetDemo(ctx context.Context, in *DemoIdentifier, opts ...grpc.CallOption) (*GetDemoResponse, error)
-	Create(ctx context.Context, in *CreateDemoRequest, opts ...grpc.CallOption) (*GetDemoResponse, error)
+	CreateDemo(ctx context.Context, in *CreateDemoRequest, opts ...grpc.CallOption) (*GetDemoResponse, error)
 }
 
 type demoServiceClient struct {
@@ -61,10 +61,10 @@ func (c *demoServiceClient) GetDemo(ctx context.Context, in *DemoIdentifier, opt
 	return out, nil
 }
 
-func (c *demoServiceClient) Create(ctx context.Context, in *CreateDemoRequest, opts ...grpc.CallOption) (*GetDemoResponse, error) {
+func (c *demoServiceClient) CreateDemo(ctx context.Context, in *CreateDemoRequest, opts ...grpc.CallOption) (*GetDemoResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetDemoResponse)
-	err := c.cc.Invoke(ctx, DemoService_Create_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, DemoService_CreateDemo_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +77,7 @@ func (c *demoServiceClient) Create(ctx context.Context, in *CreateDemoRequest, o
 type DemoServiceServer interface {
 	ListDemos(context.Context, *Empty) (*ListDemosResponse, error)
 	GetDemo(context.Context, *DemoIdentifier) (*GetDemoResponse, error)
-	Create(context.Context, *CreateDemoRequest) (*GetDemoResponse, error)
+	CreateDemo(context.Context, *CreateDemoRequest) (*GetDemoResponse, error)
 	mustEmbedUnimplementedDemoServiceServer()
 }
 
@@ -94,8 +94,8 @@ func (UnimplementedDemoServiceServer) ListDemos(context.Context, *Empty) (*ListD
 func (UnimplementedDemoServiceServer) GetDemo(context.Context, *DemoIdentifier) (*GetDemoResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetDemo not implemented")
 }
-func (UnimplementedDemoServiceServer) Create(context.Context, *CreateDemoRequest) (*GetDemoResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method Create not implemented")
+func (UnimplementedDemoServiceServer) CreateDemo(context.Context, *CreateDemoRequest) (*GetDemoResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateDemo not implemented")
 }
 func (UnimplementedDemoServiceServer) mustEmbedUnimplementedDemoServiceServer() {}
 func (UnimplementedDemoServiceServer) testEmbeddedByValue()                     {}
@@ -154,20 +154,20 @@ func _DemoService_GetDemo_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DemoService_Create_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _DemoService_CreateDemo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateDemoRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DemoServiceServer).Create(ctx, in)
+		return srv.(DemoServiceServer).CreateDemo(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: DemoService_Create_FullMethodName,
+		FullMethod: DemoService_CreateDemo_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DemoServiceServer).Create(ctx, req.(*CreateDemoRequest))
+		return srv.(DemoServiceServer).CreateDemo(ctx, req.(*CreateDemoRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -188,8 +188,8 @@ var DemoService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _DemoService_GetDemo_Handler,
 		},
 		{
-			MethodName: "Create",
-			Handler:    _DemoService_Create_Handler,
+			MethodName: "CreateDemo",
+			Handler:    _DemoService_CreateDemo_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

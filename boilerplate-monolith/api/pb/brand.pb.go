@@ -9,6 +9,7 @@ package pb
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
@@ -142,42 +143,6 @@ func (x *BrandIdentifier) GetId() int32 {
 	return 0
 }
 
-type ListBrandsRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ListBrandsRequest) Reset() {
-	*x = ListBrandsRequest{}
-	mi := &file_brand_proto_msgTypes[2]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ListBrandsRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListBrandsRequest) ProtoMessage() {}
-
-func (x *ListBrandsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brand_proto_msgTypes[2]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListBrandsRequest.ProtoReflect.Descriptor instead.
-func (*ListBrandsRequest) Descriptor() ([]byte, []int) {
-	return file_brand_proto_rawDescGZIP(), []int{2}
-}
-
 type ListBrandsResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Total         int32                  `protobuf:"varint,1,opt,name=total,proto3" json:"total,omitempty"`
@@ -188,7 +153,7 @@ type ListBrandsResponse struct {
 
 func (x *ListBrandsResponse) Reset() {
 	*x = ListBrandsResponse{}
-	mi := &file_brand_proto_msgTypes[3]
+	mi := &file_brand_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -200,7 +165,7 @@ func (x *ListBrandsResponse) String() string {
 func (*ListBrandsResponse) ProtoMessage() {}
 
 func (x *ListBrandsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brand_proto_msgTypes[3]
+	mi := &file_brand_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -213,7 +178,7 @@ func (x *ListBrandsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListBrandsResponse.ProtoReflect.Descriptor instead.
 func (*ListBrandsResponse) Descriptor() ([]byte, []int) {
-	return file_brand_proto_rawDescGZIP(), []int{3}
+	return file_brand_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *ListBrandsResponse) GetTotal() int32 {
@@ -239,7 +204,7 @@ type GetBrandResponse struct {
 
 func (x *GetBrandResponse) Reset() {
 	*x = GetBrandResponse{}
-	mi := &file_brand_proto_msgTypes[4]
+	mi := &file_brand_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -251,7 +216,7 @@ func (x *GetBrandResponse) String() string {
 func (*GetBrandResponse) ProtoMessage() {}
 
 func (x *GetBrandResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brand_proto_msgTypes[4]
+	mi := &file_brand_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -264,7 +229,7 @@ func (x *GetBrandResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetBrandResponse.ProtoReflect.Descriptor instead.
 func (*GetBrandResponse) Descriptor() ([]byte, []int) {
-	return file_brand_proto_rawDescGZIP(), []int{4}
+	return file_brand_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *GetBrandResponse) GetBrand() *Brand {
@@ -285,7 +250,7 @@ type CreateBrandRequest struct {
 
 func (x *CreateBrandRequest) Reset() {
 	*x = CreateBrandRequest{}
-	mi := &file_brand_proto_msgTypes[5]
+	mi := &file_brand_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -297,7 +262,7 @@ func (x *CreateBrandRequest) String() string {
 func (*CreateBrandRequest) ProtoMessage() {}
 
 func (x *CreateBrandRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brand_proto_msgTypes[5]
+	mi := &file_brand_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -310,7 +275,7 @@ func (x *CreateBrandRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateBrandRequest.ProtoReflect.Descriptor instead.
 func (*CreateBrandRequest) Descriptor() ([]byte, []int) {
-	return file_brand_proto_rawDescGZIP(), []int{5}
+	return file_brand_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *CreateBrandRequest) GetName() string {
@@ -346,7 +311,7 @@ type UpdateBrandRequest struct {
 
 func (x *UpdateBrandRequest) Reset() {
 	*x = UpdateBrandRequest{}
-	mi := &file_brand_proto_msgTypes[6]
+	mi := &file_brand_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -358,7 +323,7 @@ func (x *UpdateBrandRequest) String() string {
 func (*UpdateBrandRequest) ProtoMessage() {}
 
 func (x *UpdateBrandRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brand_proto_msgTypes[6]
+	mi := &file_brand_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -371,7 +336,7 @@ func (x *UpdateBrandRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateBrandRequest.ProtoReflect.Descriptor instead.
 func (*UpdateBrandRequest) Descriptor() ([]byte, []int) {
-	return file_brand_proto_rawDescGZIP(), []int{6}
+	return file_brand_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *UpdateBrandRequest) GetId() int32 {
@@ -406,7 +371,7 @@ var File_brand_proto protoreflect.FileDescriptor
 
 const file_brand_proto_rawDesc = "" +
 	"\n" +
-	"\vbrand.proto\x12\bbrand.v1\x1a\fcommon.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x8e\x01\n" +
+	"\vbrand.proto\x12\bbrand.v1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x8e\x01\n" +
 	"\x05Brand\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x12\n" +
@@ -415,8 +380,7 @@ const file_brand_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"!\n" +
 	"\x0fBrandIdentifier\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x05R\x02id\"\x13\n" +
-	"\x11ListBrandsRequest\"Q\n" +
+	"\x02id\x18\x01 \x01(\x05R\x02id\"Q\n" +
 	"\x12ListBrandsResponse\x12\x14\n" +
 	"\x05total\x18\x01 \x01(\x05R\x05total\x12%\n" +
 	"\x05items\x18\x02 \x03(\v2\x0f.brand.v1.BrandR\x05items\"9\n" +
@@ -430,14 +394,14 @@ const file_brand_proto_rawDesc = "" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x12\n" +
 	"\x04slug\x18\x03 \x01(\tR\x04slug\x12\x12\n" +
-	"\x04logo\x18\x04 \x01(\tR\x04logo2\xeb\x02\n" +
-	"\fBrandService\x12G\n" +
+	"\x04logo\x18\x04 \x01(\tR\x04logo2\xe4\x02\n" +
+	"\fBrandService\x12B\n" +
 	"\n" +
-	"ListBrands\x12\x1b.brand.v1.ListBrandsRequest\x1a\x1c.brand.v1.ListBrandsResponse\x12A\n" +
+	"ListBrands\x12\x16.google.protobuf.Empty\x1a\x1c.brand.v1.ListBrandsResponse\x12A\n" +
 	"\bGetBrand\x12\x19.brand.v1.BrandIdentifier\x1a\x1a.brand.v1.GetBrandResponse\x12F\n" +
-	"\vCreateBrand\x12\x1c.brand.v1.CreateBrandRequest\x1a\x19.brand.v1.BrandIdentifier\x12D\n" +
-	"\vUpdateBrand\x12\x1c.brand.v1.UpdateBrandRequest\x1a\x17.common.SuccessResponse\x12A\n" +
-	"\vDeleteBrand\x12\x19.brand.v1.BrandIdentifier\x1a\x17.common.SuccessResponseB\x06Z\x04.;pbb\x06proto3"
+	"\vCreateBrand\x12\x1c.brand.v1.CreateBrandRequest\x1a\x19.brand.v1.BrandIdentifier\x12C\n" +
+	"\vUpdateBrand\x12\x1c.brand.v1.UpdateBrandRequest\x1a\x16.google.protobuf.Empty\x12@\n" +
+	"\vDeleteBrand\x12\x19.brand.v1.BrandIdentifier\x1a\x16.google.protobuf.EmptyB\x06Z\x04.;pbb\x06proto3"
 
 var (
 	file_brand_proto_rawDescOnce sync.Once
@@ -451,32 +415,31 @@ func file_brand_proto_rawDescGZIP() []byte {
 	return file_brand_proto_rawDescData
 }
 
-var file_brand_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_brand_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_brand_proto_goTypes = []any{
 	(*Brand)(nil),                 // 0: brand.v1.Brand
 	(*BrandIdentifier)(nil),       // 1: brand.v1.BrandIdentifier
-	(*ListBrandsRequest)(nil),     // 2: brand.v1.ListBrandsRequest
-	(*ListBrandsResponse)(nil),    // 3: brand.v1.ListBrandsResponse
-	(*GetBrandResponse)(nil),      // 4: brand.v1.GetBrandResponse
-	(*CreateBrandRequest)(nil),    // 5: brand.v1.CreateBrandRequest
-	(*UpdateBrandRequest)(nil),    // 6: brand.v1.UpdateBrandRequest
-	(*timestamppb.Timestamp)(nil), // 7: google.protobuf.Timestamp
-	(*SuccessResponse)(nil),       // 8: common.SuccessResponse
+	(*ListBrandsResponse)(nil),    // 2: brand.v1.ListBrandsResponse
+	(*GetBrandResponse)(nil),      // 3: brand.v1.GetBrandResponse
+	(*CreateBrandRequest)(nil),    // 4: brand.v1.CreateBrandRequest
+	(*UpdateBrandRequest)(nil),    // 5: brand.v1.UpdateBrandRequest
+	(*timestamppb.Timestamp)(nil), // 6: google.protobuf.Timestamp
+	(*emptypb.Empty)(nil),         // 7: google.protobuf.Empty
 }
 var file_brand_proto_depIdxs = []int32{
-	7, // 0: brand.v1.Brand.created_at:type_name -> google.protobuf.Timestamp
+	6, // 0: brand.v1.Brand.created_at:type_name -> google.protobuf.Timestamp
 	0, // 1: brand.v1.ListBrandsResponse.items:type_name -> brand.v1.Brand
 	0, // 2: brand.v1.GetBrandResponse.brand:type_name -> brand.v1.Brand
-	2, // 3: brand.v1.BrandService.ListBrands:input_type -> brand.v1.ListBrandsRequest
+	7, // 3: brand.v1.BrandService.ListBrands:input_type -> google.protobuf.Empty
 	1, // 4: brand.v1.BrandService.GetBrand:input_type -> brand.v1.BrandIdentifier
-	5, // 5: brand.v1.BrandService.CreateBrand:input_type -> brand.v1.CreateBrandRequest
-	6, // 6: brand.v1.BrandService.UpdateBrand:input_type -> brand.v1.UpdateBrandRequest
+	4, // 5: brand.v1.BrandService.CreateBrand:input_type -> brand.v1.CreateBrandRequest
+	5, // 6: brand.v1.BrandService.UpdateBrand:input_type -> brand.v1.UpdateBrandRequest
 	1, // 7: brand.v1.BrandService.DeleteBrand:input_type -> brand.v1.BrandIdentifier
-	3, // 8: brand.v1.BrandService.ListBrands:output_type -> brand.v1.ListBrandsResponse
-	4, // 9: brand.v1.BrandService.GetBrand:output_type -> brand.v1.GetBrandResponse
+	2, // 8: brand.v1.BrandService.ListBrands:output_type -> brand.v1.ListBrandsResponse
+	3, // 9: brand.v1.BrandService.GetBrand:output_type -> brand.v1.GetBrandResponse
 	1, // 10: brand.v1.BrandService.CreateBrand:output_type -> brand.v1.BrandIdentifier
-	8, // 11: brand.v1.BrandService.UpdateBrand:output_type -> common.SuccessResponse
-	8, // 12: brand.v1.BrandService.DeleteBrand:output_type -> common.SuccessResponse
+	7, // 11: brand.v1.BrandService.UpdateBrand:output_type -> google.protobuf.Empty
+	7, // 12: brand.v1.BrandService.DeleteBrand:output_type -> google.protobuf.Empty
 	8, // [8:13] is the sub-list for method output_type
 	3, // [3:8] is the sub-list for method input_type
 	3, // [3:3] is the sub-list for extension type_name
@@ -489,14 +452,13 @@ func file_brand_proto_init() {
 	if File_brand_proto != nil {
 		return
 	}
-	file_common_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_brand_proto_rawDesc), len(file_brand_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
