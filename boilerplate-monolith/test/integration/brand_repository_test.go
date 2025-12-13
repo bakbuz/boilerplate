@@ -80,6 +80,42 @@ func TestBrandRepository_Integration(t *testing.T) {
 	fetchedDeleted, err := repo.GetById(ctx, newBrand.Id)
 	require.NoError(t, err)
 	assert.Nil(t, fetchedDeleted)
+
+	// 6. DeleteByIds
+	brandToDelete1 := &entity.Brand{
+		Name:      "DeleteByIds 1",
+		Slug:      "del-1-" + uuid.New().String(),
+		Logo:      "logo1.png",
+		CreatedBy: uuid.New(),
+		CreatedAt: time.Now(),
+	}
+	brandToDelete2 := &entity.Brand{
+		Name:      "DeleteByIds 2",
+		Slug:      "del-2-" + uuid.New().String(),
+		Logo:      "logo2.png",
+		CreatedBy: uuid.New(),
+		CreatedAt: time.Now(),
+	}
+
+	err = repo.Insert(ctx, brandToDelete1)
+	require.NoError(t, err)
+	err = repo.Insert(ctx, brandToDelete2)
+	require.NoError(t, err)
+
+	idsToDelete := []int32{brandToDelete1.Id, brandToDelete2.Id}
+	deletedCount, err := repo.DeleteByIds(ctx, idsToDelete)
+	require.NoError(t, err)
+	assert.Equal(t, int64(2), deletedCount)
+
+	// Verify they are gone
+	fetched1, err := repo.GetById(ctx, brandToDelete1.Id)
+	require.NoError(t, err)
+	assert.Nil(t, fetched1)
+
+	fetched2, err := repo.GetById(ctx, brandToDelete2.Id)
+	require.NoError(t, err)
+	assert.Nil(t, fetched2)
+
 }
 
 func TestBrandRepository_Upsert(t *testing.T) {
