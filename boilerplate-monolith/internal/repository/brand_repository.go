@@ -167,17 +167,17 @@ func (repo *brandRepository) Count(ctx context.Context) (int64, error) {
 // Upsert ...
 func (repo *brandRepository) Upsert(ctx context.Context, e *entity.Brand) error {
 	const command string = `
-		INSERT INTO catalog.brands (name, slug, logo, created_by, created_at) 
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO catalog.brands (id, name, slug, logo, created_by, created_at) 
+		VALUES ($1, $2, $3, $4, $5, $6)
 		ON CONFLICT (id) DO UPDATE 
 		SET name=EXCLUDED.name,
 			slug=EXCLUDED.slug, 
 			logo=EXCLUDED.logo, 
-			updated_by=$6, 
-			updated_at=$7
-		RETURNING id`
+			updated_by=$7, 
+			updated_at=$8`
 
-	err := repo.db.Pool().QueryRow(ctx, command,
+	_, err := repo.db.Pool().Exec(ctx, command,
+		e.Id,
 		e.Name,
 		e.Slug,
 		e.Logo,
@@ -185,7 +185,7 @@ func (repo *brandRepository) Upsert(ctx context.Context, e *entity.Brand) error 
 		e.CreatedAt,
 		e.UpdatedBy,
 		e.UpdatedAt,
-	).Scan(&e.Id)
+	)
 
 	if err != nil {
 		return errors.WithMessage(err, failedToUpsert)
