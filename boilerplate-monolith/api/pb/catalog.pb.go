@@ -28,9 +28,9 @@ type Product struct {
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	BrandId       int32                  `protobuf:"varint,2,opt,name=brand_id,json=brandId,proto3" json:"brand_id,omitempty"`
 	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
-	Sku           string                 `protobuf:"bytes,4,opt,name=sku,proto3" json:"sku,omitempty"`
-	Summary       string                 `protobuf:"bytes,5,opt,name=summary,proto3" json:"summary,omitempty"`
-	Storyline     string                 `protobuf:"bytes,6,opt,name=storyline,proto3" json:"storyline,omitempty"`
+	Sku           *string                `protobuf:"bytes,4,opt,name=sku,proto3,oneof" json:"sku,omitempty"`
+	Summary       *string                `protobuf:"bytes,5,opt,name=summary,proto3,oneof" json:"summary,omitempty"`
+	Storyline     *string                `protobuf:"bytes,6,opt,name=storyline,proto3,oneof" json:"storyline,omitempty"`
 	Stock         int32                  `protobuf:"varint,7,opt,name=stock,proto3" json:"stock,omitempty"`
 	Price         float32                `protobuf:"fixed32,8,opt,name=price,proto3" json:"price,omitempty"`
 	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
@@ -90,22 +90,22 @@ func (x *Product) GetName() string {
 }
 
 func (x *Product) GetSku() string {
-	if x != nil {
-		return x.Sku
+	if x != nil && x.Sku != nil {
+		return *x.Sku
 	}
 	return ""
 }
 
 func (x *Product) GetSummary() string {
-	if x != nil {
-		return x.Summary
+	if x != nil && x.Summary != nil {
+		return *x.Summary
 	}
 	return ""
 }
 
 func (x *Product) GetStoryline() string {
-	if x != nil {
-		return x.Storyline
+	if x != nil && x.Storyline != nil {
+		return *x.Storyline
 	}
 	return ""
 }
@@ -177,6 +177,8 @@ func (x *ProductIdentifier) GetId() string {
 
 type ListProductsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	Limit         int32                  `protobuf:"varint,1,opt,name=limit,proto3" json:"limit,omitempty"`
+	Offset        int32                  `protobuf:"varint,2,opt,name=offset,proto3" json:"offset,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -209,6 +211,20 @@ func (x *ListProductsRequest) ProtoReflect() protoreflect.Message {
 // Deprecated: Use ListProductsRequest.ProtoReflect.Descriptor instead.
 func (*ListProductsRequest) Descriptor() ([]byte, []int) {
 	return file_catalog_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *ListProductsRequest) GetLimit() int32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+func (x *ListProductsRequest) GetOffset() int32 {
+	if x != nil {
+		return x.Offset
+	}
+	return 0
 }
 
 type ListProductsResponse struct {
@@ -311,9 +327,9 @@ type CreateProductRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	BrandId       int32                  `protobuf:"varint,1,opt,name=brand_id,json=brandId,proto3" json:"brand_id,omitempty"`
 	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	Sku           string                 `protobuf:"bytes,3,opt,name=sku,proto3" json:"sku,omitempty"`
-	Summary       string                 `protobuf:"bytes,4,opt,name=summary,proto3" json:"summary,omitempty"`
-	Storyline     string                 `protobuf:"bytes,5,opt,name=storyline,proto3" json:"storyline,omitempty"`
+	Sku           *string                `protobuf:"bytes,3,opt,name=sku,proto3,oneof" json:"sku,omitempty"`
+	Summary       *string                `protobuf:"bytes,4,opt,name=summary,proto3,oneof" json:"summary,omitempty"`
+	Storyline     *string                `protobuf:"bytes,5,opt,name=storyline,proto3,oneof" json:"storyline,omitempty"`
 	Stock         int32                  `protobuf:"varint,6,opt,name=stock,proto3" json:"stock,omitempty"`
 	Price         float32                `protobuf:"fixed32,7,opt,name=price,proto3" json:"price,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -365,22 +381,22 @@ func (x *CreateProductRequest) GetName() string {
 }
 
 func (x *CreateProductRequest) GetSku() string {
-	if x != nil {
-		return x.Sku
+	if x != nil && x.Sku != nil {
+		return *x.Sku
 	}
 	return ""
 }
 
 func (x *CreateProductRequest) GetSummary() string {
-	if x != nil {
-		return x.Summary
+	if x != nil && x.Summary != nil {
+		return *x.Summary
 	}
 	return ""
 }
 
 func (x *CreateProductRequest) GetStoryline() string {
-	if x != nil {
-		return x.Storyline
+	if x != nil && x.Storyline != nil {
+		return *x.Storyline
 	}
 	return ""
 }
@@ -404,9 +420,9 @@ type UpdateProductRequest struct {
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	BrandId       int32                  `protobuf:"varint,2,opt,name=brand_id,json=brandId,proto3" json:"brand_id,omitempty"`
 	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
-	Sku           string                 `protobuf:"bytes,4,opt,name=sku,proto3" json:"sku,omitempty"`
-	Summary       string                 `protobuf:"bytes,5,opt,name=summary,proto3" json:"summary,omitempty"`
-	Storyline     string                 `protobuf:"bytes,6,opt,name=storyline,proto3" json:"storyline,omitempty"`
+	Sku           *string                `protobuf:"bytes,4,opt,name=sku,proto3,oneof" json:"sku,omitempty"`
+	Summary       *string                `protobuf:"bytes,5,opt,name=summary,proto3,oneof" json:"summary,omitempty"`
+	Storyline     *string                `protobuf:"bytes,6,opt,name=storyline,proto3,oneof" json:"storyline,omitempty"`
 	Stock         int32                  `protobuf:"varint,7,opt,name=stock,proto3" json:"stock,omitempty"`
 	Price         float32                `protobuf:"fixed32,8,opt,name=price,proto3" json:"price,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -465,22 +481,22 @@ func (x *UpdateProductRequest) GetName() string {
 }
 
 func (x *UpdateProductRequest) GetSku() string {
-	if x != nil {
-		return x.Sku
+	if x != nil && x.Sku != nil {
+		return *x.Sku
 	}
 	return ""
 }
 
 func (x *UpdateProductRequest) GetSummary() string {
-	if x != nil {
-		return x.Summary
+	if x != nil && x.Summary != nil {
+		return *x.Summary
 	}
 	return ""
 }
 
 func (x *UpdateProductRequest) GetStoryline() string {
-	if x != nil {
-		return x.Storyline
+	if x != nil && x.Storyline != nil {
+		return *x.Storyline
 	}
 	return ""
 }
@@ -504,43 +520,60 @@ var File_catalog_proto protoreflect.FileDescriptor
 const file_catalog_proto_rawDesc = "" +
 	"\n" +
 	"\rcatalog.proto\x12\n" +
-	"catalog.v1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xf9\x01\n" +
+	"catalog.v1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xaa\x02\n" +
 	"\aProduct\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x19\n" +
 	"\bbrand_id\x18\x02 \x01(\x05R\abrandId\x12\x12\n" +
-	"\x04name\x18\x03 \x01(\tR\x04name\x12\x10\n" +
-	"\x03sku\x18\x04 \x01(\tR\x03sku\x12\x18\n" +
-	"\asummary\x18\x05 \x01(\tR\asummary\x12\x1c\n" +
-	"\tstoryline\x18\x06 \x01(\tR\tstoryline\x12\x14\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\x12\x15\n" +
+	"\x03sku\x18\x04 \x01(\tH\x00R\x03sku\x88\x01\x01\x12\x1d\n" +
+	"\asummary\x18\x05 \x01(\tH\x01R\asummary\x88\x01\x01\x12!\n" +
+	"\tstoryline\x18\x06 \x01(\tH\x02R\tstoryline\x88\x01\x01\x12\x14\n" +
 	"\x05stock\x18\a \x01(\x05R\x05stock\x12\x14\n" +
 	"\x05price\x18\b \x01(\x02R\x05price\x129\n" +
 	"\n" +
-	"created_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"#\n" +
+	"created_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAtB\x06\n" +
+	"\x04_skuB\n" +
+	"\n" +
+	"\b_summaryB\f\n" +
+	"\n" +
+	"_storyline\"#\n" +
 	"\x11ProductIdentifier\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\"\x15\n" +
-	"\x13ListProductsRequest\"W\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"C\n" +
+	"\x13ListProductsRequest\x12\x14\n" +
+	"\x05limit\x18\x01 \x01(\x05R\x05limit\x12\x16\n" +
+	"\x06offset\x18\x02 \x01(\x05R\x06offset\"W\n" +
 	"\x14ListProductsResponse\x12\x14\n" +
 	"\x05total\x18\x01 \x01(\x05R\x05total\x12)\n" +
 	"\x05items\x18\x02 \x03(\v2\x13.catalog.v1.ProductR\x05items\"C\n" +
 	"\x12GetProductResponse\x12-\n" +
-	"\aproduct\x18\x01 \x01(\v2\x13.catalog.v1.ProductR\aproduct\"\xbb\x01\n" +
+	"\aproduct\x18\x01 \x01(\v2\x13.catalog.v1.ProductR\aproduct\"\xec\x01\n" +
 	"\x14CreateProductRequest\x12\x19\n" +
 	"\bbrand_id\x18\x01 \x01(\x05R\abrandId\x12\x12\n" +
-	"\x04name\x18\x02 \x01(\tR\x04name\x12\x10\n" +
-	"\x03sku\x18\x03 \x01(\tR\x03sku\x12\x18\n" +
-	"\asummary\x18\x04 \x01(\tR\asummary\x12\x1c\n" +
-	"\tstoryline\x18\x05 \x01(\tR\tstoryline\x12\x14\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x15\n" +
+	"\x03sku\x18\x03 \x01(\tH\x00R\x03sku\x88\x01\x01\x12\x1d\n" +
+	"\asummary\x18\x04 \x01(\tH\x01R\asummary\x88\x01\x01\x12!\n" +
+	"\tstoryline\x18\x05 \x01(\tH\x02R\tstoryline\x88\x01\x01\x12\x14\n" +
 	"\x05stock\x18\x06 \x01(\x05R\x05stock\x12\x14\n" +
-	"\x05price\x18\a \x01(\x02R\x05price\"\xcb\x01\n" +
+	"\x05price\x18\a \x01(\x02R\x05priceB\x06\n" +
+	"\x04_skuB\n" +
+	"\n" +
+	"\b_summaryB\f\n" +
+	"\n" +
+	"_storyline\"\xfc\x01\n" +
 	"\x14UpdateProductRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x19\n" +
 	"\bbrand_id\x18\x02 \x01(\x05R\abrandId\x12\x12\n" +
-	"\x04name\x18\x03 \x01(\tR\x04name\x12\x10\n" +
-	"\x03sku\x18\x04 \x01(\tR\x03sku\x12\x18\n" +
-	"\asummary\x18\x05 \x01(\tR\asummary\x12\x1c\n" +
-	"\tstoryline\x18\x06 \x01(\tR\tstoryline\x12\x14\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\x12\x15\n" +
+	"\x03sku\x18\x04 \x01(\tH\x00R\x03sku\x88\x01\x01\x12\x1d\n" +
+	"\asummary\x18\x05 \x01(\tH\x01R\asummary\x88\x01\x01\x12!\n" +
+	"\tstoryline\x18\x06 \x01(\tH\x02R\tstoryline\x88\x01\x01\x12\x14\n" +
 	"\x05stock\x18\a \x01(\x05R\x05stock\x12\x14\n" +
-	"\x05price\x18\b \x01(\x02R\x05price2\x94\x03\n" +
+	"\x05price\x18\b \x01(\x02R\x05priceB\x06\n" +
+	"\x04_skuB\n" +
+	"\n" +
+	"\b_summaryB\f\n" +
+	"\n" +
+	"_storyline2\x94\x03\n" +
 	"\x0eCatalogService\x12P\n" +
 	"\vGetProducts\x12\x1f.catalog.v1.ListProductsRequest\x1a .catalog.v1.ListProductsResponse\x12K\n" +
 	"\n" +
@@ -599,6 +632,9 @@ func file_catalog_proto_init() {
 	if File_catalog_proto != nil {
 		return
 	}
+	file_catalog_proto_msgTypes[0].OneofWrappers = []any{}
+	file_catalog_proto_msgTypes[5].OneofWrappers = []any{}
+	file_catalog_proto_msgTypes[6].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
