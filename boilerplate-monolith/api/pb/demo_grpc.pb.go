@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -28,9 +29,9 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type DemoServiceClient interface {
-	ListDemos(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ListDemosResponse, error)
+	ListDemos(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListDemosResponse, error)
 	GetDemo(ctx context.Context, in *DemoIdentifier, opts ...grpc.CallOption) (*GetDemoResponse, error)
-	CreateDemo(ctx context.Context, in *CreateDemoRequest, opts ...grpc.CallOption) (*GetDemoResponse, error)
+	CreateDemo(ctx context.Context, in *CreateDemoRequest, opts ...grpc.CallOption) (*DemoIdentifier, error)
 }
 
 type demoServiceClient struct {
@@ -41,7 +42,7 @@ func NewDemoServiceClient(cc grpc.ClientConnInterface) DemoServiceClient {
 	return &demoServiceClient{cc}
 }
 
-func (c *demoServiceClient) ListDemos(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ListDemosResponse, error) {
+func (c *demoServiceClient) ListDemos(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListDemosResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ListDemosResponse)
 	err := c.cc.Invoke(ctx, DemoService_ListDemos_FullMethodName, in, out, cOpts...)
@@ -61,9 +62,9 @@ func (c *demoServiceClient) GetDemo(ctx context.Context, in *DemoIdentifier, opt
 	return out, nil
 }
 
-func (c *demoServiceClient) CreateDemo(ctx context.Context, in *CreateDemoRequest, opts ...grpc.CallOption) (*GetDemoResponse, error) {
+func (c *demoServiceClient) CreateDemo(ctx context.Context, in *CreateDemoRequest, opts ...grpc.CallOption) (*DemoIdentifier, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetDemoResponse)
+	out := new(DemoIdentifier)
 	err := c.cc.Invoke(ctx, DemoService_CreateDemo_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -75,9 +76,9 @@ func (c *demoServiceClient) CreateDemo(ctx context.Context, in *CreateDemoReques
 // All implementations must embed UnimplementedDemoServiceServer
 // for forward compatibility.
 type DemoServiceServer interface {
-	ListDemos(context.Context, *Empty) (*ListDemosResponse, error)
+	ListDemos(context.Context, *emptypb.Empty) (*ListDemosResponse, error)
 	GetDemo(context.Context, *DemoIdentifier) (*GetDemoResponse, error)
-	CreateDemo(context.Context, *CreateDemoRequest) (*GetDemoResponse, error)
+	CreateDemo(context.Context, *CreateDemoRequest) (*DemoIdentifier, error)
 	mustEmbedUnimplementedDemoServiceServer()
 }
 
@@ -88,13 +89,13 @@ type DemoServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedDemoServiceServer struct{}
 
-func (UnimplementedDemoServiceServer) ListDemos(context.Context, *Empty) (*ListDemosResponse, error) {
+func (UnimplementedDemoServiceServer) ListDemos(context.Context, *emptypb.Empty) (*ListDemosResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListDemos not implemented")
 }
 func (UnimplementedDemoServiceServer) GetDemo(context.Context, *DemoIdentifier) (*GetDemoResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetDemo not implemented")
 }
-func (UnimplementedDemoServiceServer) CreateDemo(context.Context, *CreateDemoRequest) (*GetDemoResponse, error) {
+func (UnimplementedDemoServiceServer) CreateDemo(context.Context, *CreateDemoRequest) (*DemoIdentifier, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreateDemo not implemented")
 }
 func (UnimplementedDemoServiceServer) mustEmbedUnimplementedDemoServiceServer() {}
@@ -119,7 +120,7 @@ func RegisterDemoServiceServer(s grpc.ServiceRegistrar, srv DemoServiceServer) {
 }
 
 func _DemoService_ListDemos_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Empty)
+	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -131,7 +132,7 @@ func _DemoService_ListDemos_Handler(srv interface{}, ctx context.Context, dec fu
 		FullMethod: DemoService_ListDemos_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DemoServiceServer).ListDemos(ctx, req.(*Empty))
+		return srv.(DemoServiceServer).ListDemos(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }

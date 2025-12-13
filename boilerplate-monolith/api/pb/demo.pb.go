@@ -9,6 +9,7 @@ package pb
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -270,7 +271,7 @@ var File_demo_proto protoreflect.FileDescriptor
 const file_demo_proto_rawDesc = "" +
 	"\n" +
 	"\n" +
-	"demo.proto\x12\x04demo\x1a\fcommon.proto\"L\n" +
+	"demo.proto\x12\x04demo\x1a\x1bgoogle/protobuf/empty.proto\"L\n" +
 	"\x04Demo\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
@@ -285,12 +286,12 @@ const file_demo_proto_rawDesc = "" +
 	".demo.DemoR\x04demo\"I\n" +
 	"\x11CreateDemoRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12 \n" +
-	"\vdescription\x18\x02 \x01(\tR\vdescription2\xbe\x01\n" +
-	"\vDemoService\x125\n" +
-	"\tListDemos\x12\r.common.Empty\x1a\x17.demo.ListDemosResponse\"\x00\x128\n" +
-	"\aGetDemo\x12\x14.demo.DemoIdentifier\x1a\x15.demo.GetDemoResponse\"\x00\x12>\n" +
+	"\vdescription\x18\x02 \x01(\tR\vdescription2\xc6\x01\n" +
+	"\vDemoService\x12>\n" +
+	"\tListDemos\x12\x16.google.protobuf.Empty\x1a\x17.demo.ListDemosResponse\"\x00\x128\n" +
+	"\aGetDemo\x12\x14.demo.DemoIdentifier\x1a\x15.demo.GetDemoResponse\"\x00\x12=\n" +
 	"\n" +
-	"CreateDemo\x12\x17.demo.CreateDemoRequest\x1a\x15.demo.GetDemoResponse\"\x00B\x06Z\x04.;pbb\x06proto3"
+	"CreateDemo\x12\x17.demo.CreateDemoRequest\x1a\x14.demo.DemoIdentifier\"\x00B\x06Z\x04.;pbb\x06proto3"
 
 var (
 	file_demo_proto_rawDescOnce sync.Once
@@ -311,17 +312,17 @@ var file_demo_proto_goTypes = []any{
 	(*ListDemosResponse)(nil), // 2: demo.ListDemosResponse
 	(*GetDemoResponse)(nil),   // 3: demo.GetDemoResponse
 	(*CreateDemoRequest)(nil), // 4: demo.CreateDemoRequest
-	(*Empty)(nil),             // 5: common.Empty
+	(*emptypb.Empty)(nil),     // 5: google.protobuf.Empty
 }
 var file_demo_proto_depIdxs = []int32{
 	0, // 0: demo.ListDemosResponse.demos:type_name -> demo.Demo
 	0, // 1: demo.GetDemoResponse.demo:type_name -> demo.Demo
-	5, // 2: demo.DemoService.ListDemos:input_type -> common.Empty
+	5, // 2: demo.DemoService.ListDemos:input_type -> google.protobuf.Empty
 	1, // 3: demo.DemoService.GetDemo:input_type -> demo.DemoIdentifier
 	4, // 4: demo.DemoService.CreateDemo:input_type -> demo.CreateDemoRequest
 	2, // 5: demo.DemoService.ListDemos:output_type -> demo.ListDemosResponse
 	3, // 6: demo.DemoService.GetDemo:output_type -> demo.GetDemoResponse
-	3, // 7: demo.DemoService.CreateDemo:output_type -> demo.GetDemoResponse
+	1, // 7: demo.DemoService.CreateDemo:output_type -> demo.DemoIdentifier
 	5, // [5:8] is the sub-list for method output_type
 	2, // [2:5] is the sub-list for method input_type
 	2, // [2:2] is the sub-list for extension type_name
@@ -334,7 +335,6 @@ func file_demo_proto_init() {
 	if File_demo_proto != nil {
 		return
 	}
-	file_common_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

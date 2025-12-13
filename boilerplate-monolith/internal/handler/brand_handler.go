@@ -10,6 +10,7 @@ import (
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -104,7 +105,7 @@ func (h *brandHandler) validateUpdateBrandRequest(req *pb.UpdateBrandRequest) er
 // HANDLER METHODS
 // ============================================================================
 
-func (h *brandHandler) ListBrands(ctx context.Context, req *pb.ListBrandsRequest) (*pb.ListBrandsResponse, error) {
+func (h *brandHandler) ListBrands(ctx context.Context, req *emptypb.Empty) (*pb.ListBrandsResponse, error) {
 	// Context cancellation check
 	if ctx.Err() != nil {
 		return nil, status.Error(codes.Canceled, ctx.Err().Error())
@@ -181,7 +182,7 @@ func (h *brandHandler) CreateBrand(ctx context.Context, req *pb.CreateBrandReque
 	}, nil
 }
 
-func (h *brandHandler) UpdateBrand(ctx context.Context, req *pb.UpdateBrandRequest) (*pb.SuccessResponse, error) {
+func (h *brandHandler) UpdateBrand(ctx context.Context, req *pb.UpdateBrandRequest) (*emptypb.Empty, error) {
 	// 1. Request Validation
 	if err := h.validateUpdateBrandRequest(req); err != nil {
 		return nil, err
@@ -206,12 +207,10 @@ func (h *brandHandler) UpdateBrand(ctx context.Context, req *pb.UpdateBrandReque
 		return nil, status.Errorf(codes.NotFound, "brand not found: %d", req.Id)
 	}
 
-	return &pb.SuccessResponse{
-		Success: true,
-	}, nil
+	return &emptypb.Empty{}, nil
 }
 
-func (h *brandHandler) DeleteBrand(ctx context.Context, req *pb.BrandIdentifier) (*pb.SuccessResponse, error) {
+func (h *brandHandler) DeleteBrand(ctx context.Context, req *pb.BrandIdentifier) (*emptypb.Empty, error) {
 	// Validate ID
 	if req.Id == 0 {
 		return nil, status.Error(codes.InvalidArgument, "brand id is required")
@@ -233,7 +232,5 @@ func (h *brandHandler) DeleteBrand(ctx context.Context, req *pb.BrandIdentifier)
 		return nil, status.Errorf(codes.NotFound, "brand not found: %d", req.Id)
 	}
 
-	return &pb.SuccessResponse{
-		Success: true,
-	}, nil
+	return &emptypb.Empty{}, nil
 }

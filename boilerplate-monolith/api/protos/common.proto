@@ -4,8 +4,6 @@ package common;
 
 option go_package = ".;pb";
 
-message Empty {}
-
 message Lookup {
   int32 id = 1;
   string name = 2;

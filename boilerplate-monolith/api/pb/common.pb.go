@@ -70,42 +70,6 @@ func (Gender) EnumDescriptor() ([]byte, []int) {
 	return file_common_proto_rawDescGZIP(), []int{0}
 }
 
-type Empty struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *Empty) Reset() {
-	*x = Empty{}
-	mi := &file_common_proto_msgTypes[0]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *Empty) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Empty) ProtoMessage() {}
-
-func (x *Empty) ProtoReflect() protoreflect.Message {
-	mi := &file_common_proto_msgTypes[0]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Empty.ProtoReflect.Descriptor instead.
-func (*Empty) Descriptor() ([]byte, []int) {
-	return file_common_proto_rawDescGZIP(), []int{0}
-}
-
 type Lookup struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -116,7 +80,7 @@ type Lookup struct {
 
 func (x *Lookup) Reset() {
 	*x = Lookup{}
-	mi := &file_common_proto_msgTypes[1]
+	mi := &file_common_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -128,7 +92,7 @@ func (x *Lookup) String() string {
 func (*Lookup) ProtoMessage() {}
 
 func (x *Lookup) ProtoReflect() protoreflect.Message {
-	mi := &file_common_proto_msgTypes[1]
+	mi := &file_common_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -141,7 +105,7 @@ func (x *Lookup) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Lookup.ProtoReflect.Descriptor instead.
 func (*Lookup) Descriptor() ([]byte, []int) {
-	return file_common_proto_rawDescGZIP(), []int{1}
+	return file_common_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *Lookup) GetId() int32 {
@@ -167,7 +131,7 @@ type Identifier struct {
 
 func (x *Identifier) Reset() {
 	*x = Identifier{}
-	mi := &file_common_proto_msgTypes[2]
+	mi := &file_common_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -179,7 +143,7 @@ func (x *Identifier) String() string {
 func (*Identifier) ProtoMessage() {}
 
 func (x *Identifier) ProtoReflect() protoreflect.Message {
-	mi := &file_common_proto_msgTypes[2]
+	mi := &file_common_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -192,7 +156,7 @@ func (x *Identifier) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Identifier.ProtoReflect.Descriptor instead.
 func (*Identifier) Descriptor() ([]byte, []int) {
-	return file_common_proto_rawDescGZIP(), []int{2}
+	return file_common_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *Identifier) GetId() int32 {
@@ -211,7 +175,7 @@ type SuccessResponse struct {
 
 func (x *SuccessResponse) Reset() {
 	*x = SuccessResponse{}
-	mi := &file_common_proto_msgTypes[3]
+	mi := &file_common_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -223,7 +187,7 @@ func (x *SuccessResponse) String() string {
 func (*SuccessResponse) ProtoMessage() {}
 
 func (x *SuccessResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_common_proto_msgTypes[3]
+	mi := &file_common_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -236,7 +200,7 @@ func (x *SuccessResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SuccessResponse.ProtoReflect.Descriptor instead.
 func (*SuccessResponse) Descriptor() ([]byte, []int) {
-	return file_common_proto_rawDescGZIP(), []int{3}
+	return file_common_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *SuccessResponse) GetSuccess() bool {
@@ -250,8 +214,7 @@ var File_common_proto protoreflect.FileDescriptor
 
 const file_common_proto_rawDesc = "" +
 	"\n" +
-	"\fcommon.proto\x12\x06common\"\a\n" +
-	"\x05Empty\",\n" +
+	"\fcommon.proto\x12\x06common\",\n" +
 	"\x06Lookup\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\"\x1c\n" +
@@ -279,13 +242,12 @@ func file_common_proto_rawDescGZIP() []byte {
 }
 
 var file_common_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_common_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_common_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_common_proto_goTypes = []any{
 	(Gender)(0),             // 0: common.Gender
-	(*Empty)(nil),           // 1: common.Empty
-	(*Lookup)(nil),          // 2: common.Lookup
-	(*Identifier)(nil),      // 3: common.Identifier
-	(*SuccessResponse)(nil), // 4: common.SuccessResponse
+	(*Lookup)(nil),          // 1: common.Lookup
+	(*Identifier)(nil),      // 2: common.Identifier
+	(*SuccessResponse)(nil), // 3: common.SuccessResponse
 }
 var file_common_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
@@ -306,7 +268,7 @@ func file_common_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_common_proto_rawDesc), len(file_common_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   4,
+			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

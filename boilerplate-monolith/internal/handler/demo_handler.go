@@ -3,6 +3,8 @@ package handler
 import (
 	"codegen/api/pb"
 	"context"
+
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type demoHandler struct {
@@ -21,7 +23,7 @@ func init() {
 	demos[2] = &pb.Demo{Id: 3, Name: "Üç"}
 }
 
-func (h *demoHandler) ListDemos(ctx context.Context, _ *pb.Empty) (*pb.ListDemosResponse, error) {
+func (h *demoHandler) ListDemos(ctx context.Context, _ *emptypb.Empty) (*pb.ListDemosResponse, error) {
 	return &pb.ListDemosResponse{Demos: demos}, nil
 }
 
@@ -30,11 +32,11 @@ func (h *demoHandler) GetDemo(ctx context.Context, req *pb.DemoIdentifier) (*pb.
 	return &pb.GetDemoResponse{Demo: demo}, nil
 }
 
-func (h *demoHandler) Create(ctx context.Context, req *pb.CreateDemoRequest) (*pb.GetDemoResponse, error) {
+func (h *demoHandler) CreateDemo(ctx context.Context, req *pb.CreateDemoRequest) (*pb.DemoIdentifier, error) {
 	newId := demos[len(demos)-1].Id + 1
 	newDemo := &pb.Demo{Id: newId, Name: req.Name, Description: req.Description}
 
 	demos = append(demos, newDemo)
 
-	return &pb.GetDemoResponse{Demo: newDemo}, nil
+	return &pb.DemoIdentifier{Id: newId}, nil
 }

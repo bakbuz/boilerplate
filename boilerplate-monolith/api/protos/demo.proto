@@ -4,7 +4,7 @@ package demo;
 
 option go_package = ".;pb";
 
-import "common.proto";
+import "google/protobuf/empty.proto";
 
 message Demo {
   int32 id = 1;
@@ -30,7 +30,7 @@ message CreateDemoRequest {
 }
 
 service DemoService {
-  rpc ListDemos (common.Empty) returns (ListDemosResponse) {}
-  rpc GetDemo (DemoIdentifier) returns (GetDemoResponse ) {}
-  rpc CreateDemo (CreateDemoRequest) returns (GetDemoResponse ) {}
+  rpc ListDemos (google.protobuf.Empty) returns (ListDemosResponse) {}
+  rpc GetDemo (DemoIdentifier) returns (GetDemoResponse) {}
+  rpc CreateDemo (CreateDemoRequest) returns (DemoIdentifier) {}
 }
