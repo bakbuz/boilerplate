@@ -2,16 +2,19 @@ package database
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
 )
+
+// private context key to prevent collisions
+type ctxKey string
+
+const queryStartKey ctxKey = "query_start"
 
 type DB struct {
 	pool *pgxpool.Pool
@@ -93,15 +96,12 @@ func (db *DB) PostgresVersionWithErr(ctx context.Context) (string, error) {
 /**************************************************************************/
 
 func GetDatabaseName(connString string) string {
-	var dbName string
-	var strs = strings.Split(connString, ";")
-	for _, str := range strs {
-		if strings.HasPrefix(strings.TrimSpace(str), "database") {
-			dbName = strings.Split(str, "=")[1]
-			break
-		}
+	// Parsing logic updated to support URI and DSN formats robustly
+	config, err := pgxpool.ParseConfig(connString)
+	if err != nil {
+		return ""
 	}
-	return dbName
+	return config.ConnConfig.Database
 }
 
 func (db *DB) GetInt(ctx context.Context, stmt string, args ...any) (int, error) {
@@ -109,7 +109,7 @@ func (db *DB) GetInt(ctx context.Context, stmt string, args ...any) (int, error)
 
 	row := db.pool.QueryRow(ctx, stmt, args...)
 	if err := row.Scan(&dest); err != nil {
-		if err == sql.ErrNoRows { // sql: no rows in result set
+		if errors.Is(err, pgx.ErrNoRows) {
 			return -1, errors.New("no rows")
 		}
 		return -1, err
@@ -122,7 +122,7 @@ func (db *DB) GetString(ctx context.Context, stmt string, args ...any) (string, 
 
 	row := db.pool.QueryRow(ctx, stmt, args...)
 	if err := row.Scan(&dest); err != nil {
-		if err == sql.ErrNoRows { // sql: no rows in result set
+		if errors.Is(err, pgx.ErrNoRows) {
 			return "", errors.New("no rows")
 		}
 		return "", err
@@ -134,9 +134,9 @@ func (db *DB) GetString(ctx context.Context, stmt string, args ...any) (string, 
 func (db *DB) Count(ctx context.Context, stmt string, args ...any) (int64, error) {
 	var dest int64
 
-	row := db.pool.QueryRow(ctx, stmt, args)
+	row := db.pool.QueryRow(ctx, stmt, args...)
 	if err := row.Scan(&dest); err != nil {
-		if err == sql.ErrNoRows { // sql: no rows in result set
+		if errors.Is(err, pgx.ErrNoRows) {
 			return -1, errors.New("no rows")
 		}
 		return -1, err
@@ -154,12 +154,12 @@ type queryTracer struct{}
 
 // TraceQueryStart implements pgx.QueryTracer.
 func (qt *queryTracer) TraceQueryStart(ctx context.Context, conn *pgx.Conn, data pgx.TraceQueryStartData) context.Context {
-	return context.WithValue(ctx, "query_start", time.Now().UTC())
+	return context.WithValue(ctx, queryStartKey, time.Now().UTC())
 }
 
 // TraceQueryEnd implements pgx.QueryTracer.
 func (qt *queryTracer) TraceQueryEnd(ctx context.Context, conn *pgx.Conn, data pgx.TraceQueryEndData) {
-	if start, ok := ctx.Value("query_start").(time.Time); ok {
+	if start, ok := ctx.Value(queryStartKey).(time.Time); ok {
 		duration := time.Since(start)
 		if duration > 100*time.Millisecond {
 			logger := zerolog.Ctx(ctx)
