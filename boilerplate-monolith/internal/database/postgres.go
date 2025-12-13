@@ -164,7 +164,7 @@ func (qt *queryTracer) TraceQueryEnd(ctx context.Context, conn *pgx.Conn, data p
 		if duration > 100*time.Millisecond {
 			logger := zerolog.Ctx(ctx)
 			logger.Warn().
-				Str("sql", data.CommandTag.String()).
+				Str("command", data.CommandTag.String()).
 				Dur("duration", duration).
 				Msg("Slow query detected")
 		}

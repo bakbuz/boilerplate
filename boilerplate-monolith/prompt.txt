@@ -19,7 +19,7 @@ Aşağıdaki gereksinimlere göre mimari, dizin yapısı, modüller, config şem
 
 
 
--------------------------------------
+--------------------------------------------------------------------------
 
 bir grpc backend servisinde aşağıdaki gibi bir yapı kullanmaktayım.
 
@@ -55,3 +55,32 @@ iş mantığı ise tamamen service katmanına iletip dönen yanıtı yeniden han
 handler katmanından service katmanına bazen pb'den gelen pointwer, bazen custom dto, bazen ise parametre ile verileri iletmekteyim.
 bu akıştaki yanlışlarımı söyler misin? 
 lütfen iyi analiz et, senden mükemmel bir yaklaşım önermeni benkliyorum.
+
+
+
+
+
+
+
+
+--------------------------------------------------------------------------
+
+Aşağıdaki “prompt şablonları” kaynak kodunu AI’a taratıp iyileştirme işi için en iyi sonucu verir.
+
+
+You are a senior software engineer and performance/security reviewer.
+I will paste source code in chunks. Analyze it end-to-end and propose improvements with a focus on: correctness, simplicity, maintainability, performance (CPU/memory/allocations), security, and observability.
+
+Constraints:
+- Keep behavior identical unless you explicitly justify a change.
+- Prefer minimal dependencies and minimal diff.
+- Point out hidden bugs, race conditions, edge cases, and error-handling issues.
+- If you suggest refactors, provide a step-by-step plan and show the exact patches (diff format).
+- Add/adjust tests for the changes.
+
+Output format:
+- Issues found (severity: critical/high/medium/low)
+- Recommended changes (ranked by impact)
+- Patch/diff
+- Test additions
+- Performance notes (expected wins, tradeoffs)
