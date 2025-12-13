@@ -38,19 +38,12 @@ func productEntityToProto(p *entity.Product) *pb.Product {
 		Id:        p.Id.String(),
 		BrandId:   int32(p.BrandId),
 		Name:      p.Name,
+		Sku:       p.Sku,
+		Summary:   p.Summary,
+		Storyline: p.Storyline,
 		Stock:     int32(p.StockQuantity),
 		Price:     float32(p.Price),
 		CreatedAt: timestamppb.New(p.CreatedAt),
-	}
-
-	if p.Sku != nil {
-		product.Sku = *p.Sku
-	}
-	if p.Summary != nil {
-		product.Summary = *p.Summary
-	}
-	if p.Storyline != nil {
-		product.Storyline = *p.Storyline
 	}
 
 	return product
@@ -67,18 +60,11 @@ func productCreateProtoToEntity(req *pb.CreateProductRequest) (*entity.Product, 
 		Id:            newId,
 		BrandId:       int(req.BrandId),
 		Name:          req.Name,
+		Sku:           req.Sku,
+		Summary:       req.Summary,
+		Storyline:     req.Storyline,
 		StockQuantity: int(req.Stock),
 		Price:         float64(req.Price),
-	}
-
-	if req.Sku != "" {
-		product.Sku = &req.Sku
-	}
-	if req.Summary != "" {
-		product.Summary = &req.Summary
-	}
-	if req.Storyline != "" {
-		product.Storyline = &req.Storyline
 	}
 
 	return product, nil
@@ -99,18 +85,11 @@ func productUpdateProtoToEntity(req *pb.UpdateProductRequest) (*entity.Product, 
 		Id:            id,
 		BrandId:       int(req.BrandId),
 		Name:          req.Name,
+		Sku:           req.Sku,
+		Summary:       req.Summary,
+		Storyline:     req.Storyline,
 		StockQuantity: int(req.Stock),
 		Price:         float64(req.Price),
-	}
-
-	if req.Sku != "" {
-		product.Sku = &req.Sku
-	}
-	if req.Summary != "" {
-		product.Summary = &req.Summary
-	}
-	if req.Storyline != "" {
-		product.Storyline = &req.Storyline
 	}
 
 	return product, nil
