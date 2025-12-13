@@ -25,7 +25,7 @@ const (
 var publicEndpoints = map[string]struct{}{
 	pb.DemoService_ListDemos_FullMethodName: {},
 	pb.DemoService_GetDemo_FullMethodName:   {},
-	pb.DemoService_Create_FullMethodName:    {},
+	pb.DemoService_CreateDemo_FullMethodName:    {},
 	"/api.v1.AuthService/Login":             {},
 	"/api.v1.AuthService/Register":          {},
 	"/grpc.health.v1.Health/Check":          {},

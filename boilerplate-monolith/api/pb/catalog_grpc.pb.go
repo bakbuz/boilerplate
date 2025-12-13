@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -32,9 +33,9 @@ const (
 type CatalogServiceClient interface {
 	GetProducts(ctx context.Context, in *ListProductsRequest, opts ...grpc.CallOption) (*ListProductsResponse, error)
 	GetProduct(ctx context.Context, in *ProductIdentifier, opts ...grpc.CallOption) (*GetProductResponse, error)
-	CreateProduct(ctx context.Context, in *CreateProductRequest, opts ...grpc.CallOption) (*CreateProductResponse, error)
-	UpdateProduct(ctx context.Context, in *UpdateProductRequest, opts ...grpc.CallOption) (*UpdateProductResponse, error)
-	DeleteProduct(ctx context.Context, in *ProductIdentifier, opts ...grpc.CallOption) (*SuccessResponse, error)
+	CreateProduct(ctx context.Context, in *CreateProductRequest, opts ...grpc.CallOption) (*ProductIdentifier, error)
+	UpdateProduct(ctx context.Context, in *UpdateProductRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	DeleteProduct(ctx context.Context, in *ProductIdentifier, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type catalogServiceClient struct {
@@ -65,9 +66,9 @@ func (c *catalogServiceClient) GetProduct(ctx context.Context, in *ProductIdenti
 	return out, nil
 }
 
-func (c *catalogServiceClient) CreateProduct(ctx context.Context, in *CreateProductRequest, opts ...grpc.CallOption) (*CreateProductResponse, error) {
+func (c *catalogServiceClient) CreateProduct(ctx context.Context, in *CreateProductRequest, opts ...grpc.CallOption) (*ProductIdentifier, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CreateProductResponse)
+	out := new(ProductIdentifier)
 	err := c.cc.Invoke(ctx, CatalogService_CreateProduct_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -75,9 +76,9 @@ func (c *catalogServiceClient) CreateProduct(ctx context.Context, in *CreateProd
 	return out, nil
 }
 
-func (c *catalogServiceClient) UpdateProduct(ctx context.Context, in *UpdateProductRequest, opts ...grpc.CallOption) (*UpdateProductResponse, error) {
+func (c *catalogServiceClient) UpdateProduct(ctx context.Context, in *UpdateProductRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(UpdateProductResponse)
+	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, CatalogService_UpdateProduct_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -85,9 +86,9 @@ func (c *catalogServiceClient) UpdateProduct(ctx context.Context, in *UpdateProd
 	return out, nil
 }
 
-func (c *catalogServiceClient) DeleteProduct(ctx context.Context, in *ProductIdentifier, opts ...grpc.CallOption) (*SuccessResponse, error) {
+func (c *catalogServiceClient) DeleteProduct(ctx context.Context, in *ProductIdentifier, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(SuccessResponse)
+	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, CatalogService_DeleteProduct_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -101,9 +102,9 @@ func (c *catalogServiceClient) DeleteProduct(ctx context.Context, in *ProductIde
 type CatalogServiceServer interface {
 	GetProducts(context.Context, *ListProductsRequest) (*ListProductsResponse, error)
 	GetProduct(context.Context, *ProductIdentifier) (*GetProductResponse, error)
-	CreateProduct(context.Context, *CreateProductRequest) (*CreateProductResponse, error)
-	UpdateProduct(context.Context, *UpdateProductRequest) (*UpdateProductResponse, error)
-	DeleteProduct(context.Context, *ProductIdentifier) (*SuccessResponse, error)
+	CreateProduct(context.Context, *CreateProductRequest) (*ProductIdentifier, error)
+	UpdateProduct(context.Context, *UpdateProductRequest) (*emptypb.Empty, error)
+	DeleteProduct(context.Context, *ProductIdentifier) (*emptypb.Empty, error)
 	mustEmbedUnimplementedCatalogServiceServer()
 }
 
@@ -120,13 +121,13 @@ func (UnimplementedCatalogServiceServer) GetProducts(context.Context, *ListProdu
 func (UnimplementedCatalogServiceServer) GetProduct(context.Context, *ProductIdentifier) (*GetProductResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetProduct not implemented")
 }
-func (UnimplementedCatalogServiceServer) CreateProduct(context.Context, *CreateProductRequest) (*CreateProductResponse, error) {
+func (UnimplementedCatalogServiceServer) CreateProduct(context.Context, *CreateProductRequest) (*ProductIdentifier, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreateProduct not implemented")
 }
-func (UnimplementedCatalogServiceServer) UpdateProduct(context.Context, *UpdateProductRequest) (*UpdateProductResponse, error) {
+func (UnimplementedCatalogServiceServer) UpdateProduct(context.Context, *UpdateProductRequest) (*emptypb.Empty, error) {
 	return nil, status.Error(codes.Unimplemented, "method UpdateProduct not implemented")
 }
-func (UnimplementedCatalogServiceServer) DeleteProduct(context.Context, *ProductIdentifier) (*SuccessResponse, error) {
+func (UnimplementedCatalogServiceServer) DeleteProduct(context.Context, *ProductIdentifier) (*emptypb.Empty, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeleteProduct not implemented")
 }
 func (UnimplementedCatalogServiceServer) mustEmbedUnimplementedCatalogServiceServer() {}

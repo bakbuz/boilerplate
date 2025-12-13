@@ -9,6 +9,7 @@ package pb
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
@@ -398,50 +399,6 @@ func (x *CreateProductRequest) GetPrice() float32 {
 	return 0
 }
 
-type CreateProductResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Product       *Product               `protobuf:"bytes,1,opt,name=product,proto3" json:"product,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *CreateProductResponse) Reset() {
-	*x = CreateProductResponse{}
-	mi := &file_catalog_proto_msgTypes[6]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CreateProductResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CreateProductResponse) ProtoMessage() {}
-
-func (x *CreateProductResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_proto_msgTypes[6]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CreateProductResponse.ProtoReflect.Descriptor instead.
-func (*CreateProductResponse) Descriptor() ([]byte, []int) {
-	return file_catalog_proto_rawDescGZIP(), []int{6}
-}
-
-func (x *CreateProductResponse) GetProduct() *Product {
-	if x != nil {
-		return x.Product
-	}
-	return nil
-}
-
 type UpdateProductRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -458,7 +415,7 @@ type UpdateProductRequest struct {
 
 func (x *UpdateProductRequest) Reset() {
 	*x = UpdateProductRequest{}
-	mi := &file_catalog_proto_msgTypes[7]
+	mi := &file_catalog_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -470,7 +427,7 @@ func (x *UpdateProductRequest) String() string {
 func (*UpdateProductRequest) ProtoMessage() {}
 
 func (x *UpdateProductRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_proto_msgTypes[7]
+	mi := &file_catalog_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -483,7 +440,7 @@ func (x *UpdateProductRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateProductRequest.ProtoReflect.Descriptor instead.
 func (*UpdateProductRequest) Descriptor() ([]byte, []int) {
-	return file_catalog_proto_rawDescGZIP(), []int{7}
+	return file_catalog_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *UpdateProductRequest) GetId() string {
@@ -542,56 +499,12 @@ func (x *UpdateProductRequest) GetPrice() float32 {
 	return 0
 }
 
-type UpdateProductResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Product       *Product               `protobuf:"bytes,1,opt,name=product,proto3" json:"product,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *UpdateProductResponse) Reset() {
-	*x = UpdateProductResponse{}
-	mi := &file_catalog_proto_msgTypes[8]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *UpdateProductResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*UpdateProductResponse) ProtoMessage() {}
-
-func (x *UpdateProductResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_catalog_proto_msgTypes[8]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use UpdateProductResponse.ProtoReflect.Descriptor instead.
-func (*UpdateProductResponse) Descriptor() ([]byte, []int) {
-	return file_catalog_proto_rawDescGZIP(), []int{8}
-}
-
-func (x *UpdateProductResponse) GetProduct() *Product {
-	if x != nil {
-		return x.Product
-	}
-	return nil
-}
-
 var File_catalog_proto protoreflect.FileDescriptor
 
 const file_catalog_proto_rawDesc = "" +
 	"\n" +
 	"\rcatalog.proto\x12\n" +
-	"catalog.v1\x1a\fcommon.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xf9\x01\n" +
+	"catalog.v1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xf9\x01\n" +
 	"\aProduct\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x19\n" +
 	"\bbrand_id\x18\x02 \x01(\x05R\abrandId\x12\x12\n" +
@@ -618,9 +531,7 @@ const file_catalog_proto_rawDesc = "" +
 	"\asummary\x18\x04 \x01(\tR\asummary\x12\x1c\n" +
 	"\tstoryline\x18\x05 \x01(\tR\tstoryline\x12\x14\n" +
 	"\x05stock\x18\x06 \x01(\x05R\x05stock\x12\x14\n" +
-	"\x05price\x18\a \x01(\x02R\x05price\"F\n" +
-	"\x15CreateProductResponse\x12-\n" +
-	"\aproduct\x18\x01 \x01(\v2\x13.catalog.v1.ProductR\aproduct\"\xcb\x01\n" +
+	"\x05price\x18\a \x01(\x02R\x05price\"\xcb\x01\n" +
 	"\x14UpdateProductRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x19\n" +
 	"\bbrand_id\x18\x02 \x01(\x05R\abrandId\x12\x12\n" +
@@ -629,16 +540,14 @@ const file_catalog_proto_rawDesc = "" +
 	"\asummary\x18\x05 \x01(\tR\asummary\x12\x1c\n" +
 	"\tstoryline\x18\x06 \x01(\tR\tstoryline\x12\x14\n" +
 	"\x05stock\x18\a \x01(\x05R\x05stock\x12\x14\n" +
-	"\x05price\x18\b \x01(\x02R\x05price\"F\n" +
-	"\x15UpdateProductResponse\x12-\n" +
-	"\aproduct\x18\x01 \x01(\v2\x13.catalog.v1.ProductR\aproduct2\xa4\x03\n" +
+	"\x05price\x18\b \x01(\x02R\x05price2\x94\x03\n" +
 	"\x0eCatalogService\x12P\n" +
 	"\vGetProducts\x12\x1f.catalog.v1.ListProductsRequest\x1a .catalog.v1.ListProductsResponse\x12K\n" +
 	"\n" +
-	"GetProduct\x12\x1d.catalog.v1.ProductIdentifier\x1a\x1e.catalog.v1.GetProductResponse\x12T\n" +
-	"\rCreateProduct\x12 .catalog.v1.CreateProductRequest\x1a!.catalog.v1.CreateProductResponse\x12T\n" +
-	"\rUpdateProduct\x12 .catalog.v1.UpdateProductRequest\x1a!.catalog.v1.UpdateProductResponse\x12G\n" +
-	"\rDeleteProduct\x12\x1d.catalog.v1.ProductIdentifier\x1a\x17.common.SuccessResponseB\x06Z\x04.;pbb\x06proto3"
+	"GetProduct\x12\x1d.catalog.v1.ProductIdentifier\x1a\x1e.catalog.v1.GetProductResponse\x12P\n" +
+	"\rCreateProduct\x12 .catalog.v1.CreateProductRequest\x1a\x1d.catalog.v1.ProductIdentifier\x12I\n" +
+	"\rUpdateProduct\x12 .catalog.v1.UpdateProductRequest\x1a\x16.google.protobuf.Empty\x12F\n" +
+	"\rDeleteProduct\x12\x1d.catalog.v1.ProductIdentifier\x1a\x16.google.protobuf.EmptyB\x06Z\x04.;pbb\x06proto3"
 
 var (
 	file_catalog_proto_rawDescOnce sync.Once
@@ -652,7 +561,7 @@ func file_catalog_proto_rawDescGZIP() []byte {
 	return file_catalog_proto_rawDescData
 }
 
-var file_catalog_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_catalog_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_catalog_proto_goTypes = []any{
 	(*Product)(nil),               // 0: catalog.v1.Product
 	(*ProductIdentifier)(nil),     // 1: catalog.v1.ProductIdentifier
@@ -660,33 +569,29 @@ var file_catalog_proto_goTypes = []any{
 	(*ListProductsResponse)(nil),  // 3: catalog.v1.ListProductsResponse
 	(*GetProductResponse)(nil),    // 4: catalog.v1.GetProductResponse
 	(*CreateProductRequest)(nil),  // 5: catalog.v1.CreateProductRequest
-	(*CreateProductResponse)(nil), // 6: catalog.v1.CreateProductResponse
-	(*UpdateProductRequest)(nil),  // 7: catalog.v1.UpdateProductRequest
-	(*UpdateProductResponse)(nil), // 8: catalog.v1.UpdateProductResponse
-	(*timestamppb.Timestamp)(nil), // 9: google.protobuf.Timestamp
-	(*SuccessResponse)(nil),       // 10: common.SuccessResponse
+	(*UpdateProductRequest)(nil),  // 6: catalog.v1.UpdateProductRequest
+	(*timestamppb.Timestamp)(nil), // 7: google.protobuf.Timestamp
+	(*emptypb.Empty)(nil),         // 8: google.protobuf.Empty
 }
 var file_catalog_proto_depIdxs = []int32{
-	9,  // 0: catalog.v1.Product.created_at:type_name -> google.protobuf.Timestamp
-	0,  // 1: catalog.v1.ListProductsResponse.items:type_name -> catalog.v1.Product
-	0,  // 2: catalog.v1.GetProductResponse.product:type_name -> catalog.v1.Product
-	0,  // 3: catalog.v1.CreateProductResponse.product:type_name -> catalog.v1.Product
-	0,  // 4: catalog.v1.UpdateProductResponse.product:type_name -> catalog.v1.Product
-	2,  // 5: catalog.v1.CatalogService.GetProducts:input_type -> catalog.v1.ListProductsRequest
-	1,  // 6: catalog.v1.CatalogService.GetProduct:input_type -> catalog.v1.ProductIdentifier
-	5,  // 7: catalog.v1.CatalogService.CreateProduct:input_type -> catalog.v1.CreateProductRequest
-	7,  // 8: catalog.v1.CatalogService.UpdateProduct:input_type -> catalog.v1.UpdateProductRequest
-	1,  // 9: catalog.v1.CatalogService.DeleteProduct:input_type -> catalog.v1.ProductIdentifier
-	3,  // 10: catalog.v1.CatalogService.GetProducts:output_type -> catalog.v1.ListProductsResponse
-	4,  // 11: catalog.v1.CatalogService.GetProduct:output_type -> catalog.v1.GetProductResponse
-	6,  // 12: catalog.v1.CatalogService.CreateProduct:output_type -> catalog.v1.CreateProductResponse
-	8,  // 13: catalog.v1.CatalogService.UpdateProduct:output_type -> catalog.v1.UpdateProductResponse
-	10, // 14: catalog.v1.CatalogService.DeleteProduct:output_type -> common.SuccessResponse
-	10, // [10:15] is the sub-list for method output_type
-	5,  // [5:10] is the sub-list for method input_type
-	5,  // [5:5] is the sub-list for extension type_name
-	5,  // [5:5] is the sub-list for extension extendee
-	0,  // [0:5] is the sub-list for field type_name
+	7, // 0: catalog.v1.Product.created_at:type_name -> google.protobuf.Timestamp
+	0, // 1: catalog.v1.ListProductsResponse.items:type_name -> catalog.v1.Product
+	0, // 2: catalog.v1.GetProductResponse.product:type_name -> catalog.v1.Product
+	2, // 3: catalog.v1.CatalogService.GetProducts:input_type -> catalog.v1.ListProductsRequest
+	1, // 4: catalog.v1.CatalogService.GetProduct:input_type -> catalog.v1.ProductIdentifier
+	5, // 5: catalog.v1.CatalogService.CreateProduct:input_type -> catalog.v1.CreateProductRequest
+	6, // 6: catalog.v1.CatalogService.UpdateProduct:input_type -> catalog.v1.UpdateProductRequest
+	1, // 7: catalog.v1.CatalogService.DeleteProduct:input_type -> catalog.v1.ProductIdentifier
+	3, // 8: catalog.v1.CatalogService.GetProducts:output_type -> catalog.v1.ListProductsResponse
+	4, // 9: catalog.v1.CatalogService.GetProduct:output_type -> catalog.v1.GetProductResponse
+	1, // 10: catalog.v1.CatalogService.CreateProduct:output_type -> catalog.v1.ProductIdentifier
+	8, // 11: catalog.v1.CatalogService.UpdateProduct:output_type -> google.protobuf.Empty
+	8, // 12: catalog.v1.CatalogService.DeleteProduct:output_type -> google.protobuf.Empty
+	8, // [8:13] is the sub-list for method output_type
+	3, // [3:8] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_catalog_proto_init() }
@@ -694,14 +599,13 @@ func file_catalog_proto_init() {
 	if File_catalog_proto != nil {
 		return
 	}
-	file_common_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_catalog_proto_rawDesc), len(file_catalog_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   9,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

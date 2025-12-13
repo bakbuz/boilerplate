@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -228,7 +229,7 @@ func (h *productHandler) GetProduct(ctx context.Context, req *pb.ProductIdentifi
 	}, nil
 }
 
-func (h *productHandler) CreateProduct(ctx context.Context, req *pb.CreateProductRequest) (*pb.CreateProductResponse, error) {
+func (h *productHandler) CreateProduct(ctx context.Context, req *pb.CreateProductRequest) (*pb.ProductIdentifier, error) {
 	// 1. Request Validation
 	if err := h.validateCreateProductRequest(req); err != nil {
 		return nil, err
@@ -253,12 +254,12 @@ func (h *productHandler) CreateProduct(ctx context.Context, req *pb.CreateProduc
 	}
 
 	// 4. MAPPING: Entity -> Proto Response
-	return &pb.CreateProductResponse{
-		Product: productEntityToProto(domainEntity),
+	return &pb.ProductIdentifier{
+		Id: domainEntity.Id.String(),
 	}, nil
 }
 
-func (h *productHandler) UpdateProduct(ctx context.Context, req *pb.UpdateProductRequest) (*pb.UpdateProductResponse, error) {
+func (h *productHandler) UpdateProduct(ctx context.Context, req *pb.UpdateProductRequest) (*emptypb.Empty, error) {
 	// 1. Request Validation
 	if err := h.validateUpdateProductRequest(req); err != nil {
 		return nil, err
@@ -287,12 +288,10 @@ func (h *productHandler) UpdateProduct(ctx context.Context, req *pb.UpdateProduc
 	}
 
 	// 4. MAPPING: Entity -> Proto Response
-	return &pb.UpdateProductResponse{
-		Product: productEntityToProto(domainEntity),
-	}, nil
+	return &emptypb.Empty{}, nil
 }
 
-func (h *productHandler) DeleteProduct(ctx context.Context, req *pb.ProductIdentifier) (*pb.SuccessResponse, error) {
+func (h *productHandler) DeleteProduct(ctx context.Context, req *pb.ProductIdentifier) (*emptypb.Empty, error) {
 	// Validate ID format
 	id, err := uuid.Parse(req.Id)
 	if err != nil {
@@ -311,7 +310,5 @@ func (h *productHandler) DeleteProduct(ctx context.Context, req *pb.ProductIdent
 		return nil, status.Errorf(codes.NotFound, "product not found: %s", req.Id)
 	}
 
-	return &pb.SuccessResponse{
-		Success: true,
-	}, nil
+	return &emptypb.Empty{}, nil
 }
