@@ -200,3 +200,64 @@ func TestBrandRepository_BulkInsert(t *testing.T) {
 	// We expect at least 2 records
 	assert.GreaterOrEqual(t, finalCount, int64(2))
 }
+
+func TestBrandRepository_BulkUpdate(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	repo := repository.NewBrandRepository(db)
+	ctx := context.Background()
+
+	// 1. Prepare data (Insert first)
+	brand1 := &entity.Brand{
+		Name:      "To Update 1",
+		Slug:      "upd-1-" + uuid.New().String(),
+		Logo:      "logo1.png",
+		CreatedBy: uuid.New(),
+		CreatedAt: time.Now(),
+	}
+	brand2 := &entity.Brand{
+		Name:      "To Update 2",
+		Slug:      "upd-2-" + uuid.New().String(),
+		Logo:      "logo2.png",
+		CreatedBy: uuid.New(),
+		CreatedAt: time.Now(),
+	}
+
+	// 1. Prepare data (Insert one by one to get IDs)
+	err := repo.Insert(ctx, brand1)
+	require.NoError(t, err)
+	err = repo.Insert(ctx, brand2)
+	require.NoError(t, err)
+
+	// 2. Modify objects
+	updatedBy := uuid.New()
+	updatedAt := time.Now()
+
+	brand1.Name = "Updated Name 1"
+	brand1.UpdatedBy = &updatedBy
+	brand1.UpdatedAt = &updatedAt
+
+	brand2.Name = "Updated Name 2"
+	brand2.UpdatedBy = &updatedBy
+	brand2.UpdatedAt = &updatedAt
+
+	// 3. Bulk Update
+	err = repo.BulkUpdate(ctx, []*entity.Brand{brand1, brand2})
+	require.NoError(t, err)
+
+	// 4. Verify
+	fetchedList, err := repo.GetByIds(ctx, []int32{brand1.Id, brand2.Id})
+	require.NoError(t, err)
+	assert.Len(t, fetchedList, 2)
+
+	for _, b := range fetchedList {
+		if b.Id == brand1.Id {
+			assert.Equal(t, "Updated Name 1", b.Name)
+			assert.Equal(t, updatedBy, *b.UpdatedBy)
+		} else if b.Id == brand2.Id {
+			assert.Equal(t, "Updated Name 2", b.Name)
+			assert.Equal(t, updatedBy, *b.UpdatedBy)
+		}
+	}
+}
