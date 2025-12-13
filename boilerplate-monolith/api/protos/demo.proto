@@ -32,5 +32,5 @@ message CreateDemoRequest {
 service DemoService {
   rpc ListDemos (common.Empty) returns (ListDemosResponse) {}
   rpc GetDemo (DemoIdentifier) returns (GetDemoResponse ) {}
-  rpc Create (CreateDemoRequest) returns (GetDemoResponse ) {}
+  rpc CreateDemo (CreateDemoRequest) returns (GetDemoResponse ) {}
 }
