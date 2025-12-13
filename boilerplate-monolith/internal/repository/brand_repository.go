@@ -31,14 +31,14 @@ func NewBrandRepository(db *database.DB) BrandRepository {
 	return &brandRepository{db: db}
 }
 
-func mapToBrand(row pgx.Row) (*entity.Brand, error) {
+func scanBrand(row pgx.Row) (*entity.Brand, error) {
 	e := &entity.Brand{}
 
 	err := row.Scan(&e.Id, &e.Name, &e.Slug, &e.Logo, &e.CreatedBy, &e.CreatedAt, &e.UpdatedBy, &e.UpdatedAt)
-	if err == pgx.ErrNoRows { // sql: no rows in result set
-		return nil, nil
-	}
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil // Or return specific ErrNotFound if preferred
+		}
 		return nil, errors.WithMessage(err, rowScanError)
 	}
 	return e, nil
@@ -54,7 +54,9 @@ func (repo *brandRepository) GetAll(ctx context.Context) ([]*entity.Brand, error
 	}
 	defer rows.Close()
 
-	list, err := pgx.CollectRows(rows, pgx.RowToAddrOfStructByName[entity.Brand])
+	list, err := pgx.CollectRows(rows, func(row pgx.CollectableRow) (*entity.Brand, error) {
+		return scanBrand(row)
+	})
 	if err != nil {
 		return nil, errors.WithMessage(err, failedToCollectRows)
 	}
@@ -76,7 +78,9 @@ func (repo *brandRepository) GetByIds(ctx context.Context, ids []int32) ([]*enti
 	}
 	defer rows.Close()
 
-	list, err := pgx.CollectRows(rows, pgx.RowToAddrOfStructByName[entity.Brand])
+	list, err := pgx.CollectRows(rows, func(row pgx.CollectableRow) (*entity.Brand, error) {
+		return scanBrand(row)
+	})
 	if err != nil {
 		return nil, errors.WithMessage(err, failedToCollectRows)
 	}
@@ -89,7 +93,7 @@ func (repo *brandRepository) GetById(ctx context.Context, id int32) (*entity.Bra
 	const stmt string = "SELECT * FROM catalog.brands WHERE id=$1"
 
 	row := repo.db.Pool().QueryRow(ctx, stmt, id)
-	item, err := mapToBrand(row)
+	item, err := scanBrand(row)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
