@@ -1,6 +1,7 @@
 package interceptor
 
 import (
+	"codegen/api/pb"
 	"context"
 	"strings"
 
@@ -20,10 +21,14 @@ const (
 )
 
 // Hızlı arama için map kullanıyoruz (Set mantığı)
+// pb paketini burada kullanmak çok mantıklı değil ama olası endpoint değişikliklerini önlemek için kullanıyoruz
 var publicEndpoints = map[string]struct{}{
-	"/api.v1.AuthService/Login":    {},
-	"/api.v1.AuthService/Register": {},
-	"/grpc.health.v1.Health/Check": {},
+	pb.DemoService_ListDemos_FullMethodName: {},
+	pb.DemoService_GetDemo_FullMethodName:   {},
+	pb.DemoService_Create_FullMethodName:    {},
+	"/api.v1.AuthService/Login":             {},
+	"/api.v1.AuthService/Register":          {},
+	"/grpc.health.v1.Health/Check":          {},
 }
 
 func AuthInterceptor(jwtSecretKey string) grpc.UnaryServerInterceptor {
