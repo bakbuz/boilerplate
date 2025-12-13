@@ -4,7 +4,7 @@ package brand.v1;
 
 option go_package = ".;pb";
 
-import "common.proto";
+import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
 message Brand {
@@ -19,9 +19,14 @@ message BrandIdentifier {
   int32 id = 1;
 }
 
-message ListBrandsRequest { }
-message ListBrandsResponse { int32 total = 1; repeated Brand items = 2; }
-message GetBrandResponse { Brand brand = 1; }
+message ListBrandsResponse {
+  int32 total = 1;
+  repeated Brand items = 2;
+}
+
+message GetBrandResponse { 
+  Brand brand = 1; 
+}
 
 message CreateBrandRequest { 
   string name = 1;
@@ -37,9 +42,9 @@ message UpdateBrandRequest {
 }
 
 service BrandService {
-  rpc ListBrands(ListBrandsRequest) returns (ListBrandsResponse);
+  rpc ListBrands(google.protobuf.Empty) returns (ListBrandsResponse);
   rpc GetBrand(BrandIdentifier) returns (GetBrandResponse);
   rpc CreateBrand(CreateBrandRequest) returns (BrandIdentifier);  
-  rpc UpdateBrand(UpdateBrandRequest) returns (common.SuccessResponse);
-  rpc DeleteBrand(BrandIdentifier) returns (common.SuccessResponse);  
+  rpc UpdateBrand(UpdateBrandRequest) returns (google.protobuf.Empty);
+  rpc DeleteBrand(BrandIdentifier) returns (google.protobuf.Empty);  
 }
