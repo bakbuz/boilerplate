@@ -4,11 +4,12 @@ const (
 	failedToCollectRows = "failed to collect rows"
 	listQueryRowError   = "list query row returned an error"
 	rowScanError        = "row scan error"
-	failedToCount       = "failed to count products"
-	failedToInsert      = "failed to insert product"
-	failedToUpdate      = "failed to update product"
-	failedToDelete      = "failed to delete product"
-	failedToSoftDelete  = "failed to soft delete product"
+	failedToCount       = "failed to count records"
+	failedToInsert      = "failed to insert record"
+	failedToUpdate      = "failed to update record"
+	failedToDelete      = "failed to delete record"
+	failedToSoftDelete  = "failed to soft delete record"
+	failedToUpsert      = "failed to upsert record"
 	failedToBulkInsert  = "failed to execute bulk insert"
 )
 

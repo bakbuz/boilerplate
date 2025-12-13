@@ -19,6 +19,7 @@ type BrandRepository interface {
 	Delete(ctx context.Context, id int32) (int64, error)
 	Count(ctx context.Context) (int64, error)
 
+	Upsert(ctx context.Context, e *entity.Brand) error
 	BulkInsert(ctx context.Context, list []*entity.Brand) error
 }
 
@@ -163,6 +164,37 @@ func (repo *brandRepository) Count(ctx context.Context) (int64, error) {
 	return repo.db.Count(ctx, "SELECT COUNT(*) FROM catalog.brands")
 }
 
+// Upsert ...
+func (repo *brandRepository) Upsert(ctx context.Context, e *entity.Brand) error {
+	const command string = `
+		INSERT INTO catalog.brands (name, slug, logo, created_by, created_at) 
+		VALUES ($1, $2, $3, $4, $5)
+		ON CONFLICT (id) DO UPDATE 
+		SET name=EXCLUDED.name,
+			slug=EXCLUDED.slug, 
+			logo=EXCLUDED.logo, 
+			updated_by=$6, 
+			updated_at=$7
+		RETURNING id`
+
+	err := repo.db.Pool().QueryRow(ctx, command,
+		e.Name,
+		e.Slug,
+		e.Logo,
+		e.CreatedBy,
+		e.CreatedAt,
+		e.UpdatedBy,
+		e.UpdatedAt,
+	).Scan(&e.Id)
+
+	if err != nil {
+		return errors.WithMessage(err, failedToUpsert)
+	}
+
+	return nil
+}
+
+// BulkInsert ...
 func (repo *brandRepository) BulkInsert(ctx context.Context, list []*entity.Brand) error {
 	if len(list) == 0 {
 		return nil
