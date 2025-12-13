@@ -17,10 +17,12 @@ type BrandRepository interface {
 	Insert(ctx context.Context, e *entity.Brand) error
 	Update(ctx context.Context, e *entity.Brand) (int64, error)
 	Delete(ctx context.Context, id int32) (int64, error)
+	DeleteByIds(ctx context.Context, ids []int32) (int64, error)
 	Count(ctx context.Context) (int64, error)
 
 	Upsert(ctx context.Context, e *entity.Brand) error
 	BulkInsert(ctx context.Context, list []*entity.Brand) error
+	BulkUpdate(ctx context.Context, list []*entity.Brand) error
 }
 
 type brandRepository struct {
@@ -159,6 +161,22 @@ func (repo *brandRepository) Delete(ctx context.Context, id int32) (int64, error
 	return result.RowsAffected(), nil
 }
 
+// DeleteByIds ...
+func (repo *brandRepository) DeleteByIds(ctx context.Context, ids []int32) (int64, error) {
+	if len(ids) == 0 {
+		return 0, nil
+	}
+
+	const command string = `DELETE FROM catalog.brands WHERE id = ANY($1)`
+
+	result, err := repo.db.Pool().Exec(ctx, command, ids)
+	if err != nil {
+		return -1, errors.WithMessage(err, failedToDeletes)
+	}
+
+	return result.RowsAffected(), nil
+}
+
 // Count ...
 func (repo *brandRepository) Count(ctx context.Context) (int64, error) {
 	return repo.db.Count(ctx, "SELECT COUNT(*) FROM catalog.brands")
@@ -228,6 +246,52 @@ func (repo *brandRepository) BulkInsert(ctx context.Context, list []*entity.Bran
 		if err != nil {
 			batchResults.Close()
 			return errors.WithMessage(err, failedToBulkInsert)
+		}
+	}
+
+	if err := batchResults.Close(); err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
+}
+
+// BulkUpdate ...
+func (repo *brandRepository) BulkUpdate(ctx context.Context, list []*entity.Brand) error {
+	if len(list) == 0 {
+		return nil
+	}
+
+	tx, err := repo.db.Pool().Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	const command string = `
+		UPDATE catalog.brands 
+		SET name=$2, slug=$3, logo=$4, updated_by=$5, updated_at=$6 
+		WHERE id=$1`
+
+	batch := &pgx.Batch{}
+	for _, e := range list {
+		batch.Queue(command,
+			e.Id,
+			e.Name,
+			e.Slug,
+			e.Logo,
+			e.UpdatedBy,
+			e.UpdatedAt,
+		)
+	}
+
+	batchResults := tx.SendBatch(ctx, batch)
+
+	for i := 0; i < len(list); i++ {
+		_, err := batchResults.Exec()
+		if err != nil {
+			batchResults.Close()
+			return errors.WithMessage(err, failedToBulkUpdate)
 		}
 	}
 

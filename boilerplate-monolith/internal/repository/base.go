@@ -8,9 +8,11 @@ const (
 	failedToInsert      = "failed to insert record"
 	failedToUpdate      = "failed to update record"
 	failedToDelete      = "failed to delete record"
+	failedToDeletes     = "failed to delete records"
 	failedToSoftDelete  = "failed to soft delete record"
 	failedToUpsert      = "failed to upsert record"
 	failedToBulkInsert  = "failed to execute bulk insert"
+	failedToBulkUpdate  = "failed to execute bulk update"
 )
 
 /*
