@@ -48,29 +48,36 @@ func productEntityToProto(p *entity.Product) *pb.Product {
 	if p.Summary != nil {
 		product.Summary = *p.Summary
 	}
+	if p.Storyline != nil {
+		product.Storyline = *p.Storyline
+	}
 
 	return product
 }
 
 // productCreateProtoToEntity converts CreateProductRequest to Product entity
 func productCreateProtoToEntity(req *pb.CreateProductRequest) (*entity.Product, error) {
-	if req.Product == nil {
+	if req == nil {
 		return nil, errx.ErrInvalidInput
 	}
 
-	p := req.Product
+	newId, _ := uuid.NewV7()
 	product := &entity.Product{
-		BrandId:       int(p.BrandId),
-		Name:          p.Name,
-		StockQuantity: int(p.Stock),
-		Price:         float64(p.Price),
+		Id:            newId,
+		BrandId:       int(req.BrandId),
+		Name:          req.Name,
+		StockQuantity: int(req.Stock),
+		Price:         float64(req.Price),
 	}
 
-	if p.Sku != "" {
-		product.Sku = &p.Sku
+	if req.Sku != "" {
+		product.Sku = &req.Sku
 	}
-	if p.Summary != "" {
-		product.Summary = &p.Summary
+	if req.Summary != "" {
+		product.Summary = &req.Summary
+	}
+	if req.Storyline != "" {
+		product.Storyline = &req.Storyline
 	}
 
 	return product, nil
@@ -78,29 +85,31 @@ func productCreateProtoToEntity(req *pb.CreateProductRequest) (*entity.Product, 
 
 // productUpdateProtoToEntity converts UpdateProductRequest to Product entity
 func productUpdateProtoToEntity(req *pb.UpdateProductRequest) (*entity.Product, error) {
-	if req.Product == nil {
+	if req == nil {
 		return nil, errx.ErrInvalidInput
 	}
 
-	p := req.Product
-	id, err := uuid.Parse(p.Id)
+	id, err := uuid.Parse(req.Id)
 	if err != nil {
 		return nil, errors.New("invalid product id format")
 	}
 
 	product := &entity.Product{
 		Id:            id,
-		BrandId:       int(p.BrandId),
-		Name:          p.Name,
-		StockQuantity: int(p.Stock),
-		Price:         float64(p.Price),
+		BrandId:       int(req.BrandId),
+		Name:          req.Name,
+		StockQuantity: int(req.Stock),
+		Price:         float64(req.Price),
 	}
 
-	if p.Sku != "" {
-		product.Sku = &p.Sku
+	if req.Sku != "" {
+		product.Sku = &req.Sku
 	}
-	if p.Summary != "" {
-		product.Summary = &p.Summary
+	if req.Summary != "" {
+		product.Summary = &req.Summary
+	}
+	if req.Storyline != "" {
+		product.Storyline = &req.Storyline
 	}
 
 	return product, nil
@@ -112,23 +121,23 @@ func productUpdateProtoToEntity(req *pb.UpdateProductRequest) (*entity.Product, 
 
 // validateCreateProductRequest validates a CreateProductRequest
 func (h *productHandler) validateCreateProductRequest(req *pb.CreateProductRequest) error {
-	if req.Product == nil {
+	if req == nil {
 		return status.Error(codes.InvalidArgument, "product is required")
 	}
-	p := req.Product
-	if p.GetName() == "" {
+
+	if req.GetName() == "" {
 		return status.Error(codes.InvalidArgument, "product name is required")
 	}
-	if len(p.Name) > 255 {
+	if len(req.Name) > 255 {
 		return status.Error(codes.InvalidArgument, "product name too long (max 255 characters)")
 	}
-	if p.BrandId == 0 {
+	if req.BrandId == 0 {
 		return status.Error(codes.InvalidArgument, "brand_id is required")
 	}
-	if p.Price < 0 {
+	if req.Price < 0 {
 		return status.Error(codes.InvalidArgument, "price must be non-negative")
 	}
-	if p.Stock < 0 {
+	if req.Stock < 0 {
 		return status.Error(codes.InvalidArgument, "stock must be non-negative")
 	}
 	return nil
@@ -136,29 +145,28 @@ func (h *productHandler) validateCreateProductRequest(req *pb.CreateProductReque
 
 // validateUpdateProductRequest validates an UpdateProductRequest
 func (h *productHandler) validateUpdateProductRequest(req *pb.UpdateProductRequest) error {
-	if req.Product == nil {
+	if req == nil {
 		return status.Error(codes.InvalidArgument, "product is required")
 	}
-	p := req.Product
-	if p.GetId() == "" {
+	if req.GetId() == "" {
 		return status.Error(codes.InvalidArgument, "product id is required")
 	}
-	if _, err := uuid.Parse(p.Id); err != nil {
+	if _, err := uuid.Parse(req.Id); err != nil {
 		return status.Error(codes.InvalidArgument, "invalid product id format")
 	}
-	if p.GetName() == "" {
+	if req.GetName() == "" {
 		return status.Error(codes.InvalidArgument, "product name is required")
 	}
-	if len(p.Name) > 255 {
+	if len(req.Name) > 255 {
 		return status.Error(codes.InvalidArgument, "product name too long (max 255 characters)")
 	}
-	if p.BrandId == 0 {
+	if req.BrandId == 0 {
 		return status.Error(codes.InvalidArgument, "brand_id is required")
 	}
-	if p.Price < 0 {
+	if req.Price < 0 {
 		return status.Error(codes.InvalidArgument, "price must be non-negative")
 	}
-	if p.Stock < 0 {
+	if req.Stock < 0 {
 		return status.Error(codes.InvalidArgument, "stock must be non-negative")
 	}
 	return nil
@@ -266,7 +274,7 @@ func (h *productHandler) UpdateProduct(ctx context.Context, req *pb.UpdateProduc
 	rowsAffected, err := h.svc.Update(ctx, domainEntity)
 	if err != nil {
 		if errors.Is(err, errx.ErrNotFound) {
-			return nil, status.Errorf(codes.NotFound, "product not found: %s", req.Product.Id)
+			return nil, status.Errorf(codes.NotFound, "product not found: %s", req.Id)
 		}
 		if errors.Is(err, errx.ErrInvalidInput) {
 			return nil, status.Errorf(codes.InvalidArgument, "invalid product: %v", err)
@@ -275,7 +283,7 @@ func (h *productHandler) UpdateProduct(ctx context.Context, req *pb.UpdateProduc
 	}
 
 	if rowsAffected == 0 {
-		return nil, status.Errorf(codes.NotFound, "product not found: %s", req.Product.Id)
+		return nil, status.Errorf(codes.NotFound, "product not found: %s", req.Id)
 	}
 
 	// 4. MAPPING: Entity -> Proto Response

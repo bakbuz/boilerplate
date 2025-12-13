@@ -1,14 +1,18 @@
 package entity
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type Brand struct {
 	Id        int32      `json:"id"`
 	Name      string     `json:"name"`
 	Slug      string     `json:"slug"`
 	Logo      string     `json:"logo"`
-	CreatedBy int        `json:"-"`
+	CreatedBy uuid.UUID  `json:"-"`
 	CreatedAt time.Time  `json:"-"`
-	UpdatedBy *int       `json:"-"`
+	UpdatedBy *uuid.UUID `json:"-"`
 	UpdatedAt *time.Time `json:"-"`
 }

@@ -13,9 +13,10 @@ message Product {
   string name = 3;
   string sku = 4;
   string summary = 5;
-  int32 stock = 6;
-  float price = 7;
-  google.protobuf.Timestamp created_at = 8;
+  string storyline = 6;
+  int32 stock = 7;
+  float price = 8;
+  google.protobuf.Timestamp created_at = 9;
 }
 
 message ProductIdentifier {
@@ -24,11 +25,39 @@ message ProductIdentifier {
 
 message ListProductsRequest { }
 message ListProductsResponse { int32 total = 1; repeated Product items = 2; }
-message GetProductResponse { Product product = 1; }
-message CreateProductRequest { Product product = 1; }
-message CreateProductResponse { Product product = 1; }
-message UpdateProductRequest { Product product = 1; }
-message UpdateProductResponse { Product product = 1; }
+
+message GetProductResponse { 
+  Product product = 1; 
+}
+
+message CreateProductRequest { 
+  int32 brand_id = 1;
+  string name = 2;
+  string sku = 3;
+  string summary = 4;
+  string storyline = 5;
+  int32 stock = 6;
+  float price = 7;
+}
+
+message CreateProductResponse { 
+  Product product = 1; 
+}
+
+message UpdateProductRequest { 
+  string id = 1;
+  int32 brand_id = 2;
+  string name = 3;
+  string sku = 4;
+  string summary = 5;
+  string storyline = 6;
+  int32 stock = 7;
+  float price = 8;
+}
+
+message UpdateProductResponse { 
+  Product product = 1; 
+}
 
 service CatalogService {
   rpc GetProducts(ListProductsRequest) returns (ListProductsResponse);

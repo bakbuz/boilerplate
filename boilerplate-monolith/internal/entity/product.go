@@ -16,10 +16,10 @@ type Product struct {
 	StockQuantity int        `json:"stockQuantity"`
 	Price         float64    `json:"price"`
 	Deleted       bool       `json:"-"`
-	CreatedBy     int        `json:"-"`
+	CreatedBy     uuid.UUID  `json:"-"`
 	CreatedAt     time.Time  `json:"-"`
-	UpdatedBy     *int       `json:"-"`
+	UpdatedBy     *uuid.UUID `json:"-"`
 	UpdatedAt     *time.Time `json:"-"`
-	DeletedBy     *int       `json:"-"`
+	DeletedBy     *uuid.UUID `json:"-"`
 	DeletedAt     *time.Time `json:"-"`
 }

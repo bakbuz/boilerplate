@@ -154,7 +154,7 @@ type queryTracer struct{}
 
 // TraceQueryStart implements pgx.QueryTracer.
 func (qt *queryTracer) TraceQueryStart(ctx context.Context, conn *pgx.Conn, data pgx.TraceQueryStartData) context.Context {
-	return context.WithValue(ctx, "query_start", time.Now())
+	return context.WithValue(ctx, "query_start", time.Now().UTC())
 }
 
 // TraceQueryEnd implements pgx.QueryTracer.

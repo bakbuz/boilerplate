@@ -135,6 +135,7 @@ func (s *productService) Create(ctx context.Context, e *entity.Product) (int64, 
 	}
 
 	// Set created timestamp
+	e.CreatedBy = uuid.Nil
 	e.CreatedAt = time.Now().UTC()
 	e.Deleted = false
 
@@ -154,6 +155,7 @@ func (s *productService) Update(ctx context.Context, e *entity.Product) (int64, 
 	// Set updated timestamp
 	now := time.Now().UTC()
 	e.UpdatedAt = &now
+	e.UpdatedBy = &uuid.Nil
 
 	return s.repo.Update(ctx, e)
 }
@@ -203,6 +205,7 @@ func (s *productService) BulkInsert(ctx context.Context, list []*entity.Product)
 		}
 
 		// Set timestamps
+		product.CreatedBy = uuid.Nil
 		product.CreatedAt = time.Now().UTC()
 		product.Deleted = false
 	}
