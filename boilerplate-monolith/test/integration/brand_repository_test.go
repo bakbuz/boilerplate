@@ -81,3 +81,86 @@ func TestBrandRepository_Integration(t *testing.T) {
 	require.NoError(t, err)
 	assert.Nil(t, fetchedDeleted)
 }
+
+func TestBrandRepository_Upsert(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	repo := repository.NewBrandRepository(db)
+	ctx := context.Background()
+
+	// 1. Upsert (Insert Scenario)
+	upsertID := int32(99999) // Intentionally explicit ID
+	upsertBrand := &entity.Brand{
+		Id:        upsertID,
+		Name:      "Upsert Brand",
+		Slug:      "upsert-brand-" + uuid.New().String(),
+		Logo:      "upsert-logo.png",
+		CreatedBy: uuid.New(),
+		CreatedAt: time.Now(),
+	}
+
+	// Clean up potential leftover
+	_, _ = repo.Delete(ctx, upsertID)
+
+	err := repo.Upsert(ctx, upsertBrand)
+	require.NoError(t, err)
+
+	fetchedUpsert, err := repo.GetById(ctx, upsertID)
+	require.NoError(t, err)
+	assert.NotNil(t, fetchedUpsert)
+	assert.Equal(t, upsertBrand.Name, fetchedUpsert.Name)
+
+	// 2. Upsert (Update Scenario)
+	upsertBrand.Name = "Upsert Brand Updated"
+	updatedByUpsert := uuid.New()
+	updatedAtUpsert := time.Now()
+	upsertBrand.UpdatedBy = &updatedByUpsert
+	upsertBrand.UpdatedAt = &updatedAtUpsert
+
+	err = repo.Upsert(ctx, upsertBrand)
+	require.NoError(t, err)
+
+	fetchedUpsertUpdated, err := repo.GetById(ctx, upsertID)
+	require.NoError(t, err)
+	assert.Equal(t, "Upsert Brand Updated", fetchedUpsertUpdated.Name)
+	assert.Equal(t, updatedByUpsert, *fetchedUpsertUpdated.UpdatedBy)
+
+	// Cleanup Upsert
+	_, _ = repo.Delete(ctx, upsertID)
+}
+
+func TestBrandRepository_BulkInsert(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	repo := repository.NewBrandRepository(db)
+	ctx := context.Background()
+
+	// BulkInsert
+	bulkList := []*entity.Brand{
+		{
+			Name:      "Bulk 1",
+			Slug:      "bulk-1-" + uuid.New().String(),
+			Logo:      "logo1.png",
+			CreatedBy: uuid.New(),
+			CreatedAt: time.Now(),
+		},
+		{
+			Name:      "Bulk 2",
+			Slug:      "bulk-2-" + uuid.New().String(),
+			Logo:      "logo2.png",
+			CreatedBy: uuid.New(),
+			CreatedAt: time.Now(),
+		},
+	}
+
+	err := repo.BulkInsert(ctx, bulkList)
+	require.NoError(t, err)
+
+	// Verify BulkInsert count
+	finalCount, err := repo.Count(ctx)
+	require.NoError(t, err)
+	// We expect at least 2 records
+	assert.GreaterOrEqual(t, finalCount, int64(2))
+}
