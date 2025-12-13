@@ -200,6 +200,12 @@ func (repo *brandRepository) BulkInsert(ctx context.Context, list []*entity.Bran
 		return nil
 	}
 
+	tx, err := repo.db.Pool().Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
 	const command string = `
 		INSERT INTO catalog.brands (name, slug, logo, created_by, created_at) 
 		VALUES ($1, $2, $3, $4, $5)`
@@ -215,15 +221,19 @@ func (repo *brandRepository) BulkInsert(ctx context.Context, list []*entity.Bran
 		)
 	}
 
-	batchResults := repo.db.Pool().SendBatch(ctx, batch)
-	defer batchResults.Close()
+	batchResults := tx.SendBatch(ctx, batch)
 
 	for i := 0; i < len(list); i++ {
 		_, err := batchResults.Exec()
 		if err != nil {
+			batchResults.Close()
 			return errors.WithMessage(err, failedToBulkInsert)
 		}
 	}
 
-	return nil
+	if err := batchResults.Close(); err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
 }
