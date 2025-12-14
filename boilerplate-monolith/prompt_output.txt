@@ -57,6 +57,11 @@ grpc-highperf-backend/
 │       │   └── slug.go
 │       └── i18n/
 │           └── tr.go
+├── tests/
+│   ├── integration/
+│   │   └── grpc_test.go
+│   └── unit/
+│       └── service_test.go
 ├── migrations/
 │   ├── _queries.sql
 │   ├── 001_init_schema.up.sql
@@ -64,11 +69,6 @@ grpc-highperf-backend/
 ├── scripts/
 │   ├── build.sh
 │   └── deploy.sh
-├── tests/
-│   ├── integration/
-│   │   └── grpc_test.go
-│   └── unit/
-│       └── service_test.go
 └── deployment/
     ├── systemd/
     │   └── grpc-backend.service
