@@ -229,6 +229,29 @@ func TestBrandRepository_BulkInsert(t *testing.T) {
 	// Just ensure no error
 }
 
+func TestBrandRepository_BulkInsertCopyFrom(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	repo := repository.NewBrandRepository(db)
+	ctx := context.Background()
+
+	count := 10
+	list := make([]*entity.Brand, count)
+	for i := 0; i < count; i++ {
+		list[i] = &entity.Brand{
+			Name:      "CopyFrom Brand " + uuid.New().String(),
+			Slug:      "copyfrom-brand-" + uuid.New().String(),
+			CreatedAt: time.Now(),
+			CreatedBy: uuid.New(),
+		}
+	}
+
+	insertedCount, err := repo.BulkInsertCopyFrom(ctx, list)
+	require.NoError(t, err)
+	assert.Equal(t, int64(count), insertedCount)
+}
+
 func TestBrandRepository_BulkUpdate(t *testing.T) {
 	db := setupTestDB(t)
 	defer db.Close()

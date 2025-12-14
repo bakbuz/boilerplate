@@ -23,6 +23,7 @@ type BrandRepository interface {
 	Upsert(ctx context.Context, e *entity.Brand) error
 	BulkInsert(ctx context.Context, list []*entity.Brand) error
 	BulkUpdate(ctx context.Context, list []*entity.Brand) error
+	BulkInsertCopyFrom(ctx context.Context, list []*entity.Brand) (int64, error)
 }
 
 type brandRepository struct {
@@ -330,4 +331,35 @@ func (repo *brandRepository) BulkUpdate(ctx context.Context, list []*entity.Bran
 	}
 
 	return tx.Commit(ctx)
+}
+
+// BulkInsertCopyFrom ...
+func (repo *brandRepository) BulkInsertCopyFrom(ctx context.Context, list []*entity.Brand) (int64, error) {
+	if len(list) == 0 {
+		return 0, nil
+	}
+
+	rows := make([][]interface{}, len(list))
+	for i, e := range list {
+		rows[i] = []interface{}{
+			e.Name,
+			e.Slug,
+			e.Logo,
+			e.CreatedBy,
+			e.CreatedAt,
+		}
+	}
+
+	count, err := repo.db.Pool().CopyFrom(
+		ctx,
+		pgx.Identifier{"catalog", "brands"},
+		[]string{"name", "slug", "logo", "created_by", "created_at"},
+		pgx.CopyFromRows(rows),
+	)
+
+	if err != nil {
+		return 0, errors.WithMessage(err, failedToBulkInsert)
+	}
+
+	return count, nil
 }
