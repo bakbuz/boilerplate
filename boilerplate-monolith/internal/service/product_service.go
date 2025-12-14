@@ -64,9 +64,9 @@ func (s *productService) validateProduct(e *entity.Product) error {
 		return errors.New("product storyline must not exceed 2000 characters")
 	}
 
-	// Validate brand ID
+	// Validate brand Id
 	if e.BrandId <= 0 {
-		return errors.New("valid brand ID is required")
+		return errors.New("valid brand Id is required")
 	}
 
 	// Validate stock quantity
@@ -82,7 +82,7 @@ func (s *productService) validateProduct(e *entity.Product) error {
 	return nil
 }
 
-// validateProductId validates that product ID is not empty
+// validateProductId validates that product Id is not empty
 func (s *productService) validateProductId(id uuid.UUID) error {
 	if id == uuid.Nil {
 		return errx.ErrInvalidInput
@@ -95,7 +95,7 @@ func (s *productService) GetAll(ctx context.Context) ([]*entity.Product, error) 
 	return s.repo.GetAll(ctx)
 }
 
-// GetByIds retrieves products by their IDs
+// GetByIds retrieves products by their Ids
 func (s *productService) GetByIds(ctx context.Context, ids []uuid.UUID) ([]*entity.Product, error) {
 	if len(ids) == 0 {
 		return []*entity.Product{}, nil
@@ -104,7 +104,7 @@ func (s *productService) GetByIds(ctx context.Context, ids []uuid.UUID) ([]*enti
 	return s.repo.GetByIds(ctx, ids)
 }
 
-// GetById retrieves a product by its ID
+// GetById retrieves a product by its Id
 func (s *productService) GetById(ctx context.Context, id uuid.UUID) (*entity.Product, error) {
 	if err := s.validateProductId(id); err != nil {
 		return nil, err

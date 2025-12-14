@@ -152,10 +152,10 @@ func (h *brandHandler) GetBrand(ctx context.Context, req *pb.BrandIdentifier) (*
 }
 
 func (h *brandHandler) CreateBrand(ctx context.Context, req *pb.CreateBrandRequest) (*pb.BrandIdentifier, error) {
-	// Get current user ID from context
+	// Get current user Id from context
 	currentUserId, err := getCurrentUserId(ctx)
 	if err != nil {
-		return nil, status.Errorf(codes.Unauthenticated, "failed to get current user ID: %v", err)
+		return nil, status.Errorf(codes.Unauthenticated, "failed to get current user Id: %v", err)
 	}
 
 	// 1. Request Validation
@@ -184,10 +184,10 @@ func (h *brandHandler) CreateBrand(ctx context.Context, req *pb.CreateBrandReque
 }
 
 func (h *brandHandler) UpdateBrand(ctx context.Context, req *pb.UpdateBrandRequest) (*emptypb.Empty, error) {
-	// Get current user ID from context
+	// Get current user Id from context
 	currentUserId, err := getCurrentUserId(ctx)
 	if err != nil {
-		return nil, status.Errorf(codes.Unauthenticated, "failed to get current user ID: %v", err)
+		return nil, status.Errorf(codes.Unauthenticated, "failed to get current user Id: %v", err)
 	}
 
 	// 1. Request Validation
@@ -218,13 +218,13 @@ func (h *brandHandler) UpdateBrand(ctx context.Context, req *pb.UpdateBrandReque
 }
 
 func (h *brandHandler) DeleteBrand(ctx context.Context, req *pb.BrandIdentifier) (*emptypb.Empty, error) {
-	// Get current user ID from context
+	// Get current user Id from context
 	_, err := getCurrentUserId(ctx)
 	if err != nil {
-		return nil, status.Errorf(codes.Unauthenticated, "failed to get current user ID: %v", err)
+		return nil, status.Errorf(codes.Unauthenticated, "failed to get current user Id: %v", err)
 	}
 
-	// Validate ID
+	// Validate Id
 	if req.Id == 0 {
 		return nil, status.Error(codes.InvalidArgument, "brand id is required")
 	}

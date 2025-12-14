@@ -200,7 +200,7 @@ func (h *productHandler) GetProducts(ctx context.Context, req *pb.ListProductsRe
 }
 
 func (h *productHandler) GetProduct(ctx context.Context, req *pb.ProductIdentifier) (*pb.GetProductResponse, error) {
-	// Validate ID format
+	// Validate Id format
 	id, err := uuid.Parse(req.Id)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid product id format")
@@ -220,10 +220,10 @@ func (h *productHandler) GetProduct(ctx context.Context, req *pb.ProductIdentifi
 }
 
 func (h *productHandler) CreateProduct(ctx context.Context, req *pb.CreateProductRequest) (*pb.ProductIdentifier, error) {
-	// Get current user ID from context
+	// Get current user Id from context
 	currentUserId, err := getCurrentUserId(ctx)
 	if err != nil {
-		return nil, status.Errorf(codes.Unauthenticated, "failed to get current user ID: %v", err)
+		return nil, status.Errorf(codes.Unauthenticated, "failed to get current user Id: %v", err)
 	}
 
 	// 1. Request Validation
@@ -256,10 +256,10 @@ func (h *productHandler) CreateProduct(ctx context.Context, req *pb.CreateProduc
 }
 
 func (h *productHandler) UpdateProduct(ctx context.Context, req *pb.UpdateProductRequest) (*emptypb.Empty, error) {
-	// Get current user ID from context
+	// Get current user Id from context
 	currentUserId, err := getCurrentUserId(ctx)
 	if err != nil {
-		return nil, status.Errorf(codes.Unauthenticated, "failed to get current user ID: %v", err)
+		return nil, status.Errorf(codes.Unauthenticated, "failed to get current user Id: %v", err)
 	}
 
 	// 1. Request Validation
@@ -294,13 +294,13 @@ func (h *productHandler) UpdateProduct(ctx context.Context, req *pb.UpdateProduc
 }
 
 func (h *productHandler) DeleteProduct(ctx context.Context, req *pb.ProductIdentifier) (*emptypb.Empty, error) {
-	// Get current user ID from context
+	// Get current user Id from context
 	currentUserId, err := getCurrentUserId(ctx)
 	if err != nil {
-		return nil, status.Errorf(codes.Unauthenticated, "failed to get current user ID: %v", err)
+		return nil, status.Errorf(codes.Unauthenticated, "failed to get current user Id: %v", err)
 	}
 
-	// Validate ID format
+	// Validate Id format
 	id, err := uuid.Parse(req.Id)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid product id format")

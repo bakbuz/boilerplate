@@ -9,7 +9,7 @@ import (
 )
 
 func getCurrentUserId(ctx context.Context) (uuid.UUID, error) {
-	val := ctx.Value(interceptor.UserIDKey)
+	val := ctx.Value(interceptor.UserIdKey)
 	if val == nil {
 		return uuid.Nil, errors.New("user context is missing")
 	}

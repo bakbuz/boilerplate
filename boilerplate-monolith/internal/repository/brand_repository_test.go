@@ -136,28 +136,28 @@ func TestBrandRepository_Upsert(t *testing.T) {
 	repo := repository.NewBrandRepository(db)
 	ctx := context.Background()
 
-	// 1. Upsert (Insert Scenario - Auto ID)
-	t.Run("InsertNewBrand_AutoID", func(t *testing.T) {
+	// 1. Upsert (Insert Scenario - Auto Id)
+	t.Run("InsertNewBrand_AutoId", func(t *testing.T) {
 		brand := &entity.Brand{
-			Name:      "New Brand AutoID " + uuid.New().String(),
+			Name:      "New Brand AutoId " + uuid.New().String(),
 			Slug:      "new-brand-auto-" + uuid.New().String(),
 			CreatedAt: time.Now(),
 			CreatedBy: uuid.New(),
 		}
-		// Should handle ID=0 by Inserting
+		// Should handle Id=0 by Inserting
 		err := repo.Upsert(ctx, brand)
 		require.NoError(t, err)
-		assert.NotZero(t, brand.Id, "ID should be generated")
+		assert.NotZero(t, brand.Id, "Id should be generated")
 	})
 
-	// 2. Upsert (Insert Scenario - Explicit ID)
-	t.Run("InsertNewBrand_ExplicitID", func(t *testing.T) {
-		upsertID := int32(99999)
+	// 2. Upsert (Insert Scenario - Explicit Id)
+	t.Run("InsertNewBrand_ExplicitId", func(t *testing.T) {
+		upsertId := int32(99999)
 		// Clean up potential leftover
-		_, _ = repo.Delete(ctx, upsertID)
+		_, _ = repo.Delete(ctx, upsertId)
 
 		upsertBrand := &entity.Brand{
-			Id:        upsertID,
+			Id:        upsertId,
 			Name:      "Upsert Brand Explicit",
 			Slug:      "upsert-explicit-" + uuid.New().String(),
 			Logo:      "upsert-logo.png",
@@ -168,7 +168,7 @@ func TestBrandRepository_Upsert(t *testing.T) {
 		err := repo.Upsert(ctx, upsertBrand)
 		require.NoError(t, err)
 
-		fetchedUpsert, err := repo.GetById(ctx, upsertID)
+		fetchedUpsert, err := repo.GetById(ctx, upsertId)
 		require.NoError(t, err)
 		assert.NotNil(t, fetchedUpsert)
 		assert.Equal(t, upsertBrand.Name, fetchedUpsert.Name)

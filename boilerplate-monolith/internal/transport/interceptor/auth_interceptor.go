@@ -17,18 +17,18 @@ type contextKey string
 
 const (
 	BearerPrefix string     = "Bearer "
-	UserIDKey    contextKey = "user_id"
+	UserIdKey    contextKey = "user_id"
 )
 
 // Hızlı arama için map kullanıyoruz (Set mantığı)
 // pb paketini burada kullanmak çok mantıklı değil ama olası endpoint değişikliklerini önlemek için kullanıyoruz
 var publicEndpoints = map[string]struct{}{
-	pb.DemoService_ListDemos_FullMethodName: {},
-	pb.DemoService_GetDemo_FullMethodName:   {},
-	pb.DemoService_CreateDemo_FullMethodName:    {},
-	"/api.v1.AuthService/Login":             {},
-	"/api.v1.AuthService/Register":          {},
-	"/grpc.health.v1.Health/Check":          {},
+	pb.DemoService_ListDemos_FullMethodName:  {},
+	pb.DemoService_GetDemo_FullMethodName:    {},
+	pb.DemoService_CreateDemo_FullMethodName: {},
+	"/api.v1.AuthService/Login":              {},
+	"/api.v1.AuthService/Register":           {},
+	"/grpc.health.v1.Health/Check":           {},
 }
 
 func AuthInterceptor(jwtSecretKey string) grpc.UnaryServerInterceptor {
@@ -61,14 +61,14 @@ func AuthInterceptor(jwtSecretKey string) grpc.UnaryServerInterceptor {
 			return nil, status.Error(codes.Unauthenticated, "invalid token")
 		}
 
-		// 5. UserID'yi güvenli bir şekilde alma (Type assertion check)
+		// 5. UserId'yi güvenli bir şekilde alma (Type assertion check)
 		userIdVal, ok := claims["sub"].(string)
 		if !ok {
 			return nil, status.Error(codes.Unauthenticated, "invalid token payload: sub missing or invalid")
 		}
 
 		// 6. Context'e güvenli key ile ekleme
-		ctx = context.WithValue(ctx, UserIDKey, userIdVal)
+		ctx = context.WithValue(ctx, UserIdKey, userIdVal)
 
 		return handler(ctx, req)
 	}

@@ -29,14 +29,14 @@ func (r *PostgresRepo) CreateOrder(ctx context.Context, o *domain.Order) error {
 	defer tx.Rollback(ctx)
 
 	// 1. Stok düş
-	_, err = tx.Exec(ctx, `UPDATE products SET stock = stock - $1 WHERE id = $2 AND stock >= $1`, o.Quantity, o.ProductID)
+	_, err = tx.Exec(ctx, `UPDATE products SET stock = stock - $1 WHERE id = $2 AND stock >= $1`, o.Quantity, o.ProductId)
 	if err != nil {
 		return err
 	} // Stok yetersiz olabilir, bunu servis katmanı handle eder
 
 	// 2. Sipariş oluştur
 	query := `INSERT INTO orders (product_id, quantity) VALUES ($1, $2) RETURNING id, created_at`
-	err = tx.QueryRow(ctx, query, o.ProductID, o.Quantity).Scan(&o.ID, &o.CreatedAt)
+	err = tx.QueryRow(ctx, query, o.ProductId, o.Quantity).Scan(&o.Id, &o.CreatedAt)
 	if err != nil {
 		return err
 	}

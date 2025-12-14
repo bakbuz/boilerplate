@@ -191,7 +191,7 @@ func (repo *brandRepository) Count(ctx context.Context) (int64, error) {
 
 // Upsert ...
 func (repo *brandRepository) Upsert(ctx context.Context, e *entity.Brand) error {
-	// If ID is missing, treating as Insert creates a record with ID 0 on some systems
+	// If Id is missing, treating as Insert creates a record with ID 0 on some systems
 	// or fails validation. For auto-increment, we must delegate to Insert.
 	if e.Id == 0 {
 		return repo.Insert(ctx, e)

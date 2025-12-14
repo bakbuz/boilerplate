@@ -374,7 +374,7 @@ func TestProductRepository_Search(t *testing.T) {
 	assert.Equal(t, 2, res.Total) // Total should still be 2
 	assert.Len(t, res.Items, 1)   // But we only took 1
 
-	// Test 3: Search by ID
+	// Test 3: Search by Id
 	res, err = repo.Search(ctx, &dto.ProductSearchFilter{
 		Id: &p3.Id,
 	})
