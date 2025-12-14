@@ -4,6 +4,7 @@ import (
 	"codegen/internal/entity"
 	"codegen/internal/repository"
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -247,3 +248,69 @@ func TestProductRepository_BulkInsert(t *testing.T) {
 	assert.GreaterOrEqual(t, c, int64(count))
 }
 
+func TestProductRepository_BulkUpdate(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	repo := repository.NewProductRepository(db)
+	brandRepo := repository.NewBrandRepository(db)
+	ctx := context.Background()
+
+	// Insert Brand
+	brand := &entity.Brand{
+		Name:      "Bulk Update Brand",
+		Slug:      "bulk-update-brand-" + uuid.New().String(),
+		CreatedAt: time.Now(),
+		CreatedBy: uuid.New(),
+	}
+	require.NoError(t, brandRepo.Insert(ctx, brand))
+
+	// 1. Prepare products
+	count := 5
+	list := make([]*entity.Product, count)
+	for i := 0; i < count; i++ {
+		list[i] = &entity.Product{
+			Id:            uuid.New(),
+			BrandId:       int(brand.Id),
+			Name:          fmt.Sprintf("Original Product %d", i),
+			Sku:           strPtr(fmt.Sprintf("UPDATE-SKU-%d-%s", i, uuid.New().String())),
+			StockQuantity: 10,
+			Price:         50.0,
+			CreatedBy:     uuid.New(),
+			CreatedAt:     time.Now(),
+		}
+	}
+
+	_, err := repo.BulkInsert(ctx, list)
+	require.NoError(t, err)
+
+	// 2. Modify products
+	updatedBy := uuid.New()
+	updatedAt := time.Now().UTC().Truncate(time.Millisecond) // Truncate to align with DB precision if needed, though usually fine.
+
+	for i, p := range list {
+		p.Name = fmt.Sprintf("Updated Product %d", i)
+		p.Price = 100.0 + float64(i)
+		p.StockQuantity = 20 + i
+		p.UpdatedBy = &updatedBy
+		p.UpdatedAt = &updatedAt
+	}
+
+	// 3. BulkUpdate
+	affected, err := repo.BulkUpdate(ctx, list)
+	require.NoError(t, err)
+	assert.Equal(t, int64(count), affected)
+
+	// 4. Verify updates
+	for _, p := range list {
+		fetched, err := repo.GetById(ctx, p.Id)
+		require.NoError(t, err)
+		assert.Equal(t, p.Name, fetched.Name)
+		assert.Equal(t, p.Price, fetched.Price)
+		assert.Equal(t, p.StockQuantity, fetched.StockQuantity)
+		// Check UpdatedBy/UpdatedAt if appropriate
+		assert.Equal(t, updatedBy, *fetched.UpdatedBy)
+		// Compare timestamps with tolerance if necessary, but direct comparison might work if precision matches
+		// assert.WithinDuration(t, updatedAt, *fetched.UpdatedAt, time.Millisecond)
+	}
+}
