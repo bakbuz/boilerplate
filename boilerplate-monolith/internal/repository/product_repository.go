@@ -191,67 +191,30 @@ func (repo *productRepository) BulkInsert(ctx context.Context, list []*entity.Pr
 		return nil
 	}
 
-	const command string = `
-		INSERT INTO catalog.products (id, brand_id, name, sku, summary, storyline, stock_quantity, price, deleted, created_by, created_at) 
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
+	_, err := repo.db.Pool().CopyFrom(
+		ctx,
+		pgx.Identifier{"catalog", "products"},
+		[]string{"id", "brand_id", "name", "sku", "summary", "storyline", "stock_quantity", "price", "deleted", "created_by", "created_at"},
+		pgx.CopyFromSlice(len(list), func(i int) ([]any, error) {
+			e := list[i]
+			if e.Id == uuid.Nil {
+				e.Id = uuid.New()
+			}
+			return []any{e.Id, e.BrandId, e.Name, e.Sku, e.Summary, e.Storyline, e.StockQuantity, e.Price, e.Deleted, e.CreatedBy, e.CreatedAt}, nil
+		}),
+	)
 
-	batch := &pgx.Batch{}
-	for _, e := range list {
-		batch.Queue(command,
-			e.Id,
-			e.BrandId,
-			e.Name,
-			e.Sku,
-			e.Summary,
-			e.Storyline,
-			e.StockQuantity,
-			e.Price,
-			e.Deleted,
-			e.CreatedBy,
-			e.CreatedAt,
-		)
-	}
-
-	batchResults := repo.db.Pool().SendBatch(ctx, batch)
-	defer batchResults.Close()
-
-	for i := 0; i < len(list); i++ {
-		_, err := batchResults.Exec()
-		if err != nil {
-			return errors.WithMessage(err, failedToBulkInsert)
-		}
+	if err != nil {
+		return errors.WithMessage(err, failedToBulkInsert)
 	}
 
 	return nil
 }
 
 func (repo *productRepository) Search(ctx context.Context, filter *dto.ProductSearchFilter) (*dto.ProductSearchResult, error) {
-	query := "SELECT * FROM catalog.products WHERE deleted=false"
-	countQuery := "SELECT COUNT(*) FROM catalog.products WHERE deleted=false"
-	args := []any{}
-	argIndex := 1
+	where, args := buildSearchWhere(filter)
 
-	// Build WHERE clauses dynamically based on filter
-	if filter.Id != nil {
-		query += fmt.Sprintf(" AND id=$%d", argIndex)
-		countQuery += fmt.Sprintf(" AND id=$%d", argIndex)
-		args = append(args, *filter.Id)
-		argIndex++
-	}
-
-	if filter.BrandId > 0 {
-		query += fmt.Sprintf(" AND brand_id=$%d", argIndex)
-		countQuery += fmt.Sprintf(" AND brand_id=$%d", argIndex)
-		args = append(args, filter.BrandId)
-		argIndex++
-	}
-
-	if filter.Name != "" {
-		query += fmt.Sprintf(" AND name ILIKE $%d", argIndex)
-		countQuery += fmt.Sprintf(" AND name ILIKE $%d", argIndex)
-		args = append(args, "%"+filter.Name+"%")
-		argIndex++
-	}
+	countQuery := "SELECT COUNT(*) FROM catalog.products WHERE deleted=false" + where
 
 	// Get total count
 	var total int
@@ -268,7 +231,9 @@ func (repo *productRepository) Search(ctx context.Context, filter *dto.ProductSe
 	}
 
 	// Add pagination
-	query += " ORDER BY created_at DESC"
+	query := "SELECT * FROM catalog.products WHERE deleted=false" + where + " ORDER BY created_at DESC"
+
+	argIndex := len(args) + 1
 	if filter.Take > 0 {
 		query += fmt.Sprintf(" LIMIT $%d", argIndex)
 		args = append(args, filter.Take)
@@ -296,4 +261,29 @@ func (repo *productRepository) Search(ctx context.Context, filter *dto.ProductSe
 		Total: total,
 		Items: items,
 	}, nil
+}
+
+func buildSearchWhere(filter *dto.ProductSearchFilter) (string, []any) {
+	var where string
+	var args []any
+	argIndex := 1
+
+	if filter.Id != nil {
+		where += fmt.Sprintf(" AND id=$%d", argIndex)
+		args = append(args, *filter.Id)
+		argIndex++
+	}
+
+	if filter.BrandId > 0 {
+		where += fmt.Sprintf(" AND brand_id=$%d", argIndex)
+		args = append(args, filter.BrandId)
+		argIndex++
+	}
+
+	if filter.Name != "" {
+		where += fmt.Sprintf(" AND name ILIKE $%d", argIndex)
+		args = append(args, "%"+filter.Name+"%")
+		argIndex++
+	}
+	return where, args
 }
