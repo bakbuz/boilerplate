@@ -12,7 +12,7 @@ type ObjectPool[T any] struct {
 func NewObjectPool[T any](newFunc func() T) *ObjectPool[T] {
 	return &ObjectPool[T]{
 		pool: sync.Pool{
-			New: func() interface{} {
+			New: func() any {
 				return newFunc()
 			},
 		},
@@ -33,7 +33,7 @@ func (p *ObjectPool[T]) Put(obj T) {
 
 // ByteSlicePool for reducing allocations
 var ByteSlicePool = sync.Pool{
-	New: func() interface{} {
+	New: func() any {
 		return make([]byte, 0, 1024)
 	},
 }

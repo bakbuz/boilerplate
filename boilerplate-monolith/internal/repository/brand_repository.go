@@ -21,9 +21,10 @@ type BrandRepository interface {
 	Count(ctx context.Context) (int64, error)
 
 	Upsert(ctx context.Context, e *entity.Brand) error
-	BulkInsert(ctx context.Context, list []*entity.Brand) error
-	BulkUpdate(ctx context.Context, list []*entity.Brand) error
 	BulkInsertCopyFrom(ctx context.Context, list []*entity.Brand) (int64, error)
+	BulkUpdateCopyFrom(ctx context.Context, list []*entity.Brand) (int64, error)
+	BulkInsertTran(ctx context.Context, list []*entity.Brand) error
+	BulkUpdateTran(ctx context.Context, list []*entity.Brand) error
 }
 
 type brandRepository struct {
@@ -224,11 +225,116 @@ func (repo *brandRepository) Upsert(ctx context.Context, e *entity.Brand) error 
 	return nil
 }
 
+// BulkInsertCopyFrom ...
+func (repo *brandRepository) BulkInsertCopyFrom(ctx context.Context, list []*entity.Brand) (int64, error) {
+	if len(list) == 0 {
+		return 0, nil
+	}
+
+	rows := make([][]any, len(list))
+	for i, e := range list {
+		rows[i] = []any{
+			e.Name,
+			e.Slug,
+			e.Logo,
+			e.CreatedBy,
+			e.CreatedAt,
+		}
+	}
+
+	count, err := repo.db.Pool().CopyFrom(
+		ctx,
+		pgx.Identifier{"catalog", "brands"},
+		[]string{"name", "slug", "logo", "created_by", "created_at"},
+		pgx.CopyFromRows(rows),
+	)
+
+	if err != nil {
+		return 0, errors.WithMessage(err, failedToBulkInsert)
+	}
+
+	return count, nil
+}
+
+// BulkUpdateCopyFrom ...
+func (repo *brandRepository) BulkUpdateCopyFrom(ctx context.Context, list []*entity.Brand) (int64, error) {
+	if len(list) == 0 {
+		return 0, nil
+	}
+
+	tx, err := repo.db.Pool().Begin(ctx)
+	if err != nil {
+		return 0, err
+	}
+	defer tx.Rollback(ctx)
+
+	// Create temp table
+	_, err = tx.Exec(ctx, `
+		CREATE TEMP TABLE tmp_brands_update (
+			id int,
+			name text,
+			slug text,
+			logo text,
+			updated_by uuid,
+			updated_at timestamp
+		) ON COMMIT DROP
+	`)
+	if err != nil {
+		return 0, errors.WithMessage(err, "failed to create temp table")
+	}
+
+	// Prepare rows for CopyFrom
+	rows := make([][]any, len(list))
+	for i, e := range list {
+		rows[i] = []any{
+			e.Id,
+			e.Name,
+			e.Slug,
+			e.Logo,
+			e.UpdatedBy,
+			e.UpdatedAt,
+		}
+	}
+
+	// Copy data into temp table
+	_, err = tx.CopyFrom(
+		ctx,
+		pgx.Identifier{"tmp_brands_update"},
+		[]string{"id", "name", "slug", "logo", "updated_by", "updated_at"},
+		pgx.CopyFromRows(rows),
+	)
+	if err != nil {
+		return 0, errors.WithMessage(err, "failed to copy to temp table")
+	}
+
+	// Execute Update from temp table
+	cmdTag, err := tx.Exec(ctx, `
+		UPDATE catalog.brands b
+		SET 
+			name = t.name,
+			slug = t.slug,
+			logo = t.logo,
+			updated_by = t.updated_by,
+			updated_at = t.updated_at
+		FROM tmp_brands_update t
+		WHERE b.id = t.id
+	`)
+	if err != nil {
+		return 0, errors.WithMessage(err, failedToBulkUpdate)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return 0, err
+	}
+
+	return cmdTag.RowsAffected(), nil
+}
+
 // Default batch size to prevent memory pressure
 const batchSize = 1000
 
 // BulkInsert ...
-func (repo *brandRepository) BulkInsert(ctx context.Context, list []*entity.Brand) error {
+func (repo *brandRepository) BulkInsertTran(ctx context.Context, list []*entity.Brand) error {
 	if len(list) == 0 {
 		return nil
 	}
@@ -280,7 +386,7 @@ func (repo *brandRepository) BulkInsert(ctx context.Context, list []*entity.Bran
 }
 
 // BulkUpdate ...
-func (repo *brandRepository) BulkUpdate(ctx context.Context, list []*entity.Brand) error {
+func (repo *brandRepository) BulkUpdateTran(ctx context.Context, list []*entity.Brand) error {
 	if len(list) == 0 {
 		return nil
 	}
@@ -331,35 +437,4 @@ func (repo *brandRepository) BulkUpdate(ctx context.Context, list []*entity.Bran
 	}
 
 	return tx.Commit(ctx)
-}
-
-// BulkInsertCopyFrom ...
-func (repo *brandRepository) BulkInsertCopyFrom(ctx context.Context, list []*entity.Brand) (int64, error) {
-	if len(list) == 0 {
-		return 0, nil
-	}
-
-	rows := make([][]interface{}, len(list))
-	for i, e := range list {
-		rows[i] = []interface{}{
-			e.Name,
-			e.Slug,
-			e.Logo,
-			e.CreatedBy,
-			e.CreatedAt,
-		}
-	}
-
-	count, err := repo.db.Pool().CopyFrom(
-		ctx,
-		pgx.Identifier{"catalog", "brands"},
-		[]string{"name", "slug", "logo", "created_by", "created_at"},
-		pgx.CopyFromRows(rows),
-	)
-
-	if err != nil {
-		return 0, errors.WithMessage(err, failedToBulkInsert)
-	}
-
-	return count, nil
 }

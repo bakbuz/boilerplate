@@ -228,7 +228,7 @@ func (repo *productRepository) BulkInsert(ctx context.Context, list []*entity.Pr
 func (repo *productRepository) Search(ctx context.Context, filter *dto.ProductSearchFilter) (*dto.ProductSearchResult, error) {
 	query := "SELECT * FROM catalog.products WHERE deleted=false"
 	countQuery := "SELECT COUNT(*) FROM catalog.products WHERE deleted=false"
-	args := []interface{}{}
+	args := []any{}
 	argIndex := 1
 
 	// Build WHERE clauses dynamically based on filter

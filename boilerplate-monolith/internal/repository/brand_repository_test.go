@@ -204,31 +204,6 @@ func TestBrandRepository_GetById_NotFound(t *testing.T) {
 	assert.Nil(t, fetched, "Should return nil for non-existent record")
 }
 
-func TestBrandRepository_BulkInsert(t *testing.T) {
-	db := setupTestDB(t)
-	defer db.Close()
-
-	repo := repository.NewBrandRepository(db)
-	ctx := context.Background()
-
-	count := 10
-	list := make([]*entity.Brand, count)
-	for i := 0; i < count; i++ {
-		list[i] = &entity.Brand{
-			Name:      "Bulk Brand " + uuid.New().String(),
-			Slug:      "bulk-brand-" + uuid.New().String(),
-			CreatedAt: time.Now(),
-			CreatedBy: uuid.New(),
-		}
-	}
-
-	err := repo.BulkInsert(ctx, list)
-	require.NoError(t, err)
-
-	// Verify count roughly (or exact if we clear DB first, but we didn't clear here)
-	// Just ensure no error
-}
-
 func TestBrandRepository_BulkInsertCopyFrom(t *testing.T) {
 	db := setupTestDB(t)
 	defer db.Close()
@@ -252,7 +227,87 @@ func TestBrandRepository_BulkInsertCopyFrom(t *testing.T) {
 	assert.Equal(t, int64(count), insertedCount)
 }
 
-func TestBrandRepository_BulkUpdate(t *testing.T) {
+func TestBrandRepository_BulkUpdateCopyFrom(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	repo := repository.NewBrandRepository(db)
+	ctx := context.Background()
+
+	// Setup
+	brand1 := &entity.Brand{
+		Name:      "Pre-Update-Copy 1",
+		Slug:      "pre-upd-copy-1-" + uuid.New().String(),
+		CreatedAt: time.Now(),
+		CreatedBy: uuid.New(),
+	}
+	brand2 := &entity.Brand{
+		Name:      "Pre-Update-Copy 2",
+		Slug:      "pre-upd-copy-2-" + uuid.New().String(),
+		CreatedAt: time.Now(),
+		CreatedBy: uuid.New(),
+	}
+	require.NoError(t, repo.Insert(ctx, brand1))
+	require.NoError(t, repo.Insert(ctx, brand2))
+
+	// Modify
+	newUUID := uuid.New()
+	newTime := time.Now()
+
+	brand1.Name = "Post-Update-Copy 1"
+	brand1.UpdatedBy = &newUUID
+	brand1.UpdatedAt = &newTime
+
+	brand2.Name = "Post-Update-Copy 2"
+	brand2.UpdatedBy = &newUUID
+	brand2.UpdatedAt = &newTime
+
+	// Execute BulkUpdateCopyFrom
+	count, err := repo.BulkUpdateCopyFrom(ctx, []*entity.Brand{brand1, brand2})
+	require.NoError(t, err)
+	assert.Equal(t, int64(2), count)
+
+	// Verify
+	fetched, err := repo.GetByIds(ctx, []int32{brand1.Id, brand2.Id})
+	require.NoError(t, err)
+	assert.Len(t, fetched, 2)
+
+	for _, b := range fetched {
+		if b.Id == brand1.Id {
+			assert.Equal(t, "Post-Update-Copy 1", b.Name)
+			assert.Equal(t, newUUID, *b.UpdatedBy)
+		} else if b.Id == brand2.Id {
+			assert.Equal(t, "Post-Update-Copy 2", b.Name)
+		}
+	}
+}
+
+func TestBrandRepository_BulkInsertTran(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	repo := repository.NewBrandRepository(db)
+	ctx := context.Background()
+
+	count := 10
+	list := make([]*entity.Brand, count)
+	for i := 0; i < count; i++ {
+		list[i] = &entity.Brand{
+			Name:      "Bulk Brand " + uuid.New().String(),
+			Slug:      "bulk-brand-" + uuid.New().String(),
+			CreatedAt: time.Now(),
+			CreatedBy: uuid.New(),
+		}
+	}
+
+	err := repo.BulkInsertTran(ctx, list)
+	require.NoError(t, err)
+
+	// Verify count roughly (or exact if we clear DB first, but we didn't clear here)
+	// Just ensure no error
+}
+
+func TestBrandRepository_BulkUpdateTran(t *testing.T) {
 	db := setupTestDB(t)
 	defer db.Close()
 
@@ -293,7 +348,7 @@ func TestBrandRepository_BulkUpdate(t *testing.T) {
 	brand2.UpdatedAt = &updatedAt
 
 	// 3. Bulk Update
-	err = repo.BulkUpdate(ctx, []*entity.Brand{brand1, brand2})
+	err = repo.BulkUpdateTran(ctx, []*entity.Brand{brand1, brand2})
 	require.NoError(t, err)
 
 	// 4. Verify
