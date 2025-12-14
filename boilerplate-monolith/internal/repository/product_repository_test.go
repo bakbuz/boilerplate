@@ -139,3 +139,56 @@ func TestProductRepository_BulkInsertCopyFrom(t *testing.T) {
 	require.NoError(t, err)
 	assert.GreaterOrEqual(t, c, int64(count))
 }
+
+func TestProductRepository_Upsert(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	repo := repository.NewProductRepository(db)
+	brandRepo := repository.NewBrandRepository(db)
+	ctx := context.Background()
+
+	// Setup Brand
+	brand := &entity.Brand{
+		Name:      "Upsert Brand " + uuid.New().String(),
+		Slug:      "upsert-brand-" + uuid.New().String(),
+		CreatedAt: time.Now(),
+		CreatedBy: uuid.New(),
+	}
+	require.NoError(t, brandRepo.Insert(ctx, brand))
+
+	// 1. Insert new product via Upsert
+	product := &entity.Product{
+		BrandId:       int(brand.Id),
+		Name:          "Upsert Product",
+		Sku:           strPtr("UPSERT-1"),
+		StockQuantity: 50,
+		Price:         19.99,
+		CreatedAt:     time.Now(),
+		CreatedBy:     uuid.New(),
+	}
+
+	err := repo.Upsert(ctx, product)
+	require.NoError(t, err)
+	assert.NotEqual(t, uuid.Nil, product.Id)
+
+	fetched, err := repo.GetById(ctx, product.Id)
+	require.NoError(t, err)
+	assert.Equal(t, product.Name, fetched.Name)
+
+	// 2. Update existing product via Upsert
+	product.Name = "Upsert Product Updated"
+	product.Price = 29.99
+	updatedBy := uuid.New()
+	updatedAt := time.Now()
+	product.UpdatedBy = &updatedBy
+	product.UpdatedAt = &updatedAt
+
+	err = repo.Upsert(ctx, product)
+	require.NoError(t, err)
+
+	fetchedUpdated, err := repo.GetById(ctx, product.Id)
+	require.NoError(t, err)
+	assert.Equal(t, "Upsert Product Updated", fetchedUpdated.Name)
+	assert.Equal(t, 29.99, fetchedUpdated.Price)
+}

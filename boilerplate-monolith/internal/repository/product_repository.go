@@ -205,6 +205,50 @@ func (repo *productRepository) Count(ctx context.Context) (int64, error) {
 	return repo.db.Count(ctx, "SELECT COUNT(*) FROM catalog.products WHERE deleted=false")
 }
 
+// Upsert ...
+func (repo *productRepository) Upsert(ctx context.Context, e *entity.Product) error {
+	if e.Id == uuid.Nil {
+		e.Id, _ = uuid.NewV7()
+	}
+
+	const command string = `
+		INSERT INTO catalog.products (id, brand_id, name, sku, summary, storyline, stock_quantity, price, deleted, created_by, created_at) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+		ON CONFLICT (id) DO UPDATE 
+		SET brand_id=EXCLUDED.brand_id,
+			name=EXCLUDED.name,
+			sku=EXCLUDED.sku,
+			summary=EXCLUDED.summary,
+			storyline=EXCLUDED.storyline,
+			stock_quantity=EXCLUDED.stock_quantity,
+			price=EXCLUDED.price,
+			deleted=EXCLUDED.deleted,
+			updated_by=$12,
+			updated_at=$13`
+
+	_, err := repo.db.Pool().Exec(ctx, command,
+		e.Id,
+		e.BrandId,
+		e.Name,
+		e.Sku,
+		e.Summary,
+		e.Storyline,
+		e.StockQuantity,
+		e.Price,
+		e.Deleted,
+		e.CreatedBy,
+		e.CreatedAt,
+		e.UpdatedBy,
+		e.UpdatedAt,
+	)
+
+	if err != nil {
+		return errors.WithMessage(err, failedToUpsert)
+	}
+
+	return nil
+}
+
 func (repo *productRepository) BulkInsertCopyFrom(ctx context.Context, list []*entity.Product) (int64, error) {
 	if len(list) == 0 {
 		return 0, nil
