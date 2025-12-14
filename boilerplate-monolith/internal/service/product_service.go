@@ -7,7 +7,6 @@ import (
 	"codegen/pkg/errx"
 	"context"
 	"strings"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
@@ -131,13 +130,8 @@ func (s *productService) Create(ctx context.Context, e *entity.Product) (int64, 
 
 	// Generate new UUID if not provided
 	if e.Id == uuid.Nil {
-		e.Id = uuid.New()
+		e.Id, _ = uuid.NewV7()
 	}
-
-	// Set created timestamp
-	e.CreatedBy = uuid.Nil
-	e.CreatedAt = time.Now().UTC()
-	e.Deleted = false
 
 	return s.repo.Insert(ctx, e)
 }
@@ -151,11 +145,6 @@ func (s *productService) Update(ctx context.Context, e *entity.Product) (int64, 
 	if err := s.validateProductId(e.Id); err != nil {
 		return -1, err
 	}
-
-	// Set updated timestamp
-	now := time.Now().UTC()
-	e.UpdatedAt = &now
-	e.UpdatedBy = &uuid.Nil
 
 	return s.repo.Update(ctx, e)
 }
@@ -201,13 +190,8 @@ func (s *productService) BulkInsert(ctx context.Context, list []*entity.Product)
 
 		// Generate UUID if not provided
 		if product.Id == uuid.Nil {
-			product.Id = uuid.New()
+			product.Id, _ = uuid.NewV7()
 		}
-
-		// Set timestamps
-		product.CreatedBy = uuid.Nil
-		product.CreatedAt = time.Now().UTC()
-		product.Deleted = false
 	}
 
 	return s.repo.BulkInsert(ctx, list)

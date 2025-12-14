@@ -7,6 +7,7 @@ import (
 	"codegen/pkg/errx"
 	"context"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
@@ -50,7 +51,7 @@ func productEntityToProto(p *entity.Product) *pb.Product {
 }
 
 // productCreateProtoToEntity converts CreateProductRequest to Product entity
-func productCreateProtoToEntity(req *pb.CreateProductRequest) (*entity.Product, error) {
+func productCreateProtoToEntity(req *pb.CreateProductRequest, currentUserId uuid.UUID) (*entity.Product, error) {
 	if req == nil {
 		return nil, errx.ErrInvalidInput
 	}
@@ -67,11 +68,16 @@ func productCreateProtoToEntity(req *pb.CreateProductRequest) (*entity.Product, 
 		Price:         float64(req.Price),
 	}
 
+	// Set created timestamp
+	product.CreatedBy = currentUserId
+	product.CreatedAt = time.Now().UTC()
+	product.Deleted = false
+
 	return product, nil
 }
 
 // productUpdateProtoToEntity converts UpdateProductRequest to Product entity
-func productUpdateProtoToEntity(req *pb.UpdateProductRequest) (*entity.Product, error) {
+func productUpdateProtoToEntity(req *pb.UpdateProductRequest, currentUserId uuid.UUID) (*entity.Product, error) {
 	if req == nil {
 		return nil, errx.ErrInvalidInput
 	}
@@ -91,6 +97,11 @@ func productUpdateProtoToEntity(req *pb.UpdateProductRequest) (*entity.Product, 
 		StockQuantity: int(req.Stock),
 		Price:         float64(req.Price),
 	}
+
+	// Set updated timestamp
+	now := time.Now().UTC()
+	product.UpdatedAt = &now
+	product.UpdatedBy = &currentUserId
 
 	return product, nil
 }
@@ -209,13 +220,19 @@ func (h *productHandler) GetProduct(ctx context.Context, req *pb.ProductIdentifi
 }
 
 func (h *productHandler) CreateProduct(ctx context.Context, req *pb.CreateProductRequest) (*pb.ProductIdentifier, error) {
+	// Get current user ID from context
+	currentUserId, err := getCurrentUserId(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "failed to get current user ID: %v", err)
+	}
+
 	// 1. Request Validation
 	if err := h.validateCreateProductRequest(req); err != nil {
 		return nil, err
 	}
 
 	// 2. MAPPING: Proto -> Entity
-	domainEntity, err := productCreateProtoToEntity(req)
+	domainEntity, err := productCreateProtoToEntity(req, currentUserId)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid product data: %v", err)
 	}
@@ -239,13 +256,19 @@ func (h *productHandler) CreateProduct(ctx context.Context, req *pb.CreateProduc
 }
 
 func (h *productHandler) UpdateProduct(ctx context.Context, req *pb.UpdateProductRequest) (*emptypb.Empty, error) {
+	// Get current user ID from context
+	currentUserId, err := getCurrentUserId(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "failed to get current user ID: %v", err)
+	}
+
 	// 1. Request Validation
 	if err := h.validateUpdateProductRequest(req); err != nil {
 		return nil, err
 	}
 
 	// 2. MAPPING: Proto -> Entity
-	domainEntity, err := productUpdateProtoToEntity(req)
+	domainEntity, err := productUpdateProtoToEntity(req, currentUserId)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid product data: %v", err)
 	}
@@ -271,13 +294,19 @@ func (h *productHandler) UpdateProduct(ctx context.Context, req *pb.UpdateProduc
 }
 
 func (h *productHandler) DeleteProduct(ctx context.Context, req *pb.ProductIdentifier) (*emptypb.Empty, error) {
+	// Get current user ID from context
+	currentUserId, err := getCurrentUserId(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "failed to get current user ID: %v", err)
+	}
+
 	// Validate ID format
 	id, err := uuid.Parse(req.Id)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid product id format")
 	}
 
-	rowsAffected, err := h.svc.Delete(ctx, id)
+	rowsAffected, err := h.svc.SoftDelete(ctx, id, currentUserId)
 	if err != nil {
 		if errors.Is(err, errx.ErrNotFound) {
 			return nil, status.Errorf(codes.NotFound, "product not found: %s", req.Id)
