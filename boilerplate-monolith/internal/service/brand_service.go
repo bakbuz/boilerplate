@@ -20,7 +20,7 @@ type BrandService interface {
 	Update(ctx context.Context, e *entity.Brand) (int64, error)
 	Delete(ctx context.Context, id int32) (int64, error)
 	Count(ctx context.Context) (int64, error)
-	BulkInsert(ctx context.Context, list []*entity.Brand) error
+	BulkInsert(ctx context.Context, list []*entity.Brand) (int64, error)
 }
 
 type brandService struct {
@@ -132,14 +132,14 @@ func (s *brandService) Count(ctx context.Context) (int64, error) {
 }
 
 // BulkInsert ...
-func (s *brandService) BulkInsert(ctx context.Context, list []*entity.Brand) error {
+func (s *brandService) BulkInsert(ctx context.Context, list []*entity.Brand) (int64, error) {
 	if len(list) == 0 {
-		return errx.ErrInvalidInput
+		return -1, errx.ErrInvalidInput
 	}
 
 	for _, brand := range list {
 		if err := s.validateBrand(brand); err != nil {
-			return err
+			return -1, err
 		}
 		brand.CreatedAt = time.Now().UTC()
 	}

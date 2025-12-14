@@ -242,8 +242,7 @@ func (x *GetBrandResponse) GetBrand() *Brand {
 type CreateBrandRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Slug          string                 `protobuf:"bytes,2,opt,name=slug,proto3" json:"slug,omitempty"`
-	Logo          string                 `protobuf:"bytes,3,opt,name=logo,proto3" json:"logo,omitempty"`
+	Logo          string                 `protobuf:"bytes,2,opt,name=logo,proto3" json:"logo,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -285,13 +284,6 @@ func (x *CreateBrandRequest) GetName() string {
 	return ""
 }
 
-func (x *CreateBrandRequest) GetSlug() string {
-	if x != nil {
-		return x.Slug
-	}
-	return ""
-}
-
 func (x *CreateBrandRequest) GetLogo() string {
 	if x != nil {
 		return x.Logo
@@ -303,8 +295,7 @@ type UpdateBrandRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	Slug          string                 `protobuf:"bytes,3,opt,name=slug,proto3" json:"slug,omitempty"`
-	Logo          string                 `protobuf:"bytes,4,opt,name=logo,proto3" json:"logo,omitempty"`
+	Logo          string                 `protobuf:"bytes,3,opt,name=logo,proto3" json:"logo,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -353,13 +344,6 @@ func (x *UpdateBrandRequest) GetName() string {
 	return ""
 }
 
-func (x *UpdateBrandRequest) GetSlug() string {
-	if x != nil {
-		return x.Slug
-	}
-	return ""
-}
-
 func (x *UpdateBrandRequest) GetLogo() string {
 	if x != nil {
 		return x.Logo
@@ -385,16 +369,14 @@ const file_brand_proto_rawDesc = "" +
 	"\x05total\x18\x01 \x01(\x05R\x05total\x12%\n" +
 	"\x05items\x18\x02 \x03(\v2\x0f.brand.v1.BrandR\x05items\"9\n" +
 	"\x10GetBrandResponse\x12%\n" +
-	"\x05brand\x18\x01 \x01(\v2\x0f.brand.v1.BrandR\x05brand\"P\n" +
+	"\x05brand\x18\x01 \x01(\v2\x0f.brand.v1.BrandR\x05brand\"<\n" +
 	"\x12CreateBrandRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
-	"\x04slug\x18\x02 \x01(\tR\x04slug\x12\x12\n" +
-	"\x04logo\x18\x03 \x01(\tR\x04logo\"`\n" +
+	"\x04logo\x18\x02 \x01(\tR\x04logo\"L\n" +
 	"\x12UpdateBrandRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x12\n" +
-	"\x04slug\x18\x03 \x01(\tR\x04slug\x12\x12\n" +
-	"\x04logo\x18\x04 \x01(\tR\x04logo2\xe4\x02\n" +
+	"\x04logo\x18\x03 \x01(\tR\x04logo2\xe4\x02\n" +
 	"\fBrandService\x12B\n" +
 	"\n" +
 	"ListBrands\x12\x16.google.protobuf.Empty\x1a\x1c.brand.v1.ListBrandsResponse\x12A\n" +

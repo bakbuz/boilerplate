@@ -30,15 +30,13 @@ message GetBrandResponse {
 
 message CreateBrandRequest { 
   string name = 1;
-  string slug = 2;
-  string logo = 3;
+  string logo = 2;
 }
 
 message UpdateBrandRequest { 
   int32 id = 1;
   string name = 2;
-  string slug = 3;
-  string logo = 4;
+  string logo = 3;
 }
 
 service BrandService {

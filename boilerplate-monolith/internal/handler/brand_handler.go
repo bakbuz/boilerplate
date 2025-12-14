@@ -5,6 +5,7 @@ import (
 	"codegen/internal/entity"
 	"codegen/internal/service"
 	"codegen/pkg/errx"
+	"codegen/pkg/text"
 	"context"
 	"errors"
 
@@ -45,7 +46,7 @@ func brandEntityToProto(b *entity.Brand) *pb.Brand {
 func brandCreateProtoToEntity(req *pb.CreateBrandRequest) *entity.Brand {
 	return &entity.Brand{
 		Name: req.Name,
-		Slug: req.Slug,
+		Slug: text.Slugify(req.Name),
 		Logo: req.Logo,
 	}
 }
@@ -55,7 +56,7 @@ func brandUpdateProtoToEntity(req *pb.UpdateBrandRequest) *entity.Brand {
 	return &entity.Brand{
 		Id:   req.Id,
 		Name: req.Name,
-		Slug: req.Slug,
+		Slug: text.Slugify(req.Name),
 		Logo: req.Logo,
 	}
 }
@@ -72,12 +73,6 @@ func (h *brandHandler) validateCreateBrandRequest(req *pb.CreateBrandRequest) er
 	if len(req.Name) > 255 {
 		return status.Error(codes.InvalidArgument, "name too long (max 255 characters)")
 	}
-	if req.GetSlug() == "" {
-		return status.Error(codes.InvalidArgument, "slug is required")
-	}
-	if len(req.Slug) > 255 {
-		return status.Error(codes.InvalidArgument, "slug too long (max 255 characters)")
-	}
 	return nil
 }
 
@@ -91,12 +86,6 @@ func (h *brandHandler) validateUpdateBrandRequest(req *pb.UpdateBrandRequest) er
 	}
 	if len(req.Name) > 255 {
 		return status.Error(codes.InvalidArgument, "name too long (max 255 characters)")
-	}
-	if req.GetSlug() == "" {
-		return status.Error(codes.InvalidArgument, "slug is required")
-	}
-	if len(req.Slug) > 255 {
-		return status.Error(codes.InvalidArgument, "slug too long (max 255 characters)")
 	}
 	return nil
 }

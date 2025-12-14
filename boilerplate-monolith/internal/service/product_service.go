@@ -22,7 +22,7 @@ type ProductService interface {
 	Delete(ctx context.Context, id uuid.UUID) (int64, error)
 	SoftDelete(ctx context.Context, id uuid.UUID, deletedBy uuid.UUID) (int64, error)
 	Count(ctx context.Context) (int64, error)
-	BulkInsert(ctx context.Context, list []*entity.Product) error
+	BulkInsert(ctx context.Context, list []*entity.Product) (int64, error)
 	Search(ctx context.Context, filter *dto.ProductSearchFilter) (*dto.ProductSearchResult, error)
 }
 
@@ -188,15 +188,15 @@ func (s *productService) Count(ctx context.Context) (int64, error) {
 }
 
 // BulkInsert inserts multiple products
-func (s *productService) BulkInsert(ctx context.Context, list []*entity.Product) error {
+func (s *productService) BulkInsert(ctx context.Context, list []*entity.Product) (int64, error) {
 	if len(list) == 0 {
-		return errx.ErrInvalidInput
+		return -1, errx.ErrInvalidInput
 	}
 
 	// Validate all products before inserting
 	for i, product := range list {
 		if err := s.validateProduct(product); err != nil {
-			return errors.Wrapf(err, "validation failed for product at index %d", i)
+			return -1, errors.Wrapf(err, "validation failed for product at index %d", i)
 		}
 
 		// Generate UUID if not provided
