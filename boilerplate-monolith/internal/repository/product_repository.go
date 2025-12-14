@@ -21,6 +21,7 @@ type ProductRepository interface {
 	Insert(ctx context.Context, e *entity.Product) (int64, error)
 	Update(ctx context.Context, e *entity.Product) (int64, error)
 	Delete(ctx context.Context, id uuid.UUID) (int64, error)
+	DeleteByIds(ctx context.Context, ids []uuid.UUID) (int64, error)
 	SoftDelete(ctx context.Context, id uuid.UUID, deletedBy uuid.UUID) (int64, error)
 	Count(ctx context.Context) (int64, error)
 
@@ -164,6 +165,22 @@ func (repo *productRepository) Delete(ctx context.Context, id uuid.UUID) (int64,
 	result, err := repo.db.Pool().Exec(ctx, command, id)
 	if err != nil {
 		return -1, errors.WithMessage(err, failedToDelete)
+	}
+
+	return result.RowsAffected(), nil
+}
+
+// DeleteByIds ...
+func (repo *productRepository) DeleteByIds(ctx context.Context, ids []uuid.UUID) (int64, error) {
+	if len(ids) == 0 {
+		return 0, nil
+	}
+
+	const command string = `DELETE FROM catalog.products WHERE id = ANY($1)`
+
+	result, err := repo.db.Pool().Exec(ctx, command, ids)
+	if err != nil {
+		return -1, errors.WithMessage(err, failedToDeletes)
 	}
 
 	return result.RowsAffected(), nil
