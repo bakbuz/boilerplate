@@ -55,7 +55,7 @@ func mapToProduct(row pgx.Row) (*entity.Product, error) {
 
 // GetAll ...
 func (repo *productRepository) GetAll(ctx context.Context) ([]*entity.Product, error) {
-	const stmt string = "SELECT * FROM catalog.products WHERE deleted=false"
+	const stmt string = "SELECT id, brand_id, name, sku, summary, storyline, stock_quantity, price::numeric, deleted, created_by, created_at, updated_by, updated_at, deleted_by, deleted_at FROM catalog.products WHERE deleted=false"
 
 	rows, err := repo.db.Pool().Query(ctx, stmt)
 	if err != nil {
@@ -77,7 +77,7 @@ func (repo *productRepository) GetByIds(ctx context.Context, ids []uuid.UUID) ([
 		return []*entity.Product{}, nil
 	}
 
-	const stmt string = "SELECT * FROM catalog.products WHERE deleted=false AND id = ANY($1)"
+	const stmt string = "SELECT id, brand_id, name, sku, summary, storyline, stock_quantity, price::numeric, deleted, created_by, created_at, updated_by, updated_at, deleted_by, deleted_at FROM catalog.products WHERE deleted=false AND id = ANY($1)"
 
 	rows, err := repo.db.Pool().Query(ctx, stmt, ids)
 	if err != nil {
@@ -95,7 +95,7 @@ func (repo *productRepository) GetByIds(ctx context.Context, ids []uuid.UUID) ([
 
 // GetById ...
 func (repo *productRepository) GetById(ctx context.Context, id uuid.UUID) (*entity.Product, error) {
-	const stmt string = "SELECT * FROM catalog.products WHERE deleted=false AND id=$1"
+	const stmt string = "SELECT id, brand_id, name, sku, summary, storyline, stock_quantity, price::numeric, deleted, created_by, created_at, updated_by, updated_at, deleted_by, deleted_at FROM catalog.products WHERE deleted=false AND id=$1"
 
 	row := repo.db.Pool().QueryRow(ctx, stmt, id)
 	item, err := mapToProduct(row)
@@ -259,8 +259,6 @@ func (repo *productRepository) BulkInsert(ctx context.Context, list []*entity.Pr
 
 	rows := make([][]any, len(list))
 	for i, e := range list {
-		e.CreatedBy = uuid.Nil
-		e.CreatedAt = time.Now().UTC()
 		if e.Id == uuid.Nil {
 			newId, err := uuid.NewV7()
 			if err != nil {
@@ -390,7 +388,7 @@ func (repo *productRepository) Search(ctx context.Context, filter *dto.ProductSe
 	}
 
 	// Add pagination
-	query := "SELECT * FROM catalog.products WHERE deleted=false" + where + " ORDER BY created_at DESC"
+	query := "SELECT id, brand_id, name, sku, summary, storyline, stock_quantity, price::numeric, deleted, created_by, created_at, updated_by, updated_at, deleted_by, deleted_at FROM catalog.products WHERE deleted=false" + where + " ORDER BY created_at DESC"
 
 	argIndex := len(args) + 1
 	if filter.Take > 0 {

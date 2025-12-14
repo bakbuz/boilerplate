@@ -3,6 +3,7 @@ package repository_test
 import (
 	"codegen/internal/entity"
 	"codegen/internal/repository"
+	"codegen/internal/repository/dto"
 	"context"
 	"fmt"
 	"testing"
@@ -312,9 +313,112 @@ func TestProductRepository_BulkUpdate(t *testing.T) {
 		assert.Equal(t, p.Name, fetched.Name)
 		assert.Equal(t, p.Price, fetched.Price)
 		assert.Equal(t, p.StockQuantity, fetched.StockQuantity)
-		// Check UpdatedBy/UpdatedAt if appropriate
 		assert.Equal(t, updatedBy, *fetched.UpdatedBy)
-		// Compare timestamps with tolerance if necessary, but direct comparison might work if precision matches
-		// assert.WithinDuration(t, updatedAt, *fetched.UpdatedAt, time.Millisecond)
 	}
+}
+
+func TestProductRepository_Search(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	repo := repository.NewProductRepository(db)
+	brandRepo := repository.NewBrandRepository(db)
+	ctx := context.Background()
+
+	// Setup data: 1 Brand, 3 Products
+	brand := &entity.Brand{
+		Name:      "Search Brand " + uuid.New().String(),
+		Slug:      "search-brand-" + uuid.New().String(),
+		CreatedAt: time.Now(),
+		CreatedBy: uuid.New(),
+	}
+	require.NoError(t, brandRepo.Insert(ctx, brand))
+
+	p1 := &entity.Product{
+		BrandId: int(brand.Id),
+		Name:    "Alpha Product",
+		Sku:     strPtr("S-1"),
+		Price:   10,
+	}
+	p2 := &entity.Product{
+		BrandId: int(brand.Id),
+		Name:    "Alpha Beta Product",
+		Sku:     strPtr("S-2"),
+		Price:   20,
+	}
+	p3 := &entity.Product{
+		BrandId: int(brand.Id),
+		Name:    "Gamma Product",
+		Sku:     strPtr("S-3"),
+		Price:   30,
+	}
+	_, err := repo.BulkInsert(ctx, []*entity.Product{p1, p2, p3})
+	require.NoError(t, err)
+
+	// Test 1: Search by Name (Partial)
+	res, err := repo.Search(ctx, &dto.ProductSearchFilter{
+		Name: "Alpha",
+		Take: 10,
+	})
+	require.NoError(t, err)
+	assert.Equal(t, 2, res.Total)
+	assert.Len(t, res.Items, 2)
+
+	// Test 2: Search with Pagination
+	res, err = repo.Search(ctx, &dto.ProductSearchFilter{
+		Name: "Alpha",
+		Take: 1,
+		Skip: 0,
+	})
+	require.NoError(t, err)
+	assert.Equal(t, 2, res.Total) // Total should still be 2
+	assert.Len(t, res.Items, 1)   // But we only took 1
+
+	// Test 3: Search by ID
+	res, err = repo.Search(ctx, &dto.ProductSearchFilter{
+		Id: &p3.Id,
+	})
+	require.NoError(t, err)
+	assert.Equal(t, 1, res.Total)
+	assert.Equal(t, "Gamma Product", res.Items[0].Name)
+}
+
+func TestProductRepository_SoftDelete(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	repo := repository.NewProductRepository(db)
+	brandRepo := repository.NewBrandRepository(db)
+	ctx := context.Background()
+
+	// Need a brand
+	brand := &entity.Brand{
+		Name:      "Delete Brand " + uuid.New().String(),
+		Slug:      "del-brand-" + uuid.New().String(),
+		CreatedAt: time.Now(),
+		CreatedBy: uuid.New(),
+	}
+	require.NoError(t, brandRepo.Insert(ctx, brand))
+
+	// Insert
+	p := &entity.Product{
+		Id:        uuid.New(),
+		BrandId:   int(brand.Id),
+		Name:      "Soft Delete Me",
+		CreatedAt: time.Now(),
+		CreatedBy: uuid.New(),
+	}
+	_, err := repo.Insert(ctx, p)
+	require.NoError(t, err)
+
+	// Soft Delete
+	deleter := uuid.New()
+	affected, err := repo.SoftDelete(ctx, p.Id, deleter)
+	require.NoError(t, err)
+	assert.Equal(t, int64(1), affected)
+
+	// Verify not found via GetById
+	fetched, err := repo.GetById(ctx, p.Id)
+	require.NoError(t, err)
+	assert.Nil(t, fetched, "Soft deleted product should not be returned by GetById")
 }
