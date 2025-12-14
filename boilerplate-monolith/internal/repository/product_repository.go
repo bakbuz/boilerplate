@@ -25,7 +25,8 @@ type ProductRepository interface {
 	SoftDelete(ctx context.Context, id uuid.UUID, deletedBy uuid.UUID) (int64, error)
 	Count(ctx context.Context) (int64, error)
 
-	BulkInsertCopyFrom(ctx context.Context, list []*entity.Product) error
+	BulkInsertCopyFrom(ctx context.Context, list []*entity.Product) (int64, error)
+	BulkUpdateCopyFrom(ctx context.Context, list []*entity.Product) (int64, error)
 	Search(ctx context.Context, filter *dto.ProductSearchFilter) (*dto.ProductSearchResult, error)
 }
 
@@ -203,12 +204,12 @@ func (repo *productRepository) Count(ctx context.Context) (int64, error) {
 	return repo.db.Count(ctx, "SELECT COUNT(*) FROM catalog.products WHERE deleted=false")
 }
 
-func (repo *productRepository) BulkInsertCopyFrom(ctx context.Context, list []*entity.Product) error {
+func (repo *productRepository) BulkInsertCopyFrom(ctx context.Context, list []*entity.Product) (int64, error) {
 	if len(list) == 0 {
-		return nil
+		return 0, nil
 	}
 
-	_, err := repo.db.Pool().CopyFrom(
+	count, err := repo.db.Pool().CopyFrom(
 		ctx,
 		pgx.Identifier{"catalog", "products"},
 		[]string{"id", "brand_id", "name", "sku", "summary", "storyline", "stock_quantity", "price", "deleted", "created_by", "created_at"},
@@ -225,10 +226,95 @@ func (repo *productRepository) BulkInsertCopyFrom(ctx context.Context, list []*e
 	)
 
 	if err != nil {
-		return errors.WithMessage(err, failedToBulkInsert)
+		return 0, errors.WithMessage(err, failedToBulkInsert)
 	}
 
-	return nil
+	return count, nil
+}
+
+func (repo *productRepository) BulkUpdateCopyFrom(ctx context.Context, list []*entity.Product) (int64, error) {
+	if len(list) == 0 {
+		return 0, nil
+	}
+
+	tx, err := repo.db.Pool().Begin(ctx)
+	if err != nil {
+		return 0, err
+	}
+	defer tx.Rollback(ctx)
+
+	// Create temp table
+	_, err = tx.Exec(ctx, `
+		CREATE TEMP TABLE tmp_products_update (
+			id uuid,
+			brand_id int,
+			name text,
+			sku text,
+			summary text,
+			storyline text,
+			stock_quantity int,
+			price numeric,
+			updated_by uuid,
+			updated_at timestamp
+		) ON COMMIT DROP
+	`)
+	if err != nil {
+		return 0, errors.WithMessage(err, "failed to create temp table")
+	}
+
+	// Prepare rows for CopyFrom
+	rows := make([][]any, len(list))
+	for i, e := range list {
+		rows[i] = []any{
+			e.Id,
+			e.BrandId,
+			e.Name,
+			e.Sku,
+			e.Summary,
+			e.Storyline,
+			e.StockQuantity,
+			e.Price,
+			e.UpdatedBy,
+			e.UpdatedAt,
+		}
+	}
+
+	// Copy data into temp table
+	_, err = tx.CopyFrom(
+		ctx,
+		pgx.Identifier{"tmp_products_update"},
+		[]string{"id", "brand_id", "name", "sku", "summary", "storyline", "stock_quantity", "price", "updated_by", "updated_at"},
+		pgx.CopyFromRows(rows),
+	)
+	if err != nil {
+		return 0, errors.WithMessage(err, "failed to copy to temp table")
+	}
+
+	// Execute Update from temp table
+	cmdTag, err := tx.Exec(ctx, `
+		UPDATE catalog.products p
+		SET 
+			brand_id = t.brand_id,
+			name = t.name,
+			sku = t.sku,
+			summary = t.summary,
+			storyline = t.storyline,
+			stock_quantity = t.stock_quantity,
+			price = t.price,
+			updated_by = t.updated_by,
+			updated_at = t.updated_at
+		FROM tmp_products_update t
+		WHERE p.id = t.id
+	`)
+	if err != nil {
+		return 0, errors.WithMessage(err, failedToBulkUpdate)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return 0, err
+	}
+
+	return cmdTag.RowsAffected(), nil
 }
 
 func (repo *productRepository) Search(ctx context.Context, filter *dto.ProductSearchFilter) (*dto.ProductSearchResult, error) {
