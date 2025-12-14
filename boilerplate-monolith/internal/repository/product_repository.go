@@ -25,6 +25,7 @@ type ProductRepository interface {
 	SoftDelete(ctx context.Context, id uuid.UUID, deletedBy uuid.UUID) (int64, error)
 	Count(ctx context.Context) (int64, error)
 
+	Upsert(ctx context.Context, e *entity.Product) error
 	BulkInsertCopyFrom(ctx context.Context, list []*entity.Product) (int64, error)
 	BulkUpdateCopyFrom(ctx context.Context, list []*entity.Product) (int64, error)
 	Search(ctx context.Context, filter *dto.ProductSearchFilter) (*dto.ProductSearchResult, error)
