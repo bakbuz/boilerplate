@@ -1,5 +1,9 @@
 package repository
 
+import "errors"
+
+var ErrNotFound = errors.New("record not found")
+
 const (
 	failedToCollectRows = "failed to collect rows"
 	listQueryRowError   = "list query row returned an error"
