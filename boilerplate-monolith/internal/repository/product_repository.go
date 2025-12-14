@@ -208,7 +208,10 @@ func (repo *productRepository) Count(ctx context.Context) (int64, error) {
 // Upsert ...
 func (repo *productRepository) Upsert(ctx context.Context, e *entity.Product) error {
 	if e.Id == uuid.Nil {
-		e.Id, _ = uuid.NewV7()
+		var err error
+		if e.Id, err = uuid.NewV7(); err != nil {
+			return errors.WithMessage(err, "failed to generate id")
+		}
 	}
 
 	const command string = `
@@ -254,20 +257,25 @@ func (repo *productRepository) BulkInsert(ctx context.Context, list []*entity.Pr
 		return 0, nil
 	}
 
+	rows := make([][]any, len(list))
+	for i, e := range list {
+		e.CreatedBy = uuid.Nil
+		e.CreatedAt = time.Now().UTC()
+		if e.Id == uuid.Nil {
+			newId, err := uuid.NewV7()
+			if err != nil {
+				return 0, errors.WithMessage(err, "failed to generate id")
+			}
+			e.Id = newId
+		}
+		rows[i] = []any{e.Id, e.BrandId, e.Name, e.Sku, e.Summary, e.Storyline, e.StockQuantity, e.Price, e.Deleted, e.CreatedBy, e.CreatedAt}
+	}
+
 	count, err := repo.db.Pool().CopyFrom(
 		ctx,
 		pgx.Identifier{"catalog", "products"},
 		[]string{"id", "brand_id", "name", "sku", "summary", "storyline", "stock_quantity", "price", "deleted", "created_by", "created_at"},
-		pgx.CopyFromSlice(len(list), func(i int) ([]any, error) {
-			e := list[i]
-			e.CreatedBy = uuid.Nil
-			e.CreatedAt = time.Now().UTC()
-			if e.Id == uuid.Nil {
-				newId, _ := uuid.NewV7()
-				e.Id = newId
-			}
-			return []any{e.Id, e.BrandId, e.Name, e.Sku, e.Summary, e.Storyline, e.StockQuantity, e.Price, e.Deleted, e.CreatedBy, e.CreatedAt}, nil
-		}),
+		pgx.CopyFromRows(rows),
 	)
 
 	if err != nil {
