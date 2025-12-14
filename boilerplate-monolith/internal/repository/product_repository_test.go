@@ -256,6 +256,10 @@ func TestProductRepository_BulkUpdate(t *testing.T) {
 	brandRepo := repository.NewBrandRepository(db)
 	ctx := context.Background()
 
+	// Cleanup
+	_, err := db.Pool().Exec(ctx, "DELETE FROM catalog.products")
+	require.NoError(t, err)
+
 	// Insert Brand
 	brand := &entity.Brand{
 		Name:      "Bulk Update Brand",
@@ -281,7 +285,7 @@ func TestProductRepository_BulkUpdate(t *testing.T) {
 		}
 	}
 
-	_, err := repo.BulkInsert(ctx, list)
+	_, err = repo.BulkInsert(ctx, list)
 	require.NoError(t, err)
 
 	// 2. Modify products
