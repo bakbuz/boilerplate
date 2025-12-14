@@ -41,11 +41,13 @@ grpc-highperf-backend/
 │   │   ├── product_service.go
 │   │   └── product_service_test.go
     ├── transport/
-│   │   ├── interceptor/
-│   │   │   └── auth_interceptor.go
-│   │   ├── handler/
-│   │   │   ├── brand_handler.go
-│   │   │   └── product_handler.go
+    │   ├── grpc/
+    │   │   ├── interceptor/
+    │   │   │   └── auth_interceptor.go
+    │   │   ├── handler/
+    │   │   │   ├── brand_handler.go
+    │   │   │   └── product_handler.go
+    │   │   └── server.go
 │   └── pkg/
 │       ├── errx/
 │       │   └── grpc_errors.go
