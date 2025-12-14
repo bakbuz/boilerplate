@@ -74,7 +74,7 @@ func run(ctx context.Context, logger *zerolog.Logger) error {
 	if err != nil {
 		return errors.WithMessage(err, "failed to connect the database")
 	}
-	defer dbPool.Close()
+	defer dbPool.Close() // Uygulama kapanırken bağlantıyı kapat
 	logger.Info().Interface("Version", dbPool.PostgresVersion(ctx)).Msg("database connected")
 
 	// repositories

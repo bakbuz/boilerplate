@@ -1,0 +1,76 @@
+grpc-highperf-backend/
+├── config.dev.yaml
+├── Dockerfile
+├── docker-compose.yml
+├── Makefile
+├── go.mod
+├── go.sum
+├── README.md
+├── api/
+│   ├── protos/
+│       ├── brand_service.proto
+│       ├── product_service.proto
+│       └── auth_service.proto
+│   ├── pb/                             # protoc çıktıları (gitignore veya CI'de generate)
+│   │   ├── brand_service.pb.go
+│   │   ├── product_service.pb.go
+│   │   └── auth_service.pb.go
+├── cmd/
+│   └── server/
+│       └── main.go
+├── cert/
+│   ├── cert1.crt
+│   └── cert2.pem
+├── internal/
+│   ├── bootstrap/
+│   │   ├── config.go
+│   │   └── dependencies.go
+│   ├── database/
+│   │   ├── postgres.go
+│   │   └── postgres_test.go
+│   ├── entity/
+│   │   ├── brand.go
+│   │   └── product.go
+│   ├── repository/
+│   │   ├── brand_repository.go
+│   │   ├── brand_repository_test.go
+│   │   ├── product_repository.go
+│   │   └── product_repository_test.go
+│   ├── service/
+│   │   ├── brand_service.go
+│   │   ├── brand_service_test.go
+│   │   ├── product_service.go
+│   │   └── product_service_test.go
+│   ├── interceptor/
+│   │   └── auth_jwt.go
+│   ├── handler/
+│   │   ├── brand_handler.go
+│   │   └── product_handler.go
+│   └── pkg/
+│       ├── errx/
+│       │   └── grpc_errors.go
+│       ├── hash/
+│       │   └── password.go
+│       ├── random/
+│       │   └── generator.go
+│       ├── text/
+│       │   └── slug.go
+│       └── i18n/
+│           └── tr.go
+├── migrations/
+│   ├── _queries.sql
+│   ├── 001_init_schema.up.sql
+│   └── 002_init_schema.down.sql
+├── scripts/
+│   ├── build.sh
+│   └── deploy.sh
+├── tests/
+│   ├── integration/
+│   │   └── grpc_test.go
+│   └── unit/
+│       └── service_test.go
+└── deployment/
+    ├── systemd/
+    │   └── grpc-backend.service
+    └── nginx/
+        └── nginx.conf
