@@ -99,7 +99,7 @@ func TestProductRepository_Integration(t *testing.T) {
 	assert.Nil(t, fetchedDeleted)
 }
 
-func TestProductRepository_BulkInsertCopyFrom(t *testing.T) {
+func TestProductRepository_BulkInsert(t *testing.T) {
 	db := setupTestDB(t)
 	defer db.Close()
 
@@ -130,7 +130,7 @@ func TestProductRepository_BulkInsertCopyFrom(t *testing.T) {
 		}
 	}
 
-	insertedCount, err := repo.BulkInsertCopyFrom(ctx, list)
+	insertedCount, err := repo.BulkInsert(ctx, list)
 	require.NoError(t, err)
 	assert.Equal(t, int64(count), insertedCount)
 

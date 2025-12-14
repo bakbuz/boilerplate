@@ -204,7 +204,7 @@ func TestBrandRepository_GetById_NotFound(t *testing.T) {
 	assert.Nil(t, fetched, "Should return nil for non-existent record")
 }
 
-func TestBrandRepository_BulkInsertCopyFrom(t *testing.T) {
+func TestBrandRepository_BulkInsert(t *testing.T) {
 	db := setupTestDB(t)
 	defer db.Close()
 
@@ -222,12 +222,12 @@ func TestBrandRepository_BulkInsertCopyFrom(t *testing.T) {
 		}
 	}
 
-	insertedCount, err := repo.BulkInsertCopyFrom(ctx, list)
+	insertedCount, err := repo.BulkInsert(ctx, list)
 	require.NoError(t, err)
 	assert.Equal(t, int64(count), insertedCount)
 }
 
-func TestBrandRepository_BulkUpdateCopyFrom(t *testing.T) {
+func TestBrandRepository_BulkUpdate(t *testing.T) {
 	db := setupTestDB(t)
 	defer db.Close()
 
@@ -262,8 +262,8 @@ func TestBrandRepository_BulkUpdateCopyFrom(t *testing.T) {
 	brand2.UpdatedBy = &newUUID
 	brand2.UpdatedAt = &newTime
 
-	// Execute BulkUpdateCopyFrom
-	count, err := repo.BulkUpdateCopyFrom(ctx, []*entity.Brand{brand1, brand2})
+	// Execute BulkUpdate
+	count, err := repo.BulkUpdate(ctx, []*entity.Brand{brand1, brand2})
 	require.NoError(t, err)
 	assert.Equal(t, int64(2), count)
 

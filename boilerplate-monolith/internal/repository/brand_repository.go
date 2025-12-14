@@ -21,8 +21,8 @@ type BrandRepository interface {
 	Count(ctx context.Context) (int64, error)
 
 	Upsert(ctx context.Context, e *entity.Brand) error
-	BulkInsertCopyFrom(ctx context.Context, list []*entity.Brand) (int64, error)
-	BulkUpdateCopyFrom(ctx context.Context, list []*entity.Brand) (int64, error)
+	BulkInsert(ctx context.Context, list []*entity.Brand) (int64, error)
+	BulkUpdate(ctx context.Context, list []*entity.Brand) (int64, error)
 	BulkInsertTran(ctx context.Context, list []*entity.Brand) error
 	BulkUpdateTran(ctx context.Context, list []*entity.Brand) error
 }
@@ -225,8 +225,8 @@ func (repo *brandRepository) Upsert(ctx context.Context, e *entity.Brand) error 
 	return nil
 }
 
-// BulkInsertCopyFrom ...
-func (repo *brandRepository) BulkInsertCopyFrom(ctx context.Context, list []*entity.Brand) (int64, error) {
+// BulkInsert ...
+func (repo *brandRepository) BulkInsert(ctx context.Context, list []*entity.Brand) (int64, error) {
 	if len(list) == 0 {
 		return 0, nil
 	}
@@ -256,8 +256,8 @@ func (repo *brandRepository) BulkInsertCopyFrom(ctx context.Context, list []*ent
 	return count, nil
 }
 
-// BulkUpdateCopyFrom ...
-func (repo *brandRepository) BulkUpdateCopyFrom(ctx context.Context, list []*entity.Brand) (int64, error) {
+// BulkUpdate ...
+func (repo *brandRepository) BulkUpdate(ctx context.Context, list []*entity.Brand) (int64, error) {
 	if len(list) == 0 {
 		return 0, nil
 	}

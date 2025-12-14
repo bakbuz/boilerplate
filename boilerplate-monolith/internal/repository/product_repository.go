@@ -26,8 +26,8 @@ type ProductRepository interface {
 	Count(ctx context.Context) (int64, error)
 
 	Upsert(ctx context.Context, e *entity.Product) error
-	BulkInsertCopyFrom(ctx context.Context, list []*entity.Product) (int64, error)
-	BulkUpdateCopyFrom(ctx context.Context, list []*entity.Product) (int64, error)
+	BulkInsert(ctx context.Context, list []*entity.Product) (int64, error)
+	BulkUpdate(ctx context.Context, list []*entity.Product) (int64, error)
 	Search(ctx context.Context, filter *dto.ProductSearchFilter) (*dto.ProductSearchResult, error)
 }
 
@@ -249,7 +249,7 @@ func (repo *productRepository) Upsert(ctx context.Context, e *entity.Product) er
 	return nil
 }
 
-func (repo *productRepository) BulkInsertCopyFrom(ctx context.Context, list []*entity.Product) (int64, error) {
+func (repo *productRepository) BulkInsert(ctx context.Context, list []*entity.Product) (int64, error) {
 	if len(list) == 0 {
 		return 0, nil
 	}
@@ -277,7 +277,7 @@ func (repo *productRepository) BulkInsertCopyFrom(ctx context.Context, list []*e
 	return count, nil
 }
 
-func (repo *productRepository) BulkUpdateCopyFrom(ctx context.Context, list []*entity.Product) (int64, error) {
+func (repo *productRepository) BulkUpdate(ctx context.Context, list []*entity.Product) (int64, error) {
 	if len(list) == 0 {
 		return 0, nil
 	}
