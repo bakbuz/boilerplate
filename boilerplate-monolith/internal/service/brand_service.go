@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/pkg/errors"
 )
 
@@ -95,8 +94,6 @@ func (s *brandService) Create(ctx context.Context, e *entity.Brand) error {
 		return err
 	}
 
-	e.CreatedBy = uuid.Nil
-	e.CreatedAt = time.Now().UTC()
 	return s.repo.Insert(ctx, e)
 }
 
@@ -109,10 +106,6 @@ func (s *brandService) Update(ctx context.Context, e *entity.Brand) (int64, erro
 	if e.Id == 0 {
 		return -1, errx.ErrInvalidInput
 	}
-
-	now := time.Now().UTC()
-	e.UpdatedAt = &now
-	e.UpdatedBy = &uuid.Nil
 
 	return s.repo.Update(ctx, e)
 }

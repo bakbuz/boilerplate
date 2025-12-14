@@ -8,7 +8,9 @@ import (
 	"codegen/pkg/text"
 	"context"
 	"errors"
+	"time"
 
+	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -43,21 +45,26 @@ func brandEntityToProto(b *entity.Brand) *pb.Brand {
 }
 
 // brandCreateProtoToEntity converts CreateBrandRequest to Brand entity
-func brandCreateProtoToEntity(req *pb.CreateBrandRequest) *entity.Brand {
+func brandCreateProtoToEntity(req *pb.CreateBrandRequest, currentUserId uuid.UUID) *entity.Brand {
 	return &entity.Brand{
-		Name: req.Name,
-		Slug: text.Slugify(req.Name),
-		Logo: req.Logo,
+		Name:      req.Name,
+		Slug:      text.Slugify(req.Name),
+		Logo:      req.Logo,
+		CreatedBy: currentUserId,
+		CreatedAt: time.Now().UTC(),
 	}
 }
 
 // brandUpdateProtoToEntity converts UpdateBrandRequest to Brand entity
-func brandUpdateProtoToEntity(req *pb.UpdateBrandRequest) *entity.Brand {
+func brandUpdateProtoToEntity(req *pb.UpdateBrandRequest, currentUserId uuid.UUID) *entity.Brand {
+	now := time.Now().UTC()
 	return &entity.Brand{
-		Id:   req.Id,
-		Name: req.Name,
-		Slug: text.Slugify(req.Name),
-		Logo: req.Logo,
+		Id:        req.Id,
+		Name:      req.Name,
+		Slug:      text.Slugify(req.Name),
+		Logo:      req.Logo,
+		UpdatedBy: &currentUserId,
+		UpdatedAt: &now,
 	}
 }
 
@@ -145,17 +152,22 @@ func (h *brandHandler) GetBrand(ctx context.Context, req *pb.BrandIdentifier) (*
 }
 
 func (h *brandHandler) CreateBrand(ctx context.Context, req *pb.CreateBrandRequest) (*pb.BrandIdentifier, error) {
+	// Get current user ID from context
+	currentUserId, err := getCurrentUserId(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "failed to get current user ID: %v", err)
+	}
+
 	// 1. Request Validation
 	if err := h.validateCreateBrandRequest(req); err != nil {
 		return nil, err
 	}
 
 	// 2. MAPPING: Proto -> Entity
-	domainEntity := brandCreateProtoToEntity(req)
+	domainEntity := brandCreateProtoToEntity(req, currentUserId)
 
 	// 3. Service Call
-	err := h.svc.Create(ctx, domainEntity)
-	if err != nil {
+	if err = h.svc.Create(ctx, domainEntity); err != nil {
 		if errors.Is(err, errx.ErrInvalidInput) {
 			return nil, status.Errorf(codes.InvalidArgument, "invalid brand: %v", err)
 		}
@@ -172,13 +184,19 @@ func (h *brandHandler) CreateBrand(ctx context.Context, req *pb.CreateBrandReque
 }
 
 func (h *brandHandler) UpdateBrand(ctx context.Context, req *pb.UpdateBrandRequest) (*emptypb.Empty, error) {
+	// Get current user ID from context
+	currentUserId, err := getCurrentUserId(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "failed to get current user ID: %v", err)
+	}
+
 	// 1. Request Validation
 	if err := h.validateUpdateBrandRequest(req); err != nil {
 		return nil, err
 	}
 
 	// 2. MAPPING: Proto -> Entity
-	domainEntity := brandUpdateProtoToEntity(req)
+	domainEntity := brandUpdateProtoToEntity(req, currentUserId)
 
 	// 3. Service Call
 	rowsAffected, err := h.svc.Update(ctx, domainEntity)
@@ -200,6 +218,12 @@ func (h *brandHandler) UpdateBrand(ctx context.Context, req *pb.UpdateBrandReque
 }
 
 func (h *brandHandler) DeleteBrand(ctx context.Context, req *pb.BrandIdentifier) (*emptypb.Empty, error) {
+	// Get current user ID from context
+	_, err := getCurrentUserId(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "failed to get current user ID: %v", err)
+	}
+
 	// Validate ID
 	if req.Id == 0 {
 		return nil, status.Error(codes.InvalidArgument, "brand id is required")

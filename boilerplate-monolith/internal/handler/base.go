@@ -8,7 +8,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func getUserID(ctx context.Context) (uuid.UUID, error) {
+func getCurrentUserId(ctx context.Context) (uuid.UUID, error) {
 	val := ctx.Value(interceptor.UserIDKey)
 	if val == nil {
 		return uuid.Nil, errors.New("user context is missing")
