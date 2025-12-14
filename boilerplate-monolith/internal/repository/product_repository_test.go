@@ -97,6 +97,60 @@ func TestProductRepository_Integration(t *testing.T) {
 	fetchedDeleted, err := repo.GetById(ctx, newProduct.Id)
 	require.NoError(t, err)
 	assert.Nil(t, fetchedDeleted)
+
+	// 6. DeleteByIds
+	p1 := &entity.Product{
+		Id:            uuid.New(),
+		BrandId:       int(brand.Id),
+		Name:          "DeleteByIds 1",
+		Sku:           strPtr("Del-1-" + uuid.New().String()),
+		StockQuantity: 10,
+		Price:         10.0,
+		CreatedBy:     uuid.New(),
+		CreatedAt:     time.Now(),
+	}
+	p2 := &entity.Product{
+		Id:            uuid.New(),
+		BrandId:       int(brand.Id),
+		Name:          "DeleteByIds 2",
+		Sku:           strPtr("Del-2-" + uuid.New().String()),
+		StockQuantity: 10,
+		Price:         10.0,
+		CreatedBy:     uuid.New(),
+		CreatedAt:     time.Now(),
+	}
+
+	_, err = repo.Insert(ctx, p1)
+	require.NoError(t, err)
+
+	_, err = repo.Insert(ctx, p2)
+	require.NoError(t, err)
+
+	idsToDelete := []uuid.UUID{p1.Id, p2.Id}
+	deletedCount, err := repo.DeleteByIds(ctx, idsToDelete)
+	require.NoError(t, err)
+	assert.Equal(t, int64(2), deletedCount)
+
+	// Verify deletion
+	f1, err := repo.GetById(ctx, p1.Id)
+	require.NoError(t, err)
+	assert.Nil(t, f1)
+
+	f2, err := repo.GetById(ctx, p2.Id)
+	require.NoError(t, err)
+	assert.Nil(t, f2)
+}
+
+func TestProductRepository_GetById_NotFound(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	repo := repository.NewProductRepository(db)
+
+	fetched, err := repo.GetById(context.Background(), uuid.New()) // Max int32
+	// Expecting nil, nil based on user preference
+	require.NoError(t, err)
+	assert.Nil(t, fetched, "Should return nil for non-existent record")
 }
 
 func TestProductRepository_Upsert(t *testing.T) {
@@ -192,3 +246,4 @@ func TestProductRepository_BulkInsert(t *testing.T) {
 	require.NoError(t, err)
 	assert.GreaterOrEqual(t, c, int64(count))
 }
+

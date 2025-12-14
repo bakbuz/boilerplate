@@ -117,6 +117,18 @@ func TestBrandRepository_Integration(t *testing.T) {
 	assert.Nil(t, fetched2)
 }
 
+func TestBrandRepository_GetById_NotFound(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	repo := repository.NewBrandRepository(db)
+
+	fetched, err := repo.GetById(context.Background(), 2147483647) // Max int32
+	// Expecting nil, nil based on user preference
+	require.NoError(t, err)
+	assert.Nil(t, fetched, "Should return nil for non-existent record")
+}
+
 func TestBrandRepository_Upsert(t *testing.T) {
 	db := setupTestDB(t)
 	defer db.Close()
@@ -190,18 +202,6 @@ func TestBrandRepository_Upsert(t *testing.T) {
 		assert.Equal(t, brand.Name, fetched.Name)
 		assert.Equal(t, updatedBy, *fetched.UpdatedBy)
 	})
-}
-
-func TestBrandRepository_GetById_NotFound(t *testing.T) {
-	db := setupTestDB(t)
-	defer db.Close()
-
-	repo := repository.NewBrandRepository(db)
-
-	fetched, err := repo.GetById(context.Background(), 2147483647) // Max int32
-	// Expecting nil, nil based on user preference
-	require.NoError(t, err)
-	assert.Nil(t, fetched, "Should return nil for non-existent record")
 }
 
 func TestBrandRepository_BulkInsert(t *testing.T) {
