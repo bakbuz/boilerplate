@@ -3,7 +3,6 @@ package repository_test
 import (
 	"codegen/internal/entity"
 	"codegen/internal/repository"
-	"codegen/internal/repository/dto"
 	"context"
 	"testing"
 	"time"
@@ -77,17 +76,18 @@ func TestProductRepository_Integration(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "Updated Product", fetchedUpdated.Name)
 
-	// 4. Search
-	t.Run("Search", func(t *testing.T) {
-		res, err := repo.Search(ctx, &dto.ProductSearchFilter{
-			Name: "Updated",
-			Take: 10,
-		})
-		require.NoError(t, err)
-		assert.Equal(t, 1, res.Total)
-		assert.NotEmpty(t, res.Items)
-		assert.Equal(t, newProduct.Id, res.Items[0].Id)
-	})
+	// 4. GetAll
+	list, err := repo.GetAll(ctx)
+	require.NoError(t, err)
+	assert.NotEmpty(t, list)
+	found := false
+	for _, b := range list {
+		if b.Id == newProduct.Id {
+			found = true
+			break
+		}
+	}
+	assert.True(t, found, "Newly created product should be in GetAll list")
 
 	// 5. Delete
 	affected, err = repo.Delete(ctx, newProduct.Id)
@@ -97,47 +97,6 @@ func TestProductRepository_Integration(t *testing.T) {
 	fetchedDeleted, err := repo.GetById(ctx, newProduct.Id)
 	require.NoError(t, err)
 	assert.Nil(t, fetchedDeleted)
-}
-
-func TestProductRepository_BulkInsert(t *testing.T) {
-	db := setupTestDB(t)
-	defer db.Close()
-
-	repo := repository.NewProductRepository(db)
-	brandRepo := repository.NewBrandRepository(db)
-	ctx := context.Background()
-
-	// Insert Brand
-	brand := &entity.Brand{
-		Name:      "Bulk Product Brand",
-		Slug:      "bulk-prod-" + uuid.New().String(),
-		CreatedAt: time.Now(),
-		CreatedBy: uuid.New(),
-	}
-	require.NoError(t, brandRepo.Insert(ctx, brand))
-
-	count := 5
-	list := make([]*entity.Product, count)
-	for i := 0; i < count; i++ {
-		list[i] = &entity.Product{
-			Id:        uuid.New(),
-			BrandId:   int(brand.Id),
-			Name:      "Bulk Product",
-			Sku:       strPtr("BULK-" + uuid.New().String()),
-			Price:     10.0,
-			CreatedAt: time.Now(),
-			CreatedBy: uuid.New(),
-		}
-	}
-
-	insertedCount, err := repo.BulkInsert(ctx, list)
-	require.NoError(t, err)
-	assert.Equal(t, int64(count), insertedCount)
-
-	// Verify count
-	c, err := repo.Count(ctx)
-	require.NoError(t, err)
-	assert.GreaterOrEqual(t, c, int64(count))
 }
 
 func TestProductRepository_Upsert(t *testing.T) {
@@ -191,4 +150,45 @@ func TestProductRepository_Upsert(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "Upsert Product Updated", fetchedUpdated.Name)
 	assert.Equal(t, 29.99, fetchedUpdated.Price)
+}
+
+func TestProductRepository_BulkInsert(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	repo := repository.NewProductRepository(db)
+	brandRepo := repository.NewBrandRepository(db)
+	ctx := context.Background()
+
+	// Insert Brand
+	brand := &entity.Brand{
+		Name:      "Bulk Product Brand",
+		Slug:      "bulk-prod-" + uuid.New().String(),
+		CreatedAt: time.Now(),
+		CreatedBy: uuid.New(),
+	}
+	require.NoError(t, brandRepo.Insert(ctx, brand))
+
+	count := 5
+	list := make([]*entity.Product, count)
+	for i := 0; i < count; i++ {
+		list[i] = &entity.Product{
+			Id:        uuid.New(),
+			BrandId:   int(brand.Id),
+			Name:      "Bulk Product",
+			Sku:       strPtr("BULK-" + uuid.New().String()),
+			Price:     10.0,
+			CreatedAt: time.Now(),
+			CreatedBy: uuid.New(),
+		}
+	}
+
+	insertedCount, err := repo.BulkInsert(ctx, list)
+	require.NoError(t, err)
+	assert.Equal(t, int64(count), insertedCount)
+
+	// Verify count
+	c, err := repo.Count(ctx)
+	require.NoError(t, err)
+	assert.GreaterOrEqual(t, c, int64(count))
 }
