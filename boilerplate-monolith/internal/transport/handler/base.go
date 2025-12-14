@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"codegen/internal/interceptor"
+	"codegen/internal/transport/interceptor"
 	"context"
 
 	"github.com/google/uuid"
