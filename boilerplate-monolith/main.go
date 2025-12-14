@@ -2,11 +2,11 @@ package main
 
 import (
 	"codegen/api/pb"
-	"codegen/internal/bootstrap"
+	"codegen/internal/config"
 	"codegen/internal/database"
-	"codegen/internal/handler"
 	"codegen/internal/repository"
 	"codegen/internal/service"
+	"codegen/internal/transport/handler"
 	"context"
 	"flag"
 	"fmt"
@@ -64,7 +64,7 @@ func run(ctx context.Context, logger *zerolog.Logger) error {
 	configFile := fmt.Sprintf("config.%s.json", env)
 	logger.Debug().Str("ENV", env).Str("FILE", configFile).Msg("")
 
-	cfg, err := bootstrap.LoadConfig(configFile)
+	cfg, err := config.LoadConfig(configFile)
 	if err != nil {
 		return errors.WithMessage(err, "failed to read configuration file")
 	}

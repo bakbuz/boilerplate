@@ -22,9 +22,8 @@ grpc-highperf-backend/
 │   ├── cert1.crt
 │   └── cert2.pem
 ├── internal/
-│   ├── bootstrap/
-│   │   ├── config.go
-│   │   └── dependencies.go
+│   ├── config/
+│   │   └── config.go
 │   ├── database/
 │   │   ├── postgres.go
 │   │   └── postgres_test.go
@@ -41,11 +40,12 @@ grpc-highperf-backend/
 │   │   ├── brand_service_test.go
 │   │   ├── product_service.go
 │   │   └── product_service_test.go
-│   ├── interceptor/
-│   │   └── auth_jwt.go
-│   ├── handler/
-│   │   ├── brand_handler.go
-│   │   └── product_handler.go
+    ├── transport/
+│   │   ├── interceptor/
+│   │   │   └── auth_interceptor.go
+│   │   ├── handler/
+│   │   │   ├── brand_handler.go
+│   │   │   └── product_handler.go
 │   └── pkg/
 │       ├── errx/
 │       │   └── grpc_errors.go
