@@ -25,7 +25,7 @@ type ProductRepository interface {
 	SoftDelete(ctx context.Context, id uuid.UUID, deletedBy uuid.UUID) (int64, error)
 	Count(ctx context.Context) (int64, error)
 
-	BulkInsert(ctx context.Context, list []*entity.Product) error
+	BulkInsertCopyFrom(ctx context.Context, list []*entity.Product) error
 	Search(ctx context.Context, filter *dto.ProductSearchFilter) (*dto.ProductSearchResult, error)
 }
 
@@ -203,7 +203,7 @@ func (repo *productRepository) Count(ctx context.Context) (int64, error) {
 	return repo.db.Count(ctx, "SELECT COUNT(*) FROM catalog.products WHERE deleted=false")
 }
 
-func (repo *productRepository) BulkInsert(ctx context.Context, list []*entity.Product) error {
+func (repo *productRepository) BulkInsertCopyFrom(ctx context.Context, list []*entity.Product) error {
 	if len(list) == 0 {
 		return nil
 	}
@@ -214,8 +214,11 @@ func (repo *productRepository) BulkInsert(ctx context.Context, list []*entity.Pr
 		[]string{"id", "brand_id", "name", "sku", "summary", "storyline", "stock_quantity", "price", "deleted", "created_by", "created_at"},
 		pgx.CopyFromSlice(len(list), func(i int) ([]any, error) {
 			e := list[i]
+			e.CreatedBy = uuid.Nil
+			e.CreatedAt = time.Now().UTC()
 			if e.Id == uuid.Nil {
-				e.Id = uuid.New()
+				newId, _ := uuid.NewV7()
+				e.Id = newId
 			}
 			return []any{e.Id, e.BrandId, e.Name, e.Sku, e.Summary, e.Storyline, e.StockQuantity, e.Price, e.Deleted, e.CreatedBy, e.CreatedAt}, nil
 		}),
