@@ -21,12 +21,6 @@ grpc-highperf-backend/
 │   │   └── main.go
 │   └── tree/
 │       └── main.go
-├── deployment/
-│   ├── nginx/
-│   │   └── nginx.conf
-│   ├── systemd/
-│   │   └── grpc-backend.service
-│   └── terminal commands.txt
 ├── internal/
 │   ├── config/
 │   │   └── config.go
@@ -59,9 +53,9 @@ grpc-highperf-backend/
 │       └── object_pool/
 │           └── object_pool.go
 ├── migrations/
+│   ├── 000_queries.sql
 │   ├── 001_initial_schema.down.sql
-│   ├── 001_initial_schema.up.sql
-│   └── _queries.sql
+│   └── 001_initial_schema.up.sql
 ├── pkg/
 │   ├── errx/
 │   │   └── grpc_errors.go
@@ -77,14 +71,20 @@ grpc-highperf-backend/
 │   │   └── generator.go
 │   └── text/
 │       └── slug.go
-├── scripts/
-│   ├── build.sh
-│   └── deploy.sh
 ├── tests/
 │   ├── e2e/
 │   └── load/
 │       ├── brand/
 │       └── product/
+├── scripts/
+│   ├── build.sh
+│   └── deploy.sh
+├── deployment/
+│   ├── nginx/
+│   │   └── nginx.conf
+│   ├── systemd/
+│   │   └── grpc-backend.service
+│   └── terminal commands.txt
 ├── Dockerfile
 ├── Makefile
 ├── README.md
@@ -93,6 +93,7 @@ grpc-highperf-backend/
 ├── buf.txt
 ├── buf.yaml
 ├── config.dev.json
+├── docker-compose.yaml
 ├── go.mod
 ├── go.sum
 ├── main.go

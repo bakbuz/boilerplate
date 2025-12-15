@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"sort" // <-- YENİ: Sıralama paketi eklendi
+	"sort"
 	"strings"
 )
 
@@ -39,6 +39,27 @@ func main() {
 	}
 }
 
+// Dosya/Klasörün sıralamadaki "Ağırlığını" belirleyen fonksiyon
+func getSortWeight(entry os.DirEntry) int {
+	name := entry.Name()
+
+	// 1. Özel Klasörler (En Sona Atılacaklar)
+	if name == "scripts" {
+		return 2
+	}
+	if name == "deployment" {
+		return 3
+	}
+
+	// 2. Normal Klasörler (En Başa)
+	if entry.IsDir() {
+		return 1
+	}
+
+	// 3. Dosyalar
+	return 4
+}
+
 func printTree(w io.Writer, path string, prefix string) error {
 	entries, err := os.ReadDir(path)
 	if err != nil {
@@ -46,30 +67,32 @@ func printTree(w io.Writer, path string, prefix string) error {
 		return nil
 	}
 
-	// 1. Filtreleme (Gizli dosyalar hariç)
+	// Filtreleme
 	var visibleEntries []os.DirEntry
 	for _, e := range entries {
-		if !strings.HasPrefix(e.Name(), ".") && e.Name() != "tree_output_sorted.txt" {
+		if !strings.HasPrefix(e.Name(), ".") && e.Name() != "tree_custom_sort.txt" {
 			visibleEntries = append(visibleEntries, e)
 		}
 	}
 
-	// 2. SIRALAMA MANTIĞI (Önce Klasörler, Sonra Dosyalar)
+	// ÖZEL SIRALAMA MANTIĞI
 	sort.Slice(visibleEntries, func(i, j int) bool {
 		entryI := visibleEntries[i]
 		entryJ := visibleEntries[j]
 
-		// İkisi de klasör veya ikisi de dosya ise -> Alfabetik sırala
-		if entryI.IsDir() == entryJ.IsDir() {
-			return entryI.Name() < entryJ.Name()
+		weightI := getSortWeight(entryI)
+		weightJ := getSortWeight(entryJ)
+
+		// Eğer ağırlıkları farklıysa (örn: biri normal klasör, biri scripts), ağırlığa göre sırala
+		if weightI != weightJ {
+			return weightI < weightJ
 		}
 
-		// Biri klasör biri dosya ise -> Klasör olanı (IsDir=true) öne al
-		// true dönersek i önce gelir, false dönersek j önce gelir.
-		return entryI.IsDir()
+		// Eğer ağırlıkları aynıysa (ikisi de normal klasör), alfabetik sırala
+		return entryI.Name() < entryJ.Name()
 	})
 
-	// 3. Yazdırma Döngüsü
+	// Yazdırma Döngüsü
 	for i, entry := range visibleEntries {
 		isLast := i == len(visibleEntries)-1
 
