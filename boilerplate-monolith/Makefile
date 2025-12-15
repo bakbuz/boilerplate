@@ -1,7 +1,8 @@
 .PHONY: buf-gen buf-lint build docker test u r
 
 # Variables
-OUTPUT_PATH=api/pb/v1
+BINARY_OUTPUT=.bin/server
+OUTPUT_PATH=api/gen
 
 # Generate gRPC code
 buf-gen:
@@ -16,15 +17,60 @@ buf-lint:
 build: buf-gen
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/catalog ./cmd/server
 
+# Build with optimizations
 build_sm: buf-gen
 	# -s -w flagleri binary boyutunu düşürür (debug bilgilerini siler)
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o bin/server cmd/server/main.go
 
-docker: build
-	docker build -t maydere/catalog:latest .
+# Build for production with PGO
+build-prod: buf-gen
+	@echo "Building with Profile Guided Optimization..."
+	go build -pgo=auto -o bin/$(BINARY_NAME)-prod ./cmd/server
 
+# Run tests
 test:
-	go test ./... -v
+	@echo "Running tests..."
+	go test ./... -v -race -coverprofile=coverage.out
+
+# Integration tests
+test-integration:
+	@echo "Running integration tests..."
+	go test -tags=integration ./tests/integration/... -v
+
+# Clean build artifacts
+clean:
+	@echo "Cleaning..."
+	rm -rf bin/
+	rm -rf $(OUTPUT_PATH)
+	rm -f coverage.out	
+
+# Docker build
+docker: build
+	@echo "Building Docker image..."
+	docker build -t grpc-backend:latest .
+
+# Run locally with docker-compose
+docker-run:
+	docker-compose up --build
+
+# Deploy to AWS EC2
+deploy: build
+	@echo "Deploying to EC2..."
+	scp bin/$(BINARY_NAME) deployment/ user@ec2-instance:/opt/grpc-backend/
+	ssh user@ec2-instance "sudo systemctl restart grpc-backend"
+
+# Performance profiling
+profile:
+	@echo "Starting CPU profiling..."
+	go test -cpuprofile=cpu.prof -memprofile=mem.prof ./...
+
+# Lint
+lint:
+	golangci-lint run ./...
+
+# Security scan
+security:
+	gosec ./...	
 
 u:
 	cls
