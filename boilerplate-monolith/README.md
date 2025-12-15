@@ -23,3 +23,10 @@ docker-compose up -d
 
 
 # grpc-highperf-backend
+
+
+# buf.yaml
+
+go install github.com/bufbuild/buf/cmd/buf@latest
+buf config init
+buf lint api/protos
