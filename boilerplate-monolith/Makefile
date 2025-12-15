@@ -41,6 +41,10 @@ test-e2e:
 	@echo "Running end-to-end tests..."
 	go test ./tests/e2e -v
 
+test-benchmark:
+	@echo "Running benchmark tests..."
+	go test ./tests/benchmark/service -v	
+
 # Clean build artifacts
 clean:
 	@echo "Cleaning..."

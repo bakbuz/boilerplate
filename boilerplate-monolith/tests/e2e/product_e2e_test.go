@@ -243,7 +243,7 @@ func TestProductService_E2E(t *testing.T) {
 		req := &catalogv1.CreateProductRequest{
 			Name:      "MSI Raider GE78",
 			BrandId:   1,
-			Storyline: strPtr("High performance gaming laptop"),
+			Storyline: ptr("High performance gaming laptop"),
 			Price:     3500.00,
 		}
 
