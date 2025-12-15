@@ -34,3 +34,6 @@ u:
 r:
 	cls
 	go run main.go
+
+pb-lint:
+	buf lint ./api/protos/demo/v1/demo.proto

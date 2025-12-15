@@ -9,9 +9,10 @@ deps:
 lint:
   use:
     - STANDARD
-  except:
-    - PACKAGE_VERSION_SUFFIX  # demo.v1 zorlamasını kaldırır
-    - DIRECTORY_SAME_PACKAGE  # “package demo ise demo/ dizininde olmalı” zorlamasını kaldırır
+  #except:
+  #  - PACKAGE_VERSION_SUFFIX  # demo.v1 zorlamasını kaldırır
+  #  - DIRECTORY_SAME_PACKAGE  # “package demo ise demo/ dizininde olmalı” zorlamasını kaldırır
+
 breaking:
   use:
     - FILE
