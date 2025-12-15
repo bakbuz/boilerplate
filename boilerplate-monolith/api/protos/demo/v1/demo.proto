@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package demo;
+package demo.v1;
 
-option go_package = ".;pb";
+option go_package = "codegen/api/protos/demo/v1;demov1";
 
 message Demo {
   int32 id = 1;

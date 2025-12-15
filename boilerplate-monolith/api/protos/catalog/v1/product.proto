@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package catalog.v1;
+package product.v1;
 
-option go_package = ".;pb";
+option go_package = "codegen/api/protos/catalog/v1;productv1";
 
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";

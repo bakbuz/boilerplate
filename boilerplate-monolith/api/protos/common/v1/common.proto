@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package common;
+package common.v1;
 
-option go_package = ".;pb";
+option go_package = "codegen/api/protos/common/v1;commonv1";
 
 message Lookup {
   int32 id = 1;

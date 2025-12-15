@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package brand.v1;
 
-option go_package = ".;pb";
+option go_package = "codegen/api/protos/catalog/v1;brandv1";
 
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
