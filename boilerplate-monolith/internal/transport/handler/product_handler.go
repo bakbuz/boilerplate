@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"codegen/api/pb"
+	catalogv1 "codegen/api/gen/catalog/v1"
 	"codegen/internal/entity"
 	"codegen/internal/service"
 	"codegen/pkg/errx"
@@ -17,7 +17,7 @@ import (
 )
 
 type productHandler struct {
-	pb.UnimplementedCatalogServiceServer
+	catalogv1.UnimplementedProductServiceServer
 	svc service.ProductService
 }
 
@@ -30,12 +30,12 @@ func NewProductHandler(svc service.ProductService) *productHandler {
 // ============================================================================
 
 // productEntityToProto converts a Product entity to protobuf Product message
-func productEntityToProto(p *entity.Product) *pb.Product {
+func productEntityToProto(p *entity.Product) *catalogv1.Product {
 	if p == nil {
 		return nil
 	}
 
-	product := &pb.Product{
+	product := &catalogv1.Product{
 		Id:        p.Id.String(),
 		BrandId:   int32(p.BrandId),
 		Name:      p.Name,
@@ -51,7 +51,7 @@ func productEntityToProto(p *entity.Product) *pb.Product {
 }
 
 // productCreateProtoToEntity converts CreateProductRequest to Product entity
-func productCreateProtoToEntity(req *pb.CreateProductRequest, currentUserId uuid.UUID) (*entity.Product, error) {
+func productCreateProtoToEntity(req *catalogv1.CreateProductRequest, currentUserId uuid.UUID) (*entity.Product, error) {
 	if req == nil {
 		return nil, errx.ErrInvalidInput
 	}
@@ -77,7 +77,7 @@ func productCreateProtoToEntity(req *pb.CreateProductRequest, currentUserId uuid
 }
 
 // productUpdateProtoToEntity converts UpdateProductRequest to Product entity
-func productUpdateProtoToEntity(req *pb.UpdateProductRequest, currentUserId uuid.UUID) (*entity.Product, error) {
+func productUpdateProtoToEntity(req *catalogv1.UpdateProductRequest, currentUserId uuid.UUID) (*entity.Product, error) {
 	if req == nil {
 		return nil, errx.ErrInvalidInput
 	}
@@ -111,7 +111,7 @@ func productUpdateProtoToEntity(req *pb.UpdateProductRequest, currentUserId uuid
 // ============================================================================
 
 // validateCreateProductRequest validates a CreateProductRequest
-func (h *productHandler) validateCreateProductRequest(req *pb.CreateProductRequest) error {
+func (h *productHandler) validateCreateProductRequest(req *catalogv1.CreateProductRequest) error {
 	if req == nil {
 		return status.Error(codes.InvalidArgument, "product is required")
 	}
@@ -135,7 +135,7 @@ func (h *productHandler) validateCreateProductRequest(req *pb.CreateProductReque
 }
 
 // validateUpdateProductRequest validates an UpdateProductRequest
-func (h *productHandler) validateUpdateProductRequest(req *pb.UpdateProductRequest) error {
+func (h *productHandler) validateUpdateProductRequest(req *catalogv1.UpdateProductRequest) error {
 	if req == nil {
 		return status.Error(codes.InvalidArgument, "product is required")
 	}
@@ -167,7 +167,7 @@ func (h *productHandler) validateUpdateProductRequest(req *pb.UpdateProductReque
 // HANDLER METHODS
 // ============================================================================
 
-func (h *productHandler) GetProducts(ctx context.Context, req *pb.ListProductsRequest) (*pb.ListProductsResponse, error) {
+func (h *productHandler) List(ctx context.Context, req *catalogv1.ListProductsRequest) (*catalogv1.ListProductsResponse, error) {
 	// Context cancellation check
 	if ctx.Err() != nil {
 		return nil, status.Error(codes.Canceled, ctx.Err().Error())
@@ -180,26 +180,26 @@ func (h *productHandler) GetProducts(ctx context.Context, req *pb.ListProductsRe
 
 	// Empty list optimization
 	if len(list) == 0 {
-		return &pb.ListProductsResponse{
+		return &catalogv1.ListProductsResponse{
 			Total: 0,
-			Items: []*pb.Product{},
+			Items: []*catalogv1.Product{},
 		}, nil
 	}
 
 	// MAPPING: Entity List -> Proto List
 	total := int32(len(list))
-	protoItems := make([]*pb.Product, total)
+	protoItems := make([]*catalogv1.Product, total)
 	for i, p := range list {
 		protoItems[i] = productEntityToProto(p)
 	}
 
-	return &pb.ListProductsResponse{
+	return &catalogv1.ListProductsResponse{
 		Total: total,
 		Items: protoItems,
 	}, nil
 }
 
-func (h *productHandler) GetProduct(ctx context.Context, req *pb.ProductIdentifier) (*pb.GetProductResponse, error) {
+func (h *productHandler) Get(ctx context.Context, req *catalogv1.GetProductRequest) (*catalogv1.Product, error) {
 	// Validate Id format
 	id, err := uuid.Parse(req.Id)
 	if err != nil {
@@ -214,12 +214,10 @@ func (h *productHandler) GetProduct(ctx context.Context, req *pb.ProductIdentifi
 		return nil, status.Errorf(codes.Internal, "failed to fetch product: %v", err)
 	}
 
-	return &pb.GetProductResponse{
-		Product: productEntityToProto(item),
-	}, nil
+	return productEntityToProto(item), nil
 }
 
-func (h *productHandler) CreateProduct(ctx context.Context, req *pb.CreateProductRequest) (*pb.ProductIdentifier, error) {
+func (h *productHandler) Create(ctx context.Context, req *catalogv1.CreateProductRequest) (*catalogv1.Product, error) {
 	// Get current user Id from context
 	currentUserId, err := getCurrentUserId(ctx)
 	if err != nil {
@@ -250,12 +248,10 @@ func (h *productHandler) CreateProduct(ctx context.Context, req *pb.CreateProduc
 	}
 
 	// 4. MAPPING: Entity -> Proto Response
-	return &pb.ProductIdentifier{
-		Id: domainEntity.Id.String(),
-	}, nil
+	return productEntityToProto(domainEntity), nil
 }
 
-func (h *productHandler) UpdateProduct(ctx context.Context, req *pb.UpdateProductRequest) (*emptypb.Empty, error) {
+func (h *productHandler) Update(ctx context.Context, req *catalogv1.UpdateProductRequest) (*catalogv1.Product, error) {
 	// Get current user Id from context
 	currentUserId, err := getCurrentUserId(ctx)
 	if err != nil {
@@ -290,10 +286,10 @@ func (h *productHandler) UpdateProduct(ctx context.Context, req *pb.UpdateProduc
 	}
 
 	// 4. MAPPING: Entity -> Proto Response
-	return &emptypb.Empty{}, nil
+	return productEntityToProto(domainEntity), nil
 }
 
-func (h *productHandler) DeleteProduct(ctx context.Context, req *pb.ProductIdentifier) (*emptypb.Empty, error) {
+func (h *productHandler) Delete(ctx context.Context, req *catalogv1.DeleteProductRequest) (*emptypb.Empty, error) {
 	// Get current user Id from context
 	currentUserId, err := getCurrentUserId(ctx)
 	if err != nil {
