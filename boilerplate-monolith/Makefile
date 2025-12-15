@@ -1,4 +1,4 @@
-.PHONY: buf-gen buf-lint build docker test u r
+.PHONY: buf-gen buf-lint build build_sm build-prod test test-integration clean docker docker-run deploy profile lint security u r
 
 # Variables
 BINARY_OUTPUT=.bin/server
