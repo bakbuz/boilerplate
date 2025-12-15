@@ -2,12 +2,18 @@ package e2e_test
 
 import (
 	catalogv1 "codegen/api/gen/catalog/v1"
+	"codegen/internal/entity"
+	"codegen/internal/repository/dto"
 	"codegen/internal/service"
+	"codegen/internal/transport/handler"
+	"codegen/internal/transport/interceptor"
 	"context"
 	"net"
 	"sync"
 	"testing"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -25,25 +31,168 @@ func init() {
 	lis = bufconn.Listen(bufSize)
 }
 
+// Test interceptor to set user ID
+func testInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	// Set a dummy user ID if not set
+	if ctx.Value(interceptor.UserIdKey) == nil {
+		ctx = context.WithValue(ctx, interceptor.UserIdKey, uuid.New().String())
+	}
+	return handler(ctx, req)
+}
+
 // 2. Test Ortamını Ayağa Kaldıran Yardımcı Fonksiyon
 func bufDialer(context.Context, string) (net.Conn, error) {
 	return lis.Dial()
 }
 
 type InMemoryProductRepo struct {
-	items map[string]*catalogv1.Product
+	items map[string]*entity.Product
 	mu    sync.RWMutex
 }
 
 func NewInMemoryProductRepo() *InMemoryProductRepo {
 	return &InMemoryProductRepo{
-		items: make(map[string]*catalogv1.Product),
+		items: make(map[string]*entity.Product),
 	}
+}
+
+func (r *InMemoryProductRepo) GetAll(ctx context.Context) ([]*entity.Product, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	var result []*entity.Product
+	for _, p := range r.items {
+		if !p.Deleted {
+			result = append(result, p)
+		}
+	}
+	return result, nil
+}
+
+func (r *InMemoryProductRepo) GetByIds(ctx context.Context, ids []uuid.UUID) ([]*entity.Product, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	var result []*entity.Product
+	for _, id := range ids {
+		if p, exists := r.items[id.String()]; exists && !p.Deleted {
+			result = append(result, p)
+		}
+	}
+	return result, nil
+}
+
+func (r *InMemoryProductRepo) GetById(ctx context.Context, id uuid.UUID) (*entity.Product, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	if p, exists := r.items[id.String()]; exists && !p.Deleted {
+		return p, nil
+	}
+	return nil, nil
+}
+
+func (r *InMemoryProductRepo) Insert(ctx context.Context, e *entity.Product) (int64, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.items[e.Id.String()] = e
+	return 1, nil
+}
+
+func (r *InMemoryProductRepo) Update(ctx context.Context, e *entity.Product) (int64, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if _, exists := r.items[e.Id.String()]; exists {
+		r.items[e.Id.String()] = e
+		return 1, nil
+	}
+	return 0, nil
+}
+
+func (r *InMemoryProductRepo) Delete(ctx context.Context, id uuid.UUID) (int64, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if _, exists := r.items[id.String()]; exists {
+		delete(r.items, id.String())
+		return 1, nil
+	}
+	return 0, nil
+}
+
+func (r *InMemoryProductRepo) DeleteByIds(ctx context.Context, ids []uuid.UUID) (int64, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	count := int64(0)
+	for _, id := range ids {
+		if _, exists := r.items[id.String()]; exists {
+			delete(r.items, id.String())
+			count++
+		}
+	}
+	return count, nil
+}
+
+func (r *InMemoryProductRepo) SoftDelete(ctx context.Context, id uuid.UUID, deletedBy uuid.UUID) (int64, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if p, exists := r.items[id.String()]; exists {
+		now := time.Now().UTC()
+		p.Deleted = true
+		p.DeletedBy = &deletedBy
+		p.DeletedAt = &now
+		return 1, nil
+	}
+	return 0, nil
+}
+
+func (r *InMemoryProductRepo) Count(ctx context.Context) (int64, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	count := int64(0)
+	for _, p := range r.items {
+		if !p.Deleted {
+			count++
+		}
+	}
+	return count, nil
+}
+
+func (r *InMemoryProductRepo) Upsert(ctx context.Context, e *entity.Product) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.items[e.Id.String()] = e
+	return nil
+}
+
+func (r *InMemoryProductRepo) BulkInsert(ctx context.Context, list []*entity.Product) (int64, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for _, e := range list {
+		r.items[e.Id.String()] = e
+	}
+	return int64(len(list)), nil
+}
+
+func (r *InMemoryProductRepo) BulkUpdate(ctx context.Context, list []*entity.Product) (int64, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	count := int64(0)
+	for _, e := range list {
+		if _, exists := r.items[e.Id.String()]; exists {
+			r.items[e.Id.String()] = e
+			count++
+		}
+	}
+	return count, nil
+}
+
+func (r *InMemoryProductRepo) Search(ctx context.Context, filter *dto.ProductSearchFilter) (*dto.ProductSearchResult, error) {
+	// Not implemented for test
+	return &dto.ProductSearchResult{}, nil
 }
 
 func setupTestServer(t *testing.T) (catalogv1.ProductServiceClient, func()) {
 	// gRPC sunucusunu oluştur
-	s := grpc.NewServer()
+	s := grpc.NewServer(
+		grpc.UnaryInterceptor(testInterceptor),
+	)
 
 	// 1. Önce sahte veritabanını oluştur (RAM'de çalışır, çok hızlıdır)
 	mockRepo := NewInMemoryProductRepo()
@@ -51,7 +200,10 @@ func setupTestServer(t *testing.T) (catalogv1.ProductServiceClient, func()) {
 	// 2. Servisi bu sahte veritabanıyla başlat. Servis bunu gerçek veritabanı sanacak çünkü interface'e uyuyor.
 	mockSvc := service.NewProductService(mockRepo)
 
-	catalogv1.RegisterProductServiceServer(s, mockSvc)
+	// 3. Handler oluştur
+	mockHandler := handler.NewProductHandler(mockSvc)
+
+	catalogv1.RegisterProductServiceServer(s, mockHandler)
 
 	// Sunucuyu sanal listener üzerinde başlat (Goroutine içinde)
 	go func() {
@@ -61,7 +213,7 @@ func setupTestServer(t *testing.T) (catalogv1.ProductServiceClient, func()) {
 	}()
 
 	// Client bağlantısını oluştur
-	conn, err := grpc.NewClient("bufnet",
+	conn, err := grpc.Dial("bufnet",
 		grpc.WithContextDialer(bufDialer),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
@@ -82,13 +234,15 @@ func TestProductService_E2E(t *testing.T) {
 	client, teardown := setupTestServer(t)
 	defer teardown()
 
-	ctx := context.Background()
+	userId := uuid.New().String()
+	ctx := context.WithValue(context.Background(), interceptor.UserIdKey, userId)
 	var createdId string
 
 	// Adım 1: Create Product
 	t.Run("Create Product", func(t *testing.T) {
 		req := &catalogv1.CreateProductRequest{
 			Name:      "MSI Raider GE78",
+			BrandId:   1,
 			Storyline: strPtr("High performance gaming laptop"),
 			Price:     3500.00,
 		}
@@ -97,7 +251,6 @@ func TestProductService_E2E(t *testing.T) {
 		require.NoError(t, err)
 		require.NotEmpty(t, resp.Id)
 		require.Equal(t, req.Name, resp.Name)
-
 		createdId = resp.Id // Sonraki testler için Id'yi sakla
 	})
 
@@ -115,15 +268,16 @@ func TestProductService_E2E(t *testing.T) {
 	t.Run("Update Product", func(t *testing.T) {
 		// Sadece fiyatı güncelleyelim
 		req := &catalogv1.UpdateProductRequest{
-			Id:    createdId,
-			Name:  "MSI Raider GE78 HX", // İsim değişti
-			Price: 4000.00,              // Fiyat değişti
+			Id:      createdId,
+			Name:    "MSI Raider GE78 HX", // İsim değişti
+			BrandId: 1,
+			Price:   4000.00, // Fiyat değişti
 		}
 
 		resp, err := client.Update(ctx, req)
 		require.NoError(t, err)
 		require.Equal(t, "MSI Raider GE78 HX", resp.Name)
-		require.Equal(t, 4000.00, resp.Price) // proto'da float ise
+		require.Equal(t, float32(4000.00), resp.Price) // proto'da float32
 	})
 
 	// Adım 4: List Products

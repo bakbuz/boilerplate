@@ -1,7 +1,7 @@
 package interceptor
 
 import (
-	"codegen/api/pb"
+	demov1 "codegen/api/gen/demo/v1"
 	"context"
 	"strings"
 
@@ -23,9 +23,11 @@ const (
 // Hızlı arama için map kullanıyoruz (Set mantığı)
 // pb paketini burada kullanmak çok mantıklı değil ama olası endpoint değişikliklerini önlemek için kullanıyoruz
 var publicEndpoints = map[string]struct{}{
-	pb.DemoService_ListDemos_FullMethodName:  {},
-	pb.DemoService_GetDemo_FullMethodName:    {},
-	pb.DemoService_CreateDemo_FullMethodName: {},
+	demov1.DemoService_List_FullMethodName:   {},
+	demov1.DemoService_Get_FullMethodName:    {},
+	demov1.DemoService_Create_FullMethodName: {},
+	demov1.DemoService_Update_FullMethodName: {},
+	demov1.DemoService_Delete_FullMethodName: {},
 	"/api.v1.AuthService/Login":              {},
 	"/api.v1.AuthService/Register":           {},
 	"/grpc.health.v1.Health/Check":           {},
