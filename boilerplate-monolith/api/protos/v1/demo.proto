@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package demo;
+
+option go_package = "codegen/api/pb/v1;pb";
+
+message Demo {
+  int32 id = 1;
+  string name = 2;
+  string description = 3;
+}
+
+message ListDemosRequest {}
+
+message ListDemosResponse {
+  repeated Demo demos = 1;
+}
+
+message GetDemoRequest {
+  int32 id = 1;
+}
+
+message GetDemoResponse {
+  Demo demo = 1;
+}
+
+message CreateDemoRequest {
+  string name = 1;
+  string description = 2;
+}
+
+message CreateDemoResponse {
+  Demo demo = 1;
+}
+
+service DemoService {
+  rpc ListDemos (ListDemosRequest) returns (ListDemosResponse) {}
+  rpc GetDemo (GetDemoRequest) returns (GetDemoResponse) {}
+  rpc CreateDemo (CreateDemoRequest) returns (CreateDemoResponse) {}
+}
