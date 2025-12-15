@@ -13,6 +13,21 @@ lint:
   #  - PACKAGE_VERSION_SUFFIX  # demo.v1 zorlamasını kaldırır
   #  - DIRECTORY_SAME_PACKAGE  # “package demo ise demo/ dizininde olmalı” zorlamasını kaldırır
 
+  except:
+    # Aynı mesajı (örneğin 'Demo') birden fazla RPC'de dönüş tipi olarak kullanmaya izin ver.
+    - RPC_REQUEST_RESPONSE_UNIQUE
+    
+    # Response mesaj isminin ille de "MethodAdiResponse" olma zorunluluğunu kaldır.
+    # (Böylece 'returns (Demo)' veya 'returns (google.protobuf.Empty)' diyebilirsin.)
+    - RPC_RESPONSE_STANDARD_NAME
+    
+    # İsteğe bağlı: Request isimlerinin "MethodAdiRequest" olma zorunluluğunu kaldır.
+    # (Eğer ileride ortak bir request objesi kullanırsan lazım olur, şimdilik opsiyonel)
+    - RPC_REQUEST_STANDARD_NAME
+    
+    # İsteğe bağlı: Servis sonekinin "Service" ile bitme zorunluluğu (genelde açık kalır ama bazen kapatılır)
+    # - SERVICE_SUFFIX    
+
 breaking:
   use:
     - FILE

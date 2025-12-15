@@ -4,37 +4,44 @@ package demo.v1;
 
 option go_package = "codegen/api/protos/demo/v1;demov1";
 
+import "google/protobuf/empty.proto";
+
 message Demo {
   int32 id = 1;
   string name = 2;
   string description = 3;
 }
 
-message ListDemosRequest {}
+message ListRequest {
+}
 
-message ListDemosResponse {
+message ListResponse {
   repeated Demo demos = 1;
 }
 
-message GetDemoRequest {
+message GetRequest {
   int32 id = 1;
 }
 
-message GetDemoResponse {
-  Demo demo = 1;
-}
-
-message CreateDemoRequest {
+message CreateRequest {
   string name = 1;
   string description = 2;
 }
 
-message CreateDemoResponse {
-  Demo demo = 1;
+message UpdateRequest {
+  int32 id = 1;
+  string name = 2;
+  string description = 3;
+}
+
+message DeleteRequest {
+  int32 id = 1;
 }
 
 service DemoService {
-  rpc ListDemos (ListDemosRequest) returns (ListDemosResponse) {}
-  rpc GetDemo (GetDemoRequest) returns (GetDemoResponse) {}
-  rpc CreateDemo (CreateDemoRequest) returns (CreateDemoResponse) {}
+  rpc List (ListRequest) returns (ListResponse) {}
+  rpc Get (GetRequest) returns (Demo) {}
+  rpc Create (CreateRequest) returns (Demo) {}
+  rpc Update (UpdateRequest) returns (Demo) {}
+  rpc Delete (DeleteRequest) returns (google.protobuf.Empty) {}
 }
