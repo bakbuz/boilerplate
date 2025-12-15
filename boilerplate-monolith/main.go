@@ -1,7 +1,8 @@
 package main
 
 import (
-	"codegen/api/pb"
+	catalogv1 "codegen/api/gen/catalog/v1"
+	demov1 "codegen/api/gen/demo/v1"
 	"codegen/internal/config"
 	"codegen/internal/database"
 	"codegen/internal/repository"
@@ -98,9 +99,9 @@ func run(ctx context.Context, logger *zerolog.Logger) error {
 
 	// gRPC server instance
 	grpcServer := grpc.NewServer(opts...)
-	pb.RegisterDemoServiceServer(grpcServer, demoHandler)
-	pb.RegisterBrandServiceServer(grpcServer, brandHandler)
-	pb.RegisterCatalogServiceServer(grpcServer, productHandler)
+	demov1.RegisterDemoServiceServer(grpcServer, demoHandler)
+	catalogv1.RegisterBrandServiceServer(grpcServer, brandHandler)
+	catalogv1.RegisterProductServiceServer(grpcServer, productHandler)
 
 	// Development modunda Reflection aç (Postman/gRPCurl için)
 	if env != "production" {
