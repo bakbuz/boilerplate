@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package brand.v1;
+package catalog.v1;
 
 option go_package = "codegen/api/protos/catalog/v1;brandv1";
 
@@ -15,13 +15,16 @@ message Brand {
   google.protobuf.Timestamp created_at = 5;
 }
 
-message BrandIdentifier {
-  int32 id = 1;
+message ListBrandsRequest {
 }
 
 message ListBrandsResponse {
   int32 total = 1;
   repeated Brand items = 2;
+}
+
+message GetBrandRequest {
+  int32 id = 1;
 }
 
 message GetBrandResponse { 
@@ -39,10 +42,14 @@ message UpdateBrandRequest {
   string logo = 3;
 }
 
+message DeleteBrandRequest {
+  int32 id = 1;
+}
+
 service BrandService {
-  rpc ListBrands(google.protobuf.Empty) returns (ListBrandsResponse);
-  rpc GetBrand(BrandIdentifier) returns (GetBrandResponse);
-  rpc CreateBrand(CreateBrandRequest) returns (BrandIdentifier);  
-  rpc UpdateBrand(UpdateBrandRequest) returns (google.protobuf.Empty);
-  rpc DeleteBrand(BrandIdentifier) returns (google.protobuf.Empty);  
+  rpc List(ListBrandsRequest) returns (ListBrandsResponse);
+  rpc Get(GetBrandRequest) returns (Brand);
+  rpc Create(CreateBrandRequest) returns (Brand);  
+  rpc Update(UpdateBrandRequest) returns (Brand);
+  rpc Delete(DeleteBrandRequest) returns (google.protobuf.Empty);  
 }
