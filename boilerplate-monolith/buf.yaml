@@ -1,13 +1,17 @@
-version: v1
-name: buf.build/codegen/demo # Burayı kendi organizasyon isminle değiştirebilirsin
+version: v2
+
+modules:
+  - path: api/protos
+
 deps:
-  - buf.build/googleapis/googleapis # Google tipleri gerekirse diye (opsiyonel)
+  - buf.build/googleapis/googleapis:latest
+
 lint:
   use:
     - STANDARD
+  except:
+    - PACKAGE_VERSION_SUFFIX  # demo.v1 zorlamasını kaldırır
+    - DIRECTORY_SAME_PACKAGE  # “package demo ise demo/ dizininde olmalı” zorlamasını kaldırır
 breaking:
   use:
     - FILE
-build:
-  roots:
-    - api/protos  # <-- KRİTİK AYAR: Buf kaynakları burada arayacak

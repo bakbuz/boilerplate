@@ -1,0 +1,101 @@
+grpc-highperf-backend/
+├── api/
+│   ├── pb/                     # protoc çıktıları (gitignore veya CI'de generate)
+│   │   ├── brand.pb.go
+│   │   ├── brand_grpc.pb.go
+│   │   ├── catalog.pb.go
+│   │   ├── catalog_grpc.pb.go
+│   │   ├── common.pb.go
+│   │   ├── demo.pb.go
+│   │   └── demo_grpc.pb.go
+│   └── protos/
+│       ├── brand.proto
+│       ├── catalog.proto
+│       ├── common.proto
+│       └── demo.proto
+├── cert/
+│   └── supabase/
+│       └── prod-ca-2021.crt
+├── cmd/
+│   ├── server/
+│   │   └── main.go
+│   └── tree/
+│       └── main.go
+├── deployment/
+│   ├── nginx/
+│   │   └── nginx.conf
+│   ├── systemd/
+│   │   └── grpc-backend.service
+│   └── terminal commands.txt
+├── internal/
+│   ├── config/
+│   │   └── config.go
+│   ├── database/
+│   │   ├── postgres.go
+│   │   └── postgres_test.go
+│   ├── entity/
+│   │   ├── brand.go
+│   │   └── product.go
+│   ├── repository/
+│   │   ├── dto/
+│   │   │   └── product_dto.go
+│   │   ├── brand_repository.go
+│   │   ├── brand_repository_test.go
+│   │   ├── product_repository.go
+│   │   └── product_repository_test.go
+│   ├── service/
+│   │   ├── brand_service.go
+│   │   └── product_service.go
+│   ├── transport/
+│   │   ├── handler/
+│   │   │   ├── base.go
+│   │   │   ├── brand_handler.go
+│   │   │   ├── demo_handler.go
+│   │   │   └── product_handler.go
+│   │   └── interceptor/
+│   │       ├── auth_interceptor.go
+│   │       └── log_interceptor.txt
+│   └── utility/
+│       └── object_pool/
+│           └── object_pool.go
+├── migrations/
+│   ├── 001_initial_schema.down.sql
+│   ├── 001_initial_schema.up.sql
+│   └── _queries.sql
+├── pkg/
+│   ├── errx/
+│   │   └── grpc_errors.go
+│   ├── hash/
+│   │   ├── otp.go
+│   │   └── password.go
+│   ├── i18n/
+│   │   ├── en/
+│   │   │   └── strings.go
+│   │   └── tr/
+│   │       └── strings.go
+│   ├── random/
+│   │   └── generator.go
+│   └── text/
+│       └── slug.go
+├── scripts/
+│   ├── build.sh
+│   └── deploy.sh
+├── tests/
+│   ├── e2e/
+│   └── load/
+│       ├── brand/
+│       └── product/
+├── Dockerfile
+├── Makefile
+├── README.md
+├── buf.gen.txt
+├── buf.gen.yaml
+├── buf.txt
+├── buf.yaml
+├── config.dev.json
+├── go.mod
+├── go.sum
+├── main.go
+├── prompt.txt
+├── prompt_output.txt
+└── tree_output.txt

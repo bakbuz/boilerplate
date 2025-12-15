@@ -1,11 +1,4 @@
 grpc-highperf-backend/
-├── config.dev.yaml
-├── Dockerfile
-├── docker-compose.yml
-├── Makefile
-├── go.mod
-├── go.sum
-├── README.md
 ├── api/
 │   ├── protos/
 │       ├── brand_service.proto
@@ -76,3 +69,10 @@ grpc-highperf-backend/
     │   └── grpc-backend.service
     └── nginx/
         └── nginx.conf
+├── config.dev.yaml
+├── Dockerfile
+├── docker-compose.yml
+├── Makefile
+├── go.mod
+├── go.sum
+├── README.md        
