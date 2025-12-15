@@ -251,6 +251,9 @@ func TestProductService_E2E(t *testing.T) {
 		require.NoError(t, err)
 		require.NotEmpty(t, resp.Id)
 		require.Equal(t, req.Name, resp.Name)
+		require.Equal(t, req.BrandId, resp.BrandId)
+		require.Equal(t, *req.Storyline, *resp.Storyline)
+		require.Equal(t, float32(req.Price), resp.Price)
 		createdId = resp.Id // Sonraki testler için Id'yi sakla
 	})
 
@@ -262,22 +265,27 @@ func TestProductService_E2E(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, createdId, resp.Id)
 		require.Equal(t, "MSI Raider GE78", resp.Name)
+		require.Equal(t, int32(1), resp.BrandId)
+		require.Equal(t, "High performance gaming laptop", *resp.Storyline)
+		require.Equal(t, float32(3500.00), resp.Price)
 	})
 
 	// Adım 3: Update Product
 	t.Run("Update Product", func(t *testing.T) {
-		// Sadece fiyatı güncelleyelim
+		// Update name and price
 		req := &catalogv1.UpdateProductRequest{
 			Id:      createdId,
-			Name:    "MSI Raider GE78 HX", // İsim değişti
+			Name:    "MSI Raider GE78 HX", // Name changed
 			BrandId: 1,
-			Price:   4000.00, // Fiyat değişti
+			Price:   4000.00, // Price changed
 		}
 
 		resp, err := client.Update(ctx, req)
 		require.NoError(t, err)
 		require.Equal(t, "MSI Raider GE78 HX", resp.Name)
 		require.Equal(t, float32(4000.00), resp.Price) // proto'da float32
+		require.Equal(t, req.BrandId, resp.BrandId)
+		require.Nil(t, resp.Storyline) // Not set in update, assuming cleared or unchanged per service logic
 	})
 
 	// Adım 4: List Products
@@ -313,6 +321,41 @@ func TestProductService_E2E(t *testing.T) {
 
 		require.Error(t, err)
 		// Hata kodunun NOT_FOUND olduğunu doğrula
+		st, ok := status.FromError(err)
+		require.True(t, ok)
+		require.Equal(t, codes.NotFound, st.Code())
+	})
+
+	// Error case: Get non-existing product
+	t.Run("Get Non-Existing Product", func(t *testing.T) {
+		req := &catalogv1.GetProductRequest{Id: uuid.New().String()}
+		_, err := client.Get(ctx, req)
+		require.Error(t, err)
+		st, ok := status.FromError(err)
+		require.True(t, ok)
+		require.Equal(t, codes.NotFound, st.Code())
+	})
+
+	// Error case: Update non-existing product
+	t.Run("Update Non-Existing Product", func(t *testing.T) {
+		req := &catalogv1.UpdateProductRequest{
+			Id:      uuid.New().String(),
+			Name:    "Non-Existing",
+			BrandId: 1,
+			Price:   100.00,
+		}
+		_, err := client.Update(ctx, req)
+		require.Error(t, err)
+		st, ok := status.FromError(err)
+		require.True(t, ok)
+		require.Equal(t, codes.NotFound, st.Code())
+	})
+
+	// Error case: Delete non-existing product
+	t.Run("Delete Non-Existing Product", func(t *testing.T) {
+		req := &catalogv1.DeleteProductRequest{Id: uuid.New().String()}
+		_, err := client.Delete(ctx, req)
+		require.Error(t, err)
 		st, ok := status.FromError(err)
 		require.True(t, ok)
 		require.Equal(t, codes.NotFound, st.Code())
