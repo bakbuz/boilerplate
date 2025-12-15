@@ -12,36 +12,37 @@ message Demo {
   string description = 3;
 }
 
-message ListRequest {
+message ListDemosRequest {
 }
 
-message ListResponse {
-  repeated Demo demos = 1;
+message ListDemosResponse {
+  repeated Demo items = 1;
 }
 
-message GetRequest {
+message GetDemoRequest {
   int32 id = 1;
 }
 
-message CreateRequest {
+message CreateDemoRequest {
   string name = 1;
   string description = 2;
 }
 
-message UpdateRequest {
+message UpdateDemoRequest {
   int32 id = 1;
   string name = 2;
   string description = 3;
 }
 
-message DeleteRequest {
+message DeleteDemoRequest {
   int32 id = 1;
 }
 
+// SERVICE DEFINITION
 service DemoService {
-  rpc List (ListRequest) returns (ListResponse) {}
-  rpc Get (GetRequest) returns (Demo) {}
-  rpc Create (CreateRequest) returns (Demo) {}
-  rpc Update (UpdateRequest) returns (Demo) {}
-  rpc Delete (DeleteRequest) returns (google.protobuf.Empty) {}
+  rpc List (ListDemosRequest) returns (ListDemosResponse) {}
+  rpc Get (GetDemoRequest) returns (Demo) {}
+  rpc Create (CreateDemoRequest) returns (Demo) {}
+  rpc Update (UpdateDemoRequest) returns (Demo) {}
+  rpc Delete (DeleteDemoRequest) returns (google.protobuf.Empty) {}
 }
