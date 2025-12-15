@@ -1,12 +1,18 @@
 .PHONY: proto build docker test u r
 
+# Variables
+PROTO_PATH=api/protos/v1
+OUTPUT_PATH=api/pb/v1
+
+# Generate gRPC code
 proto:
 	cls
+	@mkdir -p $(OUTPUT_PATH)
 	protoc \
-    	--proto_path=./api/protos \
-		--go_out=./api/pb \
-		--go-grpc_out=./api/pb \
-		./api/protos/*.proto
+    	--proto_path=./${PROTO_PATH} \
+		--go_out=./${OUTPUT_PATH} \
+		--go-grpc_out=./${OUTPUT_PATH} \
+		./${PROTO_PATH}/*.proto
 
 build: proto
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/catalog ./cmd/server
