@@ -88,9 +88,7 @@ grpc-highperf-backend/
 ├── Dockerfile
 ├── Makefile
 ├── README.md
-├── buf.gen.txt
 ├── buf.gen.yaml
-├── buf.txt
 ├── buf.yaml
 ├── config.dev.json
 ├── docker-compose.yaml
@@ -98,5 +96,4 @@ grpc-highperf-backend/
 ├── go.sum
 ├── main.go
 ├── prompt.txt
-├── prompt_output.txt
 └── tree_output.txt
