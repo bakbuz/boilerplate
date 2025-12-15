@@ -6,8 +6,7 @@ OUTPUT_PATH=api/pb/v1
 
 # Generate gRPC code
 proto:
-	cls
-	@mkdir -p $(OUTPUT_PATH)
+	@echo $(OUTPUT_PATH)
 	protoc \
     	--proto_path=./${PROTO_PATH} \
 		--go_out=./${OUTPUT_PATH} \
