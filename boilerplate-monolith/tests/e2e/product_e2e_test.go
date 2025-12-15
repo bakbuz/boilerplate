@@ -213,7 +213,7 @@ func setupTestServer(t *testing.T) (catalogv1.ProductServiceClient, func()) {
 	}()
 
 	// Client bağlantısını oluştur
-	conn, err := grpc.Dial("bufnet",
+	conn, err := grpc.NewClient("passthrough:///bufnet",
 		grpc.WithContextDialer(bufDialer),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
