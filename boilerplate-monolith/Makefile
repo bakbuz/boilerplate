@@ -37,6 +37,10 @@ test-integration:
 	@echo "Running integration tests..."
 	go test -tags=integration ./tests/integration/... -v
 
+test-e2e:
+	@echo "Running end-to-end tests..."
+	go test ./tests/e2e -v
+
 # Clean build artifacts
 clean:
 	@echo "Cleaning..."
