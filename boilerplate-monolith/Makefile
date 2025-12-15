@@ -36,4 +36,7 @@ r:
 	go run main.go
 
 pb-lint:
+	buf lint ./api/protos/common/v1/common.proto
 	buf lint ./api/protos/demo/v1/demo.proto
+	buf lint ./api/protos/catalog/v1/brand.proto
+	buf lint ./api/protos/catalog/v1/product.proto
