@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"codegen/api/pb"
+	catalogv1 "codegen/api/gen/catalog/v1"
 	"codegen/internal/entity"
 	"codegen/internal/service"
 	"codegen/pkg/errx"
@@ -18,7 +18,7 @@ import (
 )
 
 type brandHandler struct {
-	pb.UnimplementedBrandServiceServer
+	catalogv1.UnimplementedBrandServiceServer
 	svc service.BrandService
 }
 
@@ -31,11 +31,11 @@ func NewBrandHandler(svc service.BrandService) *brandHandler {
 // ============================================================================
 
 // brandEntityToProto converts a Brand entity to protobuf Brand message
-func brandEntityToProto(b *entity.Brand) *pb.Brand {
+func brandEntityToProto(b *entity.Brand) *catalogv1.Brand {
 	if b == nil {
 		return nil
 	}
-	return &pb.Brand{
+	return &catalogv1.Brand{
 		Id:        b.Id,
 		Name:      b.Name,
 		Slug:      b.Slug,
@@ -45,7 +45,7 @@ func brandEntityToProto(b *entity.Brand) *pb.Brand {
 }
 
 // brandCreateProtoToEntity converts CreateBrandRequest to Brand entity
-func brandCreateProtoToEntity(req *pb.CreateBrandRequest, currentUserId uuid.UUID) *entity.Brand {
+func brandCreateProtoToEntity(req *catalogv1.CreateBrandRequest, currentUserId uuid.UUID) *entity.Brand {
 	return &entity.Brand{
 		Name:      req.Name,
 		Slug:      text.Slugify(req.Name),
@@ -56,7 +56,7 @@ func brandCreateProtoToEntity(req *pb.CreateBrandRequest, currentUserId uuid.UUI
 }
 
 // brandUpdateProtoToEntity converts UpdateBrandRequest to Brand entity
-func brandUpdateProtoToEntity(req *pb.UpdateBrandRequest, currentUserId uuid.UUID) *entity.Brand {
+func brandUpdateProtoToEntity(req *catalogv1.UpdateBrandRequest, currentUserId uuid.UUID) *entity.Brand {
 	now := time.Now().UTC()
 	return &entity.Brand{
 		Id:        req.Id,
@@ -73,7 +73,7 @@ func brandUpdateProtoToEntity(req *pb.UpdateBrandRequest, currentUserId uuid.UUI
 // ============================================================================
 
 // validateCreateBrandRequest validates a CreateBrandRequest
-func (h *brandHandler) validateCreateBrandRequest(req *pb.CreateBrandRequest) error {
+func (h *brandHandler) validateCreateBrandRequest(req *catalogv1.CreateBrandRequest) error {
 	if req.GetName() == "" {
 		return status.Error(codes.InvalidArgument, "name is required")
 	}
@@ -84,7 +84,7 @@ func (h *brandHandler) validateCreateBrandRequest(req *pb.CreateBrandRequest) er
 }
 
 // validateUpdateBrandRequest validates an UpdateBrandRequest
-func (h *brandHandler) validateUpdateBrandRequest(req *pb.UpdateBrandRequest) error {
+func (h *brandHandler) validateUpdateBrandRequest(req *catalogv1.UpdateBrandRequest) error {
 	if req.GetId() == 0 {
 		return status.Error(codes.InvalidArgument, "id is required")
 	}
@@ -101,7 +101,7 @@ func (h *brandHandler) validateUpdateBrandRequest(req *pb.UpdateBrandRequest) er
 // HANDLER METHODS
 // ============================================================================
 
-func (h *brandHandler) ListBrands(ctx context.Context, req *emptypb.Empty) (*pb.ListBrandsResponse, error) {
+func (h *brandHandler) List(ctx context.Context, req *catalogv1.ListBrandsRequest) (*catalogv1.ListBrandsResponse, error) {
 	// Context cancellation check
 	if ctx.Err() != nil {
 		return nil, status.Error(codes.Canceled, ctx.Err().Error())
@@ -114,26 +114,26 @@ func (h *brandHandler) ListBrands(ctx context.Context, req *emptypb.Empty) (*pb.
 
 	// Empty list optimization
 	if len(list) == 0 {
-		return &pb.ListBrandsResponse{
+		return &catalogv1.ListBrandsResponse{
 			Total: 0,
-			Items: []*pb.Brand{},
+			Items: []*catalogv1.Brand{},
 		}, nil
 	}
 
 	// MAPPING: Entity List -> Proto List
 	total := int32(len(list))
-	protoItems := make([]*pb.Brand, total)
+	protoItems := make([]*catalogv1.Brand, total)
 	for i, b := range list {
 		protoItems[i] = brandEntityToProto(b)
 	}
 
-	return &pb.ListBrandsResponse{
+	return &catalogv1.ListBrandsResponse{
 		Total: total,
 		Items: protoItems,
 	}, nil
 }
 
-func (h *brandHandler) GetBrand(ctx context.Context, req *pb.BrandIdentifier) (*pb.GetBrandResponse, error) {
+func (h *brandHandler) Get(ctx context.Context, req *catalogv1.GetBrandRequest) (*catalogv1.Brand, error) {
 	item, err := h.svc.GetById(ctx, req.Id)
 	if err != nil {
 		// Distinguish between NotFound and other errors
@@ -146,12 +146,10 @@ func (h *brandHandler) GetBrand(ctx context.Context, req *pb.BrandIdentifier) (*
 		return nil, status.Errorf(codes.Internal, "failed to fetch brand: %v", err)
 	}
 
-	return &pb.GetBrandResponse{
-		Brand: brandEntityToProto(item),
-	}, nil
+	return brandEntityToProto(item), nil
 }
 
-func (h *brandHandler) CreateBrand(ctx context.Context, req *pb.CreateBrandRequest) (*pb.BrandIdentifier, error) {
+func (h *brandHandler) Create(ctx context.Context, req *catalogv1.CreateBrandRequest) (*catalogv1.Brand, error) {
 	// Get current user Id from context
 	currentUserId, err := getCurrentUserId(ctx)
 	if err != nil {
@@ -178,12 +176,10 @@ func (h *brandHandler) CreateBrand(ctx context.Context, req *pb.CreateBrandReque
 	}
 
 	// 4. MAPPING: Entity -> Proto Response
-	return &pb.BrandIdentifier{
-		Id: domainEntity.Id,
-	}, nil
+	return brandEntityToProto(domainEntity), nil
 }
 
-func (h *brandHandler) UpdateBrand(ctx context.Context, req *pb.UpdateBrandRequest) (*emptypb.Empty, error) {
+func (h *brandHandler) Update(ctx context.Context, req *catalogv1.UpdateBrandRequest) (*catalogv1.Brand, error) {
 	// Get current user Id from context
 	currentUserId, err := getCurrentUserId(ctx)
 	if err != nil {
@@ -214,10 +210,10 @@ func (h *brandHandler) UpdateBrand(ctx context.Context, req *pb.UpdateBrandReque
 		return nil, status.Errorf(codes.NotFound, "brand not found: %d", req.Id)
 	}
 
-	return &emptypb.Empty{}, nil
+	return brandEntityToProto(domainEntity), nil
 }
 
-func (h *brandHandler) DeleteBrand(ctx context.Context, req *pb.BrandIdentifier) (*emptypb.Empty, error) {
+func (h *brandHandler) Delete(ctx context.Context, req *catalogv1.DeleteBrandRequest) (*emptypb.Empty, error) {
 	// Get current user Id from context
 	_, err := getCurrentUserId(ctx)
 	if err != nil {

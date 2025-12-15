@@ -1,42 +1,70 @@
 package handler
 
 import (
-	"codegen/api/pb"
+	demov1 "codegen/api/gen/demo/v1"
 	"context"
 
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type demoHandler struct {
-	pb.UnimplementedDemoServiceServer
+	demov1.UnimplementedDemoServiceServer
 }
 
 func NewDemoHandler() *demoHandler {
 	return &demoHandler{}
 }
 
-var demos []*pb.Demo = make([]*pb.Demo, 3)
+var demos []*demov1.Demo = make([]*demov1.Demo, 3)
 
 func init() {
-	demos[0] = &pb.Demo{Id: 1, Name: "Bir"}
-	demos[1] = &pb.Demo{Id: 2, Name: "İki"}
-	demos[2] = &pb.Demo{Id: 3, Name: "Üç"}
+	demos[0] = &demov1.Demo{Id: 1, Name: "Bir"}
+	demos[1] = &demov1.Demo{Id: 2, Name: "İki"}
+	demos[2] = &demov1.Demo{Id: 3, Name: "Üç"}
 }
 
-func (h *demoHandler) ListDemos(ctx context.Context, _ *emptypb.Empty) (*pb.ListDemosResponse, error) {
-	return &pb.ListDemosResponse{Demos: demos}, nil
+func (h *demoHandler) List(context.Context, *demov1.ListDemosRequest) (*demov1.ListDemosResponse, error) {
+	return &demov1.ListDemosResponse{Items: demos}, nil
 }
 
-func (h *demoHandler) GetDemo(ctx context.Context, req *pb.DemoIdentifier) (*pb.GetDemoResponse, error) {
+func (h *demoHandler) Get(ctx context.Context, req *demov1.GetDemoRequest) (*demov1.Demo, error) {
 	demo := demos[req.Id]
-	return &pb.GetDemoResponse{Demo: demo}, nil
+	return demo, nil
 }
 
-func (h *demoHandler) CreateDemo(ctx context.Context, req *pb.CreateDemoRequest) (*pb.DemoIdentifier, error) {
+func (h *demoHandler) Create(ctx context.Context, req *demov1.CreateDemoRequest) (*demov1.Demo, error) {
 	newId := demos[len(demos)-1].Id + 1
-	newDemo := &pb.Demo{Id: newId, Name: req.Name, Description: req.Description}
+	newDemo := &demov1.Demo{Id: newId, Name: req.Name, Description: req.Description}
 
 	demos = append(demos, newDemo)
 
-	return &pb.DemoIdentifier{Id: newId}, nil
+	return newDemo, nil
+}
+
+func (h *demoHandler) Update(ctx context.Context, req *demov1.UpdateDemoRequest) (*demov1.Demo, error) {
+	demo := demos[req.Id]
+
+	demo.Name = req.Name
+	demo.Description = req.Description
+
+	return demo, nil
+}
+func (h *demoHandler) Delete(ctx context.Context, req *demov1.DeleteDemoRequest) (*emptypb.Empty, error) {
+
+	// 1. Önce silinecek elemanın index'ini bul
+	index := -1
+	for i, d := range demos {
+		if d.Id == req.Id {
+			index = i
+			break
+		}
+	}
+
+	// 2. Eğer bulunduysa silme işlemini yap
+	if index != -1 {
+		// [0...index-1] + [index+1...son]
+		demos = append(demos[:index], demos[index+1:]...)
+	}
+
+	return &emptypb.Empty{}, nil
 }
