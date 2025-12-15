@@ -1,7 +1,13 @@
 version: v1
+name: buf.build/codegen/demo # Burayı kendi organizasyon isminle değiştirebilirsin
+deps:
+  - buf.build/googleapis/googleapis # Google tipleri gerekirse diye (opsiyonel)
 lint:
   use:
     - STANDARD
 breaking:
   use:
     - FILE
+build:
+  roots:
+    - api/protos  # <-- KRİTİK AYAR: Buf kaynakları burada arayacak
