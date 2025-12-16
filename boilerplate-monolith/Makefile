@@ -32,6 +32,14 @@ test:
 	@echo "Running tests..."
 	go test ./... -v -race -coverprofile=coverage.out
 
+test-repo:
+	@echo "Running repository integration tests..."
+	go test ./internal/repository/... -v
+
+test-svc:
+	@echo "Running service unit tests..."
+	go test ./internal/service/... -v
+
 # Integration tests
 test-integration:
 	@echo "Running integration tests..."
