@@ -34,14 +34,29 @@ func NewProductService(repo repository.ProductRepository) ProductService {
 	return &productService{repo: repo}
 }
 
-// validateProduct validates product entity for create/update operations
-func (s *productService) validateProduct(e *entity.Product) error {
+// sanitizeAndValidate validates product entity for create/update operations
+func (s *productService) sanitizeAndValidate(e *entity.Product) error {
 	if e == nil {
 		return errx.ErrInvalidInput
 	}
 
+	// Sanitize strings
+	e.Name = strings.TrimSpace(e.Name)
+	if e.Sku != nil {
+		trimmed := strings.TrimSpace(*e.Sku)
+		e.Sku = &trimmed
+	}
+	if e.Summary != nil {
+		trimmed := strings.TrimSpace(*e.Summary)
+		e.Summary = &trimmed
+	}
+	if e.Storyline != nil {
+		trimmed := strings.TrimSpace(*e.Storyline)
+		e.Storyline = &trimmed
+	}
+
 	// Validate product name
-	if strings.TrimSpace(e.Name) == "" {
+	if e.Name == "" {
 		return errors.New("product name is required")
 	}
 
@@ -124,7 +139,7 @@ func (s *productService) GetById(ctx context.Context, id uuid.UUID) (*entity.Pro
 
 // Create creates a new product
 func (s *productService) Create(ctx context.Context, e *entity.Product) (int64, error) {
-	if err := s.validateProduct(e); err != nil {
+	if err := s.sanitizeAndValidate(e); err != nil {
 		return -1, err
 	}
 
@@ -138,7 +153,7 @@ func (s *productService) Create(ctx context.Context, e *entity.Product) (int64, 
 
 // Update updates an existing product
 func (s *productService) Update(ctx context.Context, e *entity.Product) (int64, error) {
-	if err := s.validateProduct(e); err != nil {
+	if err := s.sanitizeAndValidate(e); err != nil {
 		return -1, err
 	}
 
@@ -184,7 +199,7 @@ func (s *productService) BulkInsert(ctx context.Context, list []*entity.Product)
 
 	// Validate all products before inserting
 	for i, product := range list {
-		if err := s.validateProduct(product); err != nil {
+		if err := s.sanitizeAndValidate(product); err != nil {
 			return -1, errors.Wrapf(err, "validation failed for product at index %d", i)
 		}
 
