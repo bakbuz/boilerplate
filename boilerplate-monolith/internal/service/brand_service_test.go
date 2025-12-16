@@ -6,6 +6,7 @@ import (
 	"context"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -138,7 +139,7 @@ func TestBrandService_Create(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("success", func(t *testing.T) {
-		validBrand := &entity.Brand{Name: "valid", Slug: "valid"}
+		validBrand := &entity.Brand{Name: "valid", Slug: "valid", CreatedAt: time.Now().UTC()}
 		repo.On("Insert", ctx, mock.MatchedBy(func(b *entity.Brand) bool {
 			return b.Name == "valid" && !b.CreatedAt.IsZero()
 		})).Return(nil)
@@ -161,7 +162,8 @@ func TestBrandService_Update(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("success", func(t *testing.T) {
-		validBrand := &entity.Brand{Id: 1, Name: "valid", Slug: "valid"}
+		now := time.Now().UTC()
+		validBrand := &entity.Brand{Id: 1, Name: "valid", Slug: "valid", UpdatedAt: &now}
 		repo.On("Update", ctx, mock.MatchedBy(func(b *entity.Brand) bool {
 			return b.UpdatedAt != nil && !b.UpdatedAt.IsZero()
 		})).Return(int64(1), nil)
@@ -183,18 +185,18 @@ func TestBrandService_Validation(t *testing.T) {
 	repo := new(MockBrandRepository)
 	svc := NewBrandService(repo)
 	ctx := context.Background()
+	now := time.Now().UTC()
 
 	tests := []struct {
 		name   string
 		brand  *entity.Brand
 		errMsg string
 	}{
-		{"empty name", &entity.Brand{Name: "", Slug: "slug"}, "brand name is required"},
-		{"long name", &entity.Brand{Name: strings.Repeat("a", 256), Slug: "slug"}, "brand name must not exceed 255 characters"},
-		{"long name multibyte", &entity.Brand{Name: strings.Repeat("日", 256), Slug: "slug"}, "brand name must not exceed 255 characters"},
-		{"name multibyte ok", &entity.Brand{Name: strings.Repeat("日", 255), Slug: "slug"}, ""},
-		{"empty slug", &entity.Brand{Name: "name", Slug: ""}, "brand slug is required"},
-		{"long slug", &entity.Brand{Name: "name", Slug: strings.Repeat("a", 256)}, "brand slug must not exceed 255 characters"},
+		{"empty name", &entity.Brand{Name: "", Slug: "slug", CreatedAt: now, UpdatedAt: &now}, "brand name is required"},
+		{"long name", &entity.Brand{Name: strings.Repeat("a", 256), Slug: "slug", CreatedAt: now, UpdatedAt: &now}, "brand name must not exceed 255 characters"},
+		{"long name multibyte", &entity.Brand{Name: strings.Repeat("日", 256), Slug: "slug", CreatedAt: now, UpdatedAt: &now}, "brand name must not exceed 255 characters"},
+		{"name multibyte ok", &entity.Brand{Name: strings.Repeat("日", 255), Slug: "slug", CreatedAt: now, UpdatedAt: &now}, ""},
+		{"long slug", &entity.Brand{Name: "name", Slug: strings.Repeat("a", 256), CreatedAt: now, UpdatedAt: &now}, "brand slug must not exceed 255 characters"},
 	}
 
 	for _, tt := range tests {

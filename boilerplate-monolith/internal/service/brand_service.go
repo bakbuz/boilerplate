@@ -7,6 +7,7 @@ import (
 	"context"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/pkg/errors"
 )
@@ -41,12 +42,8 @@ func (s *brandService) validateBrand(e *entity.Brand) error {
 		return errors.New("brand name is required")
 	}
 
-	if len(e.Name) > 255 {
+	if utf8.RuneCountInString(e.Name) > 255 {
 		return errors.New("brand name must not exceed 255 characters")
-	}
-
-	if strings.TrimSpace(e.Slug) == "" {
-		return errors.New("brand slug is required")
 	}
 
 	if len(e.Slug) > 255 {
