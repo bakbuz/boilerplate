@@ -34,11 +34,11 @@ test:
 
 test-repo:
 	@echo "Running repository integration tests..."
-	go test ./internal/repository/... -v
+	go test ./internal/repository/...
 
 test-svc:
 	@echo "Running service unit tests..."
-	go test ./internal/service/... -v
+	go test ./internal/service/...
 
 # Integration tests
 test-integration:
