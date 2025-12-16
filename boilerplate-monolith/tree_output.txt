@@ -1,18 +1,30 @@
 grpc-highperf-backend/
 ├── api/
-│   ├── pb/                     # protoc çıktıları (gitignore veya CI'de generate)
-│   │   ├── brand.pb.go
-│   │   ├── brand_grpc.pb.go
-│   │   ├── catalog.pb.go
-│   │   ├── catalog_grpc.pb.go
-│   │   ├── common.pb.go
-│   │   ├── demo.pb.go
-│   │   └── demo_grpc.pb.go
+│   ├── gen/
+│   │   ├── catalog/
+│   │   │   └── v1/
+│   │   │       ├── brand.pb.go
+│   │   │       ├── brand_grpc.pb.go
+│   │   │       ├── product.pb.go
+│   │   │       └── product_grpc.pb.go
+│   │   ├── common/
+│   │   │   └── v1/
+│   │   │       └── common.pb.go
+│   │   └── demo/
+│   │       └── v1/
+│   │           ├── demo.pb.go
+│   │           └── demo_grpc.pb.go
 │   └── protos/
-│       ├── brand.proto
-│       ├── catalog.proto
-│       ├── common.proto
-│       └── demo.proto
+│       ├── catalog/
+│       │   └── v1/
+│       │       ├── brand.proto
+│       │       └── product.proto
+│       ├── common/
+│       │   └── v1/
+│       │       └── common.proto
+│       └── demo/
+│           └── v1/
+│               └── demo.proto
 ├── cert/
 │   └── supabase/
 │       └── prod-ca-2021.crt
@@ -39,7 +51,9 @@ grpc-highperf-backend/
 │   │   └── product_repository_test.go
 │   ├── service/
 │   │   ├── brand_service.go
-│   │   └── product_service.go
+│   │   ├── brand_service_test.go
+│   │   ├── product_service.go
+│   │   └── product_service_test.go
 │   ├── transport/
 │   │   ├── handler/
 │   │   │   ├── base.go
@@ -54,8 +68,8 @@ grpc-highperf-backend/
 │           └── object_pool.go
 ├── migrations/
 │   ├── 000_queries.sql
-│   ├── 001_initial_schema.down.sql
-│   └── 001_initial_schema.up.sql
+│   ├── 001_initial_schema.up.sql
+│   └── 002_initial_schema.down.sql
 ├── pkg/
 │   ├── errx/
 │   │   └── grpc_errors.go
@@ -72,7 +86,13 @@ grpc-highperf-backend/
 │   └── text/
 │       └── slug.go
 ├── tests/
+│   ├── benchmark/
+│   │   └── service/
+│   │       ├── base.go
+│   │       └── product_service_benchmark_test.go
 │   ├── e2e/
+│   │   ├── base.go
+│   │   └── product_e2e_test.go
 │   └── load/
 │       ├── brand/
 │       └── product/
