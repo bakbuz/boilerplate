@@ -366,3 +366,33 @@ func TestBrandRepository_BulkUpdateTran(t *testing.T) {
 		}
 	}
 }
+
+func TestBrandRepository_BulkInsert_Large(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	repo := repository.NewBrandRepository(db)
+	ctx := context.Background()
+
+	// 2005 items to test chunking (batchSize=1000, so 3 chunks: 1000, 1000, 5)
+	count := 2005
+	list := make([]*entity.Brand, count)
+	for i := 0; i < count; i++ {
+		list[i] = &entity.Brand{
+			Name:      "Large Brand " + uuid.New().String(),
+			Slug:      "large-brand-" + uuid.New().String(),
+			CreatedAt: time.Now(),
+			CreatedBy: uuid.New(),
+		}
+	}
+
+	insertedCount, err := repo.BulkInsert(ctx, list)
+	require.NoError(t, err)
+	assert.Equal(t, int64(count), insertedCount)
+
+	// Verify count logic
+	// We might have other records, so we'll just check if it's at least count
+	dbCount, err := repo.Count(ctx)
+	require.NoError(t, err)
+	assert.GreaterOrEqual(t, dbCount, int64(count))
+}
