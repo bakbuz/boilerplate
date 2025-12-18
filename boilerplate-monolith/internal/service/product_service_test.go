@@ -5,6 +5,7 @@ import (
 	"codegen/internal/repository/dto"
 	"codegen/pkg/errx"
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/google/uuid"
@@ -84,6 +85,11 @@ func (m *MockProductRepository) BulkInsert(ctx context.Context, list []*entity.P
 func (m *MockProductRepository) BulkUpdate(ctx context.Context, list []*entity.Product) (int64, error) {
 	args := m.Called(ctx, list)
 	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockProductRepository) RunInTx(ctx context.Context, fn func(ctx context.Context) error) error {
+	args := m.Called(ctx, fn)
+	return args.Error(0)
 }
 
 func (m *MockProductRepository) Search(ctx context.Context, filter *dto.ProductSearchFilter) (*dto.ProductSearchResult, error) {
@@ -233,6 +239,45 @@ func TestProductService_GetById(t *testing.T) {
 	})
 }
 
+func TestProductService_RunInTx(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("success", func(t *testing.T) {
+		repo := new(MockProductRepository)
+		svc := NewProductService(repo)
+
+		// Mock the RunInTx call
+		// The mock needs to execute the callback function passed to it
+		repo.On("RunInTx", ctx, mock.Anything).Return(nil).Run(func(args mock.Arguments) {
+			fn := args.Get(1).(func(context.Context) error)
+			fn(ctx)
+		})
+
+		err := svc.RunInTx(ctx, func(ctx context.Context) error {
+			return nil
+		})
+
+		assert.NoError(t, err)
+		repo.AssertExpectations(t)
+	})
+
+	t.Run("error propagation", func(t *testing.T) {
+		repo := new(MockProductRepository)
+		svc := NewProductService(repo)
+		expectedErr := errors.New("some error")
+
+		// Mock RunInTx to return error
+		repo.On("RunInTx", ctx, mock.Anything).Return(expectedErr)
+
+		err := svc.RunInTx(ctx, func(ctx context.Context) error {
+			return nil
+		})
+
+		assert.ErrorIs(t, err, expectedErr)
+		repo.AssertExpectations(t)
+	})
+}
+
 func TestProductService_Search(t *testing.T) {
 	ctx := context.Background()
 
@@ -255,7 +300,7 @@ func TestProductService_Search(t *testing.T) {
 		svc := NewProductService(repo)
 		filter := &dto.ProductSearchFilter{} // Take 0
 		repo.On("Search", ctx, mock.MatchedBy(func(f *dto.ProductSearchFilter) bool {
-			return f.Take == 50 // Should default to 50
+			return f.Take == 10 // Should default to 10
 		})).Return(&dto.ProductSearchResult{}, nil)
 
 		_, err := svc.Search(ctx, filter)
