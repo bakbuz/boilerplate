@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -64,12 +65,18 @@ func AuthInterceptor(jwtSecretKey string) grpc.UnaryServerInterceptor {
 		}
 
 		// 5. UserId'yi güvenli bir şekilde alma (Type assertion check)
-		userIdVal, ok := claims["sub"].(string)
+		userIdStr, ok := claims["sub"].(string)
 		if !ok {
 			return nil, status.Error(codes.Unauthenticated, "invalid token payload: sub missing or invalid")
 		}
 
-		// 6. Context'e güvenli key ile ekleme
+		// 6. UserId'yi UUID türüne dönüştür
+		userIdVal, err := uuid.Parse(userIdStr)
+		if err != nil {
+			return nil, status.Error(codes.Unauthenticated, err.Error())
+		}
+
+		// 7. Context'e güvenli key ile ekleme
 		ctx = context.WithValue(ctx, UserIdKey, userIdVal)
 
 		return handler(ctx, req)
