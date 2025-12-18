@@ -165,7 +165,7 @@ func (s *productService) Search(ctx context.Context, filter *dto.ProductSearchFi
 
 	// Set default pagination if not provided
 	if filter.Take == 0 {
-		filter.Take = 50 // Default page size
+		filter.Take = 10 // Default page size
 	}
 
 	// Limit maximum page size to prevent excessive data retrieval
