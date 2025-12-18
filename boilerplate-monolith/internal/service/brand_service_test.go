@@ -1,7 +1,7 @@
 package service
 
 import (
-	"codegen/internal/entity"
+	"codegen/internal/domain"
 	"codegen/pkg/errx"
 	"context"
 	"strings"
@@ -17,36 +17,36 @@ type MockBrandRepository struct {
 	mock.Mock
 }
 
-func (m *MockBrandRepository) GetAll(ctx context.Context) ([]*entity.Brand, error) {
+func (m *MockBrandRepository) GetAll(ctx context.Context) ([]*domain.Brand, error) {
 	args := m.Called(ctx)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*entity.Brand), args.Error(1)
+	return args.Get(0).([]*domain.Brand), args.Error(1)
 }
 
-func (m *MockBrandRepository) GetByIds(ctx context.Context, ids []int32) ([]*entity.Brand, error) {
+func (m *MockBrandRepository) GetByIds(ctx context.Context, ids []int32) ([]*domain.Brand, error) {
 	args := m.Called(ctx, ids)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*entity.Brand), args.Error(1)
+	return args.Get(0).([]*domain.Brand), args.Error(1)
 }
 
-func (m *MockBrandRepository) GetById(ctx context.Context, id int32) (*entity.Brand, error) {
+func (m *MockBrandRepository) GetById(ctx context.Context, id int32) (*domain.Brand, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*entity.Brand), args.Error(1)
+	return args.Get(0).(*domain.Brand), args.Error(1)
 }
 
-func (m *MockBrandRepository) Insert(ctx context.Context, e *entity.Brand) error {
+func (m *MockBrandRepository) Insert(ctx context.Context, e *domain.Brand) error {
 	args := m.Called(ctx, e)
 	return args.Error(0)
 }
 
-func (m *MockBrandRepository) Update(ctx context.Context, e *entity.Brand) (int64, error) {
+func (m *MockBrandRepository) Update(ctx context.Context, e *domain.Brand) (int64, error) {
 	args := m.Called(ctx, e)
 	return args.Get(0).(int64), args.Error(1)
 }
@@ -66,27 +66,27 @@ func (m *MockBrandRepository) Count(ctx context.Context) (int64, error) {
 	return args.Get(0).(int64), args.Error(1)
 }
 
-func (m *MockBrandRepository) Upsert(ctx context.Context, e *entity.Brand) error {
+func (m *MockBrandRepository) Upsert(ctx context.Context, e *domain.Brand) error {
 	args := m.Called(ctx, e)
 	return args.Error(0)
 }
 
-func (m *MockBrandRepository) BulkInsert(ctx context.Context, list []*entity.Brand) (int64, error) {
+func (m *MockBrandRepository) BulkInsert(ctx context.Context, list []*domain.Brand) (int64, error) {
 	args := m.Called(ctx, list)
 	return args.Get(0).(int64), args.Error(1)
 }
 
-func (m *MockBrandRepository) BulkUpdate(ctx context.Context, list []*entity.Brand) (int64, error) {
+func (m *MockBrandRepository) BulkUpdate(ctx context.Context, list []*domain.Brand) (int64, error) {
 	args := m.Called(ctx, list)
 	return args.Get(0).(int64), args.Error(1)
 }
 
-func (m *MockBrandRepository) BulkInsertTran(ctx context.Context, list []*entity.Brand) error {
+func (m *MockBrandRepository) BulkInsertTran(ctx context.Context, list []*domain.Brand) error {
 	args := m.Called(ctx, list)
 	return args.Error(0)
 }
 
-func (m *MockBrandRepository) BulkUpdateTran(ctx context.Context, list []*entity.Brand) error {
+func (m *MockBrandRepository) BulkUpdateTran(ctx context.Context, list []*domain.Brand) error {
 	args := m.Called(ctx, list)
 	return args.Error(0)
 }
@@ -96,7 +96,7 @@ func TestBrandService_GetAll(t *testing.T) {
 	svc := NewBrandService(repo)
 	ctx := context.Background()
 
-	expectedApiBrands := []*entity.Brand{{Name: "b1"}, {Name: "b2"}}
+	expectedApiBrands := []*domain.Brand{{Name: "b1"}, {Name: "b2"}}
 	repo.On("GetAll", ctx).Return(expectedApiBrands, nil)
 
 	list, err := svc.GetAll(ctx)
@@ -111,7 +111,7 @@ func TestBrandService_GetById(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("success", func(t *testing.T) {
-		expectedBrand := &entity.Brand{Id: 1, Name: "b1"}
+		expectedBrand := &domain.Brand{Id: 1, Name: "b1"}
 		repo.On("GetById", ctx, int32(1)).Return(expectedBrand, nil)
 
 		brand, err := svc.GetById(ctx, 1)
@@ -139,8 +139,8 @@ func TestBrandService_Create(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("success", func(t *testing.T) {
-		validBrand := &entity.Brand{Name: "valid", Slug: "valid", CreatedAt: time.Now().UTC()}
-		repo.On("Insert", ctx, mock.MatchedBy(func(b *entity.Brand) bool {
+		validBrand := &domain.Brand{Name: "valid", Slug: "valid", CreatedAt: time.Now().UTC()}
+		repo.On("Insert", ctx, mock.MatchedBy(func(b *domain.Brand) bool {
 			return b.Name == "valid" && !b.CreatedAt.IsZero()
 		})).Return(nil)
 
@@ -149,7 +149,7 @@ func TestBrandService_Create(t *testing.T) {
 	})
 
 	t.Run("validation error", func(t *testing.T) {
-		invalidBrand := &entity.Brand{Name: "", Slug: "valid"}
+		invalidBrand := &domain.Brand{Name: "", Slug: "valid"}
 		err := svc.Create(ctx, invalidBrand)
 		assert.Error(t, err)
 		assert.Equal(t, "brand name is required", err.Error())
@@ -163,8 +163,8 @@ func TestBrandService_Update(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		now := time.Now().UTC()
-		validBrand := &entity.Brand{Id: 1, Name: "valid", Slug: "valid", UpdatedAt: &now}
-		repo.On("Update", ctx, mock.MatchedBy(func(b *entity.Brand) bool {
+		validBrand := &domain.Brand{Id: 1, Name: "valid", Slug: "valid", UpdatedAt: &now}
+		repo.On("Update", ctx, mock.MatchedBy(func(b *domain.Brand) bool {
 			return b.UpdatedAt != nil && !b.UpdatedAt.IsZero()
 		})).Return(int64(1), nil)
 
@@ -174,7 +174,7 @@ func TestBrandService_Update(t *testing.T) {
 	})
 
 	t.Run("invalid input id 0", func(t *testing.T) {
-		brand := &entity.Brand{Id: 0, Name: "valid", Slug: "valid"}
+		brand := &domain.Brand{Id: 0, Name: "valid", Slug: "valid"}
 		rows, err := svc.Update(ctx, brand)
 		assert.ErrorIs(t, err, errx.ErrInvalidInput)
 		assert.Equal(t, int64(-1), rows)
@@ -189,14 +189,14 @@ func TestBrandService_Validation(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		brand  *entity.Brand
+		brand  *domain.Brand
 		errMsg string
 	}{
-		{"empty name", &entity.Brand{Name: "", Slug: "slug", CreatedAt: now, UpdatedAt: &now}, "brand name is required"},
-		{"long name", &entity.Brand{Name: strings.Repeat("a", 256), Slug: "slug", CreatedAt: now, UpdatedAt: &now}, "brand name must not exceed 255 characters"},
-		{"long name multibyte", &entity.Brand{Name: strings.Repeat("日", 256), Slug: "slug", CreatedAt: now, UpdatedAt: &now}, "brand name must not exceed 255 characters"},
-		{"name multibyte ok", &entity.Brand{Name: strings.Repeat("日", 255), Slug: "slug", CreatedAt: now, UpdatedAt: &now}, ""},
-		{"long slug", &entity.Brand{Name: "name", Slug: strings.Repeat("a", 256), CreatedAt: now, UpdatedAt: &now}, "brand slug must not exceed 255 characters"},
+		{"empty name", &domain.Brand{Name: "", Slug: "slug", CreatedAt: now, UpdatedAt: &now}, "brand name is required"},
+		{"long name", &domain.Brand{Name: strings.Repeat("a", 256), Slug: "slug", CreatedAt: now, UpdatedAt: &now}, "brand name must not exceed 255 characters"},
+		{"long name multibyte", &domain.Brand{Name: strings.Repeat("日", 256), Slug: "slug", CreatedAt: now, UpdatedAt: &now}, "brand name must not exceed 255 characters"},
+		{"name multibyte ok", &domain.Brand{Name: strings.Repeat("日", 255), Slug: "slug", CreatedAt: now, UpdatedAt: &now}, ""},
+		{"long slug", &domain.Brand{Name: "name", Slug: strings.Repeat("a", 256), CreatedAt: now, UpdatedAt: &now}, "brand slug must not exceed 255 characters"},
 	}
 
 	for _, tt := range tests {

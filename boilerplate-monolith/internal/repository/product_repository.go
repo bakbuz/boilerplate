@@ -2,7 +2,7 @@ package repository
 
 import (
 	"codegen/internal/database"
-	"codegen/internal/entity"
+	"codegen/internal/domain"
 	"context"
 	"fmt"
 	"time"
@@ -14,21 +14,21 @@ import (
 
 // ProductRepository ...
 type ProductRepository interface {
-	GetAll(ctx context.Context) ([]*entity.Product, error)
-	GetByIds(ctx context.Context, ids []uuid.UUID) ([]*entity.Product, error)
-	GetById(ctx context.Context, id uuid.UUID) (*entity.Product, error)
-	Insert(ctx context.Context, e *entity.Product) (int64, error)
-	Update(ctx context.Context, e *entity.Product) (int64, error)
+	GetAll(ctx context.Context) ([]*domain.Product, error)
+	GetByIds(ctx context.Context, ids []uuid.UUID) ([]*domain.Product, error)
+	GetById(ctx context.Context, id uuid.UUID) (*domain.Product, error)
+	Insert(ctx context.Context, e *domain.Product) (int64, error)
+	Update(ctx context.Context, e *domain.Product) (int64, error)
 	Delete(ctx context.Context, id uuid.UUID) (int64, error)
 	DeleteByIds(ctx context.Context, ids []uuid.UUID) (int64, error)
 	SoftDelete(ctx context.Context, id uuid.UUID, deletedBy uuid.UUID) (int64, error)
 	Count(ctx context.Context) (int64, error)
 
-	Upsert(ctx context.Context, e *entity.Product) error
-	BulkInsert(ctx context.Context, list []*entity.Product) (int64, error)
-	BulkUpdate(ctx context.Context, list []*entity.Product) (int64, error)
+	Upsert(ctx context.Context, e *domain.Product) error
+	BulkInsert(ctx context.Context, list []*domain.Product) (int64, error)
+	BulkUpdate(ctx context.Context, list []*domain.Product) (int64, error)
 	RunInTx(ctx context.Context, fn func(ctx context.Context) error) error
-	Search(ctx context.Context, filter *entity.ProductSearchFilter) (*entity.ProductSearchResult, error)
+	Search(ctx context.Context, filter *domain.ProductSearchFilter) (*domain.ProductSearchResult, error)
 }
 
 type productRepository struct {
@@ -40,8 +40,8 @@ func NewProductRepository(db *database.DB) ProductRepository {
 	return &productRepository{db: db}
 }
 
-func scanProduct(row pgx.Row) (*entity.Product, error) {
-	e := &entity.Product{}
+func scanProduct(row pgx.Row) (*domain.Product, error) {
+	e := &domain.Product{}
 
 	err := row.Scan(&e.Id, &e.BrandId, &e.Name, &e.Sku, &e.Summary, &e.Storyline, &e.StockQuantity, &e.Price, &e.Deleted, &e.CreatedBy, &e.CreatedAt, &e.UpdatedBy, &e.UpdatedAt, &e.DeletedBy, &e.DeletedAt)
 	if err == pgx.ErrNoRows { // sql: no rows in result set
@@ -54,7 +54,7 @@ func scanProduct(row pgx.Row) (*entity.Product, error) {
 }
 
 // GetAll ...
-func (repo *productRepository) GetAll(ctx context.Context) ([]*entity.Product, error) {
+func (repo *productRepository) GetAll(ctx context.Context) ([]*domain.Product, error) {
 	const stmt string = "SELECT id, brand_id, name, sku, summary, storyline, stock_quantity, price::numeric, deleted, created_by, created_at, updated_by, updated_at, deleted_by, deleted_at FROM catalog.products WHERE deleted=false"
 
 	rows, err := repo.db.Pool().Query(ctx, stmt)
@@ -63,7 +63,7 @@ func (repo *productRepository) GetAll(ctx context.Context) ([]*entity.Product, e
 	}
 	defer rows.Close()
 
-	var list []*entity.Product
+	var list []*domain.Product
 	for rows.Next() {
 		product, err := scanProduct(rows)
 		if err != nil {
@@ -80,9 +80,9 @@ func (repo *productRepository) GetAll(ctx context.Context) ([]*entity.Product, e
 }
 
 // GetByIds ...
-func (repo *productRepository) GetByIds(ctx context.Context, ids []uuid.UUID) ([]*entity.Product, error) {
+func (repo *productRepository) GetByIds(ctx context.Context, ids []uuid.UUID) ([]*domain.Product, error) {
 	if len(ids) == 0 {
-		return []*entity.Product{}, nil
+		return []*domain.Product{}, nil
 	}
 
 	const stmt string = "SELECT id, brand_id, name, sku, summary, storyline, stock_quantity, price::numeric, deleted, created_by, created_at, updated_by, updated_at, deleted_by, deleted_at FROM catalog.products WHERE deleted=false AND id = ANY($1)"
@@ -93,7 +93,7 @@ func (repo *productRepository) GetByIds(ctx context.Context, ids []uuid.UUID) ([
 	}
 	defer rows.Close()
 
-	var list []*entity.Product
+	var list []*domain.Product
 	for rows.Next() {
 		product, err := scanProduct(rows)
 		if err != nil {
@@ -110,7 +110,7 @@ func (repo *productRepository) GetByIds(ctx context.Context, ids []uuid.UUID) ([
 }
 
 // GetById ...
-func (repo *productRepository) GetById(ctx context.Context, id uuid.UUID) (*entity.Product, error) {
+func (repo *productRepository) GetById(ctx context.Context, id uuid.UUID) (*domain.Product, error) {
 	const stmt string = "SELECT id, brand_id, name, sku, summary, storyline, stock_quantity, price::numeric, deleted, created_by, created_at, updated_by, updated_at, deleted_by, deleted_at FROM catalog.products WHERE deleted=false AND id=$1"
 
 	row := repo.db.Pool().QueryRow(ctx, stmt, id)
@@ -123,7 +123,7 @@ func (repo *productRepository) GetById(ctx context.Context, id uuid.UUID) (*enti
 }
 
 // Insert ...
-func (repo *productRepository) Insert(ctx context.Context, e *entity.Product) (int64, error) {
+func (repo *productRepository) Insert(ctx context.Context, e *domain.Product) (int64, error) {
 	const command string = `
 		INSERT INTO catalog.products (id, brand_id, name, sku, summary, storyline, stock_quantity, price, deleted, created_by, created_at) 
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
@@ -150,7 +150,7 @@ func (repo *productRepository) Insert(ctx context.Context, e *entity.Product) (i
 }
 
 // Update ...
-func (repo *productRepository) Update(ctx context.Context, e *entity.Product) (int64, error) {
+func (repo *productRepository) Update(ctx context.Context, e *domain.Product) (int64, error) {
 	const command string = `
 		UPDATE catalog.products 
 		SET brand_id=$2, name=$3, sku=$4, summary=$5, storyline=$6, stock_quantity=$7, price=$8, updated_by=$9, updated_at=$10 
@@ -222,7 +222,7 @@ func (repo *productRepository) Count(ctx context.Context) (int64, error) {
 }
 
 // Upsert ...
-func (repo *productRepository) Upsert(ctx context.Context, e *entity.Product) error {
+func (repo *productRepository) Upsert(ctx context.Context, e *domain.Product) error {
 	if e.Id == uuid.Nil {
 		var err error
 		if e.Id, err = uuid.NewV7(); err != nil {
@@ -268,7 +268,7 @@ func (repo *productRepository) Upsert(ctx context.Context, e *entity.Product) er
 	return nil
 }
 
-func (repo *productRepository) BulkInsert(ctx context.Context, list []*entity.Product) (int64, error) {
+func (repo *productRepository) BulkInsert(ctx context.Context, list []*domain.Product) (int64, error) {
 	if len(list) == 0 {
 		return 0, nil
 	}
@@ -299,7 +299,7 @@ func (repo *productRepository) BulkInsert(ctx context.Context, list []*entity.Pr
 	return count, nil
 }
 
-func (repo *productRepository) BulkUpdate(ctx context.Context, list []*entity.Product) (int64, error) {
+func (repo *productRepository) BulkUpdate(ctx context.Context, list []*domain.Product) (int64, error) {
 	if len(list) == 0 {
 		return 0, nil
 	}
@@ -400,7 +400,7 @@ func (repo *productRepository) RunInTx(ctx context.Context, fn func(ctx context.
 	return tx.Commit(ctx)
 }
 
-func (repo *productRepository) Search(ctx context.Context, filter *entity.ProductSearchFilter) (*entity.ProductSearchResult, error) {
+func (repo *productRepository) Search(ctx context.Context, filter *domain.ProductSearchFilter) (*domain.ProductSearchResult, error) {
 	where, args := buildSearchWhere(filter)
 
 	countQuery := "SELECT COUNT(*) FROM catalog.products WHERE deleted=false" + where
@@ -413,7 +413,7 @@ func (repo *productRepository) Search(ctx context.Context, filter *entity.Produc
 	}
 
 	if total == 0 {
-		return &entity.ProductSearchResult{}, nil
+		return &domain.ProductSearchResult{}, nil
 	}
 
 	// Add pagination
@@ -442,9 +442,9 @@ func (repo *productRepository) Search(ctx context.Context, filter *entity.Produc
 	}
 	defer rows.Close()
 
-	var items []entity.ProductSummary
+	var items []domain.ProductSummary
 	for rows.Next() {
-		e := entity.ProductSummary{}
+		e := domain.ProductSummary{}
 		err := rows.Scan(&e.Id, &e.Name, &e.Price, &e.BrandId, &e.BrandName)
 		if err != nil {
 			return nil, errors.WithMessage(err, rowScanError)
@@ -456,13 +456,13 @@ func (repo *productRepository) Search(ctx context.Context, filter *entity.Produc
 		return nil, errors.WithMessage(err, listQueryRowError)
 	}
 
-	return &entity.ProductSearchResult{
+	return &domain.ProductSearchResult{
 		Total: total,
 		Items: items,
 	}, nil
 }
 
-func buildSearchWhere(filter *entity.ProductSearchFilter) (string, []any) {
+func buildSearchWhere(filter *domain.ProductSearchFilter) (string, []any) {
 	var where string
 	var args []any
 	argIndex := 1

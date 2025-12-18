@@ -1,7 +1,7 @@
 package service
 
 import (
-	"codegen/internal/entity"
+	"codegen/internal/domain"
 	"codegen/internal/repository"
 	"codegen/pkg/errx"
 	"context"
@@ -11,17 +11,17 @@ import (
 )
 
 type ProductService interface {
-	GetAll(ctx context.Context) ([]*entity.Product, error)
-	GetByIds(ctx context.Context, ids []uuid.UUID) ([]*entity.Product, error)
-	GetById(ctx context.Context, id uuid.UUID) (*entity.Product, error)
-	Create(ctx context.Context, e *entity.Product) (int64, error)
-	Update(ctx context.Context, e *entity.Product) (int64, error)
+	GetAll(ctx context.Context) ([]*domain.Product, error)
+	GetByIds(ctx context.Context, ids []uuid.UUID) ([]*domain.Product, error)
+	GetById(ctx context.Context, id uuid.UUID) (*domain.Product, error)
+	Create(ctx context.Context, e *domain.Product) (int64, error)
+	Update(ctx context.Context, e *domain.Product) (int64, error)
 	Delete(ctx context.Context, id uuid.UUID) (int64, error)
 	SoftDelete(ctx context.Context, id uuid.UUID, deletedBy uuid.UUID) (int64, error)
 	Count(ctx context.Context) (int64, error)
-	BulkInsert(ctx context.Context, list []*entity.Product) (int64, error)
+	BulkInsert(ctx context.Context, list []*domain.Product) (int64, error)
 	RunInTx(ctx context.Context, fn func(ctx context.Context) error) error
-	Search(ctx context.Context, filter *entity.ProductSearchFilter) (*entity.ProductSearchResult, error)
+	Search(ctx context.Context, filter *domain.ProductSearchFilter) (*domain.ProductSearchResult, error)
 }
 
 type productService struct {
@@ -42,21 +42,21 @@ func (s *productService) validateProductId(id uuid.UUID) error {
 }
 
 // GetAll retrieves all products
-func (s *productService) GetAll(ctx context.Context) ([]*entity.Product, error) {
+func (s *productService) GetAll(ctx context.Context) ([]*domain.Product, error) {
 	return s.repo.GetAll(ctx)
 }
 
 // GetByIds retrieves products by their Ids
-func (s *productService) GetByIds(ctx context.Context, ids []uuid.UUID) ([]*entity.Product, error) {
+func (s *productService) GetByIds(ctx context.Context, ids []uuid.UUID) ([]*domain.Product, error) {
 	if len(ids) == 0 {
-		return []*entity.Product{}, nil
+		return []*domain.Product{}, nil
 	}
 
 	return s.repo.GetByIds(ctx, ids)
 }
 
 // GetById retrieves a product by its Id
-func (s *productService) GetById(ctx context.Context, id uuid.UUID) (*entity.Product, error) {
+func (s *productService) GetById(ctx context.Context, id uuid.UUID) (*domain.Product, error) {
 	if err := s.validateProductId(id); err != nil {
 		return nil, err
 	}
@@ -74,7 +74,7 @@ func (s *productService) GetById(ctx context.Context, id uuid.UUID) (*entity.Pro
 }
 
 // Create creates a new product
-func (s *productService) Create(ctx context.Context, e *entity.Product) (int64, error) {
+func (s *productService) Create(ctx context.Context, e *domain.Product) (int64, error) {
 	if err := e.Validate(); err != nil {
 		return -1, err
 	}
@@ -88,7 +88,7 @@ func (s *productService) Create(ctx context.Context, e *entity.Product) (int64, 
 }
 
 // Update updates an existing product
-func (s *productService) Update(ctx context.Context, e *entity.Product) (int64, error) {
+func (s *productService) Update(ctx context.Context, e *domain.Product) (int64, error) {
 	if err := e.Validate(); err != nil {
 		return -1, err
 	}
@@ -128,7 +128,7 @@ func (s *productService) Count(ctx context.Context) (int64, error) {
 }
 
 // BulkInsert inserts multiple products
-func (s *productService) BulkInsert(ctx context.Context, list []*entity.Product) (int64, error) {
+func (s *productService) BulkInsert(ctx context.Context, list []*domain.Product) (int64, error) {
 	if len(list) == 0 {
 		return -1, errx.ErrInvalidInput
 	}
@@ -154,7 +154,7 @@ func (s *productService) RunInTx(ctx context.Context, fn func(ctx context.Contex
 }
 
 // Search searches products based on filter criteria
-func (s *productService) Search(ctx context.Context, filter *entity.ProductSearchFilter) (*entity.ProductSearchResult, error) {
+func (s *productService) Search(ctx context.Context, filter *domain.ProductSearchFilter) (*domain.ProductSearchResult, error) {
 	if filter == nil {
 		return nil, errx.ErrInvalidInput
 	}

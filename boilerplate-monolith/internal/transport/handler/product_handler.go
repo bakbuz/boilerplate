@@ -2,7 +2,7 @@ package handler
 
 import (
 	catalogv1 "codegen/api/gen/catalog/v1"
-	"codegen/internal/entity"
+	"codegen/internal/domain"
 	"codegen/internal/service"
 	"codegen/pkg/errx"
 	"context"
@@ -30,7 +30,7 @@ func NewProductHandler(svc service.ProductService) *productHandler {
 // ============================================================================
 
 // productEntityToProto converts a Product entity to protobuf Product message
-func productEntityToProto(p *entity.Product) *catalogv1.Product {
+func productEntityToProto(p *domain.Product) *catalogv1.Product {
 	if p == nil {
 		return nil
 	}
@@ -51,13 +51,13 @@ func productEntityToProto(p *entity.Product) *catalogv1.Product {
 }
 
 // productCreateProtoToEntity converts CreateProductRequest to Product entity
-func productCreateProtoToEntity(req *catalogv1.CreateProductRequest, currentUserId uuid.UUID) (*entity.Product, error) {
+func productCreateProtoToEntity(req *catalogv1.CreateProductRequest, currentUserId uuid.UUID) (*domain.Product, error) {
 	if req == nil {
 		return nil, errx.ErrInvalidInput
 	}
 
 	newId, _ := uuid.NewV7()
-	product := &entity.Product{
+	product := &domain.Product{
 		Id:            newId,
 		BrandId:       int(req.BrandId),
 		Name:          req.Name,
@@ -77,7 +77,7 @@ func productCreateProtoToEntity(req *catalogv1.CreateProductRequest, currentUser
 }
 
 // productUpdateProtoToEntity converts UpdateProductRequest to Product entity
-func productUpdateProtoToEntity(req *catalogv1.UpdateProductRequest, currentUserId uuid.UUID) (*entity.Product, error) {
+func productUpdateProtoToEntity(req *catalogv1.UpdateProductRequest, currentUserId uuid.UUID) (*domain.Product, error) {
 	if req == nil {
 		return nil, errx.ErrInvalidInput
 	}
@@ -87,7 +87,7 @@ func productUpdateProtoToEntity(req *catalogv1.UpdateProductRequest, currentUser
 		return nil, errors.New("invalid product id format")
 	}
 
-	product := &entity.Product{
+	product := &domain.Product{
 		Id:            id,
 		BrandId:       int(req.BrandId),
 		Name:          req.Name,

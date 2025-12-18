@@ -1,7 +1,7 @@
 package repository_test
 
 import (
-	"codegen/internal/entity"
+	"codegen/internal/domain"
 	"codegen/internal/repository"
 	"context"
 	"fmt"
@@ -29,7 +29,7 @@ func TestProductRepository_Integration(t *testing.T) {
 	require.NoError(t, err)
 
 	brandRepo := repository.NewBrandRepository(db)
-	brand := &entity.Brand{
+	brand := &domain.Brand{
 		Name:      "Product Test Brand " + uuid.New().String(),
 		Slug:      "prod-test-" + uuid.New().String(),
 		CreatedAt: time.Now(),
@@ -37,7 +37,7 @@ func TestProductRepository_Integration(t *testing.T) {
 	}
 	require.NoError(t, brandRepo.Insert(ctx, brand))
 
-	newProduct := &entity.Product{
+	newProduct := &domain.Product{
 		Id:            uuid.New(),
 		BrandId:       int(brand.Id),
 		Name:          "Test Product",
@@ -100,7 +100,7 @@ func TestProductRepository_Integration(t *testing.T) {
 	assert.Nil(t, fetchedDeleted)
 
 	// 6. DeleteByIds
-	p1 := &entity.Product{
+	p1 := &domain.Product{
 		Id:            uuid.New(),
 		BrandId:       int(brand.Id),
 		Name:          "DeleteByIds 1",
@@ -110,7 +110,7 @@ func TestProductRepository_Integration(t *testing.T) {
 		CreatedBy:     uuid.New(),
 		CreatedAt:     time.Now(),
 	}
-	p2 := &entity.Product{
+	p2 := &domain.Product{
 		Id:            uuid.New(),
 		BrandId:       int(brand.Id),
 		Name:          "DeleteByIds 2",
@@ -163,7 +163,7 @@ func TestProductRepository_Upsert(t *testing.T) {
 	ctx := context.Background()
 
 	// Setup Brand
-	brand := &entity.Brand{
+	brand := &domain.Brand{
 		Name:      "Upsert Brand " + uuid.New().String(),
 		Slug:      "upsert-brand-" + uuid.New().String(),
 		CreatedAt: time.Now(),
@@ -172,7 +172,7 @@ func TestProductRepository_Upsert(t *testing.T) {
 	require.NoError(t, brandRepo.Insert(ctx, brand))
 
 	// 1. Insert new product via Upsert
-	product := &entity.Product{
+	product := &domain.Product{
 		BrandId:       int(brand.Id),
 		Name:          "Upsert Product",
 		Sku:           strPtr("UPSERT-1"),
@@ -216,7 +216,7 @@ func TestProductRepository_BulkInsert(t *testing.T) {
 	ctx := context.Background()
 
 	// Insert Brand
-	brand := &entity.Brand{
+	brand := &domain.Brand{
 		Name:      "Bulk Product Brand",
 		Slug:      "bulk-prod-" + uuid.New().String(),
 		CreatedAt: time.Now(),
@@ -225,9 +225,9 @@ func TestProductRepository_BulkInsert(t *testing.T) {
 	require.NoError(t, brandRepo.Insert(ctx, brand))
 
 	count := 5
-	list := make([]*entity.Product, count)
+	list := make([]*domain.Product, count)
 	for i := 0; i < count; i++ {
-		list[i] = &entity.Product{
+		list[i] = &domain.Product{
 			Id:        uuid.New(),
 			BrandId:   int(brand.Id),
 			Name:      "Bulk Product",
@@ -261,7 +261,7 @@ func TestProductRepository_BulkUpdate(t *testing.T) {
 	require.NoError(t, err)
 
 	// Insert Brand
-	brand := &entity.Brand{
+	brand := &domain.Brand{
 		Name:      "Bulk Update Brand",
 		Slug:      "bulk-update-brand-" + uuid.New().String(),
 		CreatedAt: time.Now(),
@@ -271,9 +271,9 @@ func TestProductRepository_BulkUpdate(t *testing.T) {
 
 	// 1. Prepare products
 	count := 5
-	list := make([]*entity.Product, count)
+	list := make([]*domain.Product, count)
 	for i := 0; i < count; i++ {
-		list[i] = &entity.Product{
+		list[i] = &domain.Product{
 			Id:            uuid.New(),
 			BrandId:       int(brand.Id),
 			Name:          fmt.Sprintf("Original Product %d", i),
@@ -325,7 +325,7 @@ func TestProductRepository_Search(t *testing.T) {
 	ctx := context.Background()
 
 	// Setup data: 1 Brand, 3 Products
-	brand := &entity.Brand{
+	brand := &domain.Brand{
 		Name:      "Search Brand " + uuid.New().String(),
 		Slug:      "search-brand-" + uuid.New().String(),
 		CreatedAt: time.Now(),
@@ -333,29 +333,29 @@ func TestProductRepository_Search(t *testing.T) {
 	}
 	require.NoError(t, brandRepo.Insert(ctx, brand))
 
-	p1 := &entity.Product{
+	p1 := &domain.Product{
 		BrandId: int(brand.Id),
 		Name:    "Alpha Product",
 		Sku:     strPtr("S-1"),
 		Price:   10,
 	}
-	p2 := &entity.Product{
+	p2 := &domain.Product{
 		BrandId: int(brand.Id),
 		Name:    "Alpha Beta Product",
 		Sku:     strPtr("S-2"),
 		Price:   20,
 	}
-	p3 := &entity.Product{
+	p3 := &domain.Product{
 		BrandId: int(brand.Id),
 		Name:    "Gamma Product",
 		Sku:     strPtr("S-3"),
 		Price:   30,
 	}
-	_, err := repo.BulkInsert(ctx, []*entity.Product{p1, p2, p3})
+	_, err := repo.BulkInsert(ctx, []*domain.Product{p1, p2, p3})
 	require.NoError(t, err)
 
 	// Test 1: Search by Name (Partial)
-	res, err := repo.Search(ctx, &entity.ProductSearchFilter{
+	res, err := repo.Search(ctx, &domain.ProductSearchFilter{
 		Name:  "Alpha",
 		Limit: 10,
 	})
@@ -364,7 +364,7 @@ func TestProductRepository_Search(t *testing.T) {
 	assert.Len(t, res.Items, 2)
 
 	// Test 2: Search with Pagination
-	res, err = repo.Search(ctx, &entity.ProductSearchFilter{
+	res, err = repo.Search(ctx, &domain.ProductSearchFilter{
 		Name:   "Alpha",
 		Limit:  1,
 		Offset: 0,
@@ -383,7 +383,7 @@ func TestProductRepository_SoftDelete(t *testing.T) {
 	ctx := context.Background()
 
 	// Need a brand
-	brand := &entity.Brand{
+	brand := &domain.Brand{
 		Name:      "Delete Brand " + uuid.New().String(),
 		Slug:      "del-brand-" + uuid.New().String(),
 		CreatedAt: time.Now(),
@@ -392,7 +392,7 @@ func TestProductRepository_SoftDelete(t *testing.T) {
 	require.NoError(t, brandRepo.Insert(ctx, brand))
 
 	// Insert
-	p := &entity.Product{
+	p := &domain.Product{
 		Id:        uuid.New(),
 		BrandId:   int(brand.Id),
 		Name:      "Soft Delete Me",

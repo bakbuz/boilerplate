@@ -1,7 +1,7 @@
 package service
 
 import (
-	"codegen/internal/entity"
+	"codegen/internal/domain"
 	"codegen/pkg/errx"
 	"context"
 	"errors"
@@ -17,36 +17,36 @@ type MockProductRepository struct {
 	mock.Mock
 }
 
-func (m *MockProductRepository) GetAll(ctx context.Context) ([]*entity.Product, error) {
+func (m *MockProductRepository) GetAll(ctx context.Context) ([]*domain.Product, error) {
 	args := m.Called(ctx)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*entity.Product), args.Error(1)
+	return args.Get(0).([]*domain.Product), args.Error(1)
 }
 
-func (m *MockProductRepository) GetByIds(ctx context.Context, ids []uuid.UUID) ([]*entity.Product, error) {
+func (m *MockProductRepository) GetByIds(ctx context.Context, ids []uuid.UUID) ([]*domain.Product, error) {
 	args := m.Called(ctx, ids)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*entity.Product), args.Error(1)
+	return args.Get(0).([]*domain.Product), args.Error(1)
 }
 
-func (m *MockProductRepository) GetById(ctx context.Context, id uuid.UUID) (*entity.Product, error) {
+func (m *MockProductRepository) GetById(ctx context.Context, id uuid.UUID) (*domain.Product, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*entity.Product), args.Error(1)
+	return args.Get(0).(*domain.Product), args.Error(1)
 }
 
-func (m *MockProductRepository) Insert(ctx context.Context, e *entity.Product) (int64, error) {
+func (m *MockProductRepository) Insert(ctx context.Context, e *domain.Product) (int64, error) {
 	args := m.Called(ctx, e)
 	return args.Get(0).(int64), args.Error(1)
 }
 
-func (m *MockProductRepository) Update(ctx context.Context, e *entity.Product) (int64, error) {
+func (m *MockProductRepository) Update(ctx context.Context, e *domain.Product) (int64, error) {
 	args := m.Called(ctx, e)
 	return args.Get(0).(int64), args.Error(1)
 }
@@ -71,17 +71,17 @@ func (m *MockProductRepository) Count(ctx context.Context) (int64, error) {
 	return args.Get(0).(int64), args.Error(1)
 }
 
-func (m *MockProductRepository) Upsert(ctx context.Context, e *entity.Product) error {
+func (m *MockProductRepository) Upsert(ctx context.Context, e *domain.Product) error {
 	args := m.Called(ctx, e)
 	return args.Error(0)
 }
 
-func (m *MockProductRepository) BulkInsert(ctx context.Context, list []*entity.Product) (int64, error) {
+func (m *MockProductRepository) BulkInsert(ctx context.Context, list []*domain.Product) (int64, error) {
 	args := m.Called(ctx, list)
 	return args.Get(0).(int64), args.Error(1)
 }
 
-func (m *MockProductRepository) BulkUpdate(ctx context.Context, list []*entity.Product) (int64, error) {
+func (m *MockProductRepository) BulkUpdate(ctx context.Context, list []*domain.Product) (int64, error) {
 	args := m.Called(ctx, list)
 	return args.Get(0).(int64), args.Error(1)
 }
@@ -91,12 +91,12 @@ func (m *MockProductRepository) RunInTx(ctx context.Context, fn func(ctx context
 	return args.Error(0)
 }
 
-func (m *MockProductRepository) Search(ctx context.Context, filter *entity.ProductSearchFilter) (*entity.ProductSearchResult, error) {
+func (m *MockProductRepository) Search(ctx context.Context, filter *domain.ProductSearchFilter) (*domain.ProductSearchResult, error) {
 	args := m.Called(ctx, filter)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*entity.ProductSearchResult), args.Error(1)
+	return args.Get(0).(*domain.ProductSearchResult), args.Error(1)
 }
 
 func TestProductService_Create(t *testing.T) {
@@ -105,14 +105,14 @@ func TestProductService_Create(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		repo := new(MockProductRepository)
 		svc := NewProductService(repo)
-		validProduct := &entity.Product{
+		validProduct := &domain.Product{
 			Name:          "Valid Product",
 			BrandId:       1,
 			StockQuantity: 10,
 			Price:         99.99,
 		}
 
-		repo.On("Insert", ctx, mock.MatchedBy(func(p *entity.Product) bool {
+		repo.On("Insert", ctx, mock.MatchedBy(func(p *domain.Product) bool {
 			return p.Name == "Valid Product" && p.BrandId == 1 && p.Id != uuid.Nil
 		})).Return(int64(1), nil)
 
@@ -125,7 +125,7 @@ func TestProductService_Create(t *testing.T) {
 	t.Run("validation error - empty name", func(t *testing.T) {
 		repo := new(MockProductRepository)
 		svc := NewProductService(repo)
-		invalidProduct := &entity.Product{
+		invalidProduct := &domain.Product{
 			Name:    "   ", // Should be trimmed to empty
 			BrandId: 1,
 		}
@@ -139,7 +139,7 @@ func TestProductService_Create(t *testing.T) {
 	t.Run("validation error - negative price", func(t *testing.T) {
 		repo := new(MockProductRepository)
 		svc := NewProductService(repo)
-		invalidProduct := &entity.Product{
+		invalidProduct := &domain.Product{
 			Name:    "Valid Name",
 			BrandId: 1,
 			Price:   -10,
@@ -154,7 +154,7 @@ func TestProductService_Create(t *testing.T) {
 	t.Run("repo error", func(t *testing.T) {
 		repo := new(MockProductRepository)
 		svc := NewProductService(repo)
-		validProduct := &entity.Product{
+		validProduct := &domain.Product{
 			Name:    "Repo Error",
 			BrandId: 1,
 		}
@@ -174,13 +174,13 @@ func TestProductService_Update(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		repo := new(MockProductRepository)
 		svc := NewProductService(repo)
-		validProduct := &entity.Product{
+		validProduct := &domain.Product{
 			Id:      id,
 			Name:    "Updated Product",
 			BrandId: 1,
 		}
 
-		repo.On("Update", ctx, mock.MatchedBy(func(p *entity.Product) bool {
+		repo.On("Update", ctx, mock.MatchedBy(func(p *domain.Product) bool {
 			return p.Name == "Updated Product" && p.Id == id
 		})).Return(int64(1), nil)
 
@@ -192,7 +192,7 @@ func TestProductService_Update(t *testing.T) {
 	t.Run("validation error - invalid id", func(t *testing.T) {
 		repo := new(MockProductRepository)
 		svc := NewProductService(repo)
-		invalidProduct := &entity.Product{
+		invalidProduct := &domain.Product{
 			Id:      uuid.Nil,
 			Name:    "Valid Name",
 			BrandId: 1,
@@ -211,7 +211,7 @@ func TestProductService_GetById(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		repo := new(MockProductRepository)
 		svc := NewProductService(repo)
-		expectedProduct := &entity.Product{Id: id, Name: "Found"}
+		expectedProduct := &domain.Product{Id: id, Name: "Found"}
 		repo.On("GetById", ctx, id).Return(expectedProduct, nil)
 
 		product, err := svc.GetById(ctx, id)
@@ -283,9 +283,9 @@ func TestProductService_Search(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		repo := new(MockProductRepository)
 		svc := NewProductService(repo)
-		filter := &entity.ProductSearchFilter{Limit: 10, Offset: 0}
-		expectedResult := &entity.ProductSearchResult{Total: 1, Items: []entity.ProductSummary{{Name: "Search Result"}}}
-		repo.On("Search", ctx, mock.MatchedBy(func(f *entity.ProductSearchFilter) bool {
+		filter := &domain.ProductSearchFilter{Limit: 10, Offset: 0}
+		expectedResult := &domain.ProductSearchResult{Total: 1, Items: []domain.ProductSummary{{Name: "Search Result"}}}
+		repo.On("Search", ctx, mock.MatchedBy(func(f *domain.ProductSearchFilter) bool {
 			return f.Limit == 10
 		})).Return(expectedResult, nil)
 
@@ -297,10 +297,10 @@ func TestProductService_Search(t *testing.T) {
 	t.Run("default pagination", func(t *testing.T) {
 		repo := new(MockProductRepository)
 		svc := NewProductService(repo)
-		filter := &entity.ProductSearchFilter{} // Take 0
-		repo.On("Search", ctx, mock.MatchedBy(func(f *entity.ProductSearchFilter) bool {
+		filter := &domain.ProductSearchFilter{} // Take 0
+		repo.On("Search", ctx, mock.MatchedBy(func(f *domain.ProductSearchFilter) bool {
 			return f.Limit == 10 // Should default to 10
-		})).Return(&entity.ProductSearchResult{}, nil)
+		})).Return(&domain.ProductSearchResult{}, nil)
 
 		_, err := svc.Search(ctx, filter)
 		assert.NoError(t, err)
@@ -309,7 +309,7 @@ func TestProductService_Search(t *testing.T) {
 	t.Run("invalid pagination", func(t *testing.T) {
 		repo := new(MockProductRepository)
 		svc := NewProductService(repo)
-		filter := &entity.ProductSearchFilter{Limit: 1001}
+		filter := &domain.ProductSearchFilter{Limit: 1001}
 		result, err := svc.Search(ctx, filter)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "limit parameter must not exceed 1000")
@@ -324,13 +324,13 @@ func TestProductService_Sanitization(t *testing.T) {
 		repo := new(MockProductRepository)
 		svc := NewProductService(repo)
 		sku := "  SKU-123  "
-		input := &entity.Product{
+		input := &domain.Product{
 			Name:    "  Trim Me  ",
 			Sku:     &sku,
 			BrandId: 1,
 		}
 
-		repo.On("Insert", ctx, mock.MatchedBy(func(p *entity.Product) bool {
+		repo.On("Insert", ctx, mock.MatchedBy(func(p *domain.Product) bool {
 			return p.Name == "Trim Me" && *p.Sku == "SKU-123"
 		})).Return(int64(1), nil)
 

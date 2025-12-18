@@ -1,4 +1,4 @@
-package entity
+package domain
 
 import (
 	"codegen/pkg/errx"
@@ -119,7 +119,7 @@ type ProductSearchResult struct {
 }
 
 // ProductSummary: (Daha önceki cevaptan hatırlatma)
-// Bu struct aynı pakette olduğu için import prefix'ine (entity.) gerek yok.
+// Bu struct aynı pakette olduğu için import prefix'ine (domain.) gerek yok.
 type ProductSummary struct {
 	Id        uuid.UUID // Veya string, projendeki ID tipine göre
 	Name      string

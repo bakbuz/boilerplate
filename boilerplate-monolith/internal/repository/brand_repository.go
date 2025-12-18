@@ -2,7 +2,7 @@ package repository
 
 import (
 	"codegen/internal/database"
-	"codegen/internal/entity"
+	"codegen/internal/domain"
 	"context"
 
 	"github.com/jackc/pgx/v5"
@@ -11,20 +11,20 @@ import (
 
 // BrandRepository ...
 type BrandRepository interface {
-	GetAll(ctx context.Context) ([]*entity.Brand, error)
-	GetByIds(ctx context.Context, ids []int32) ([]*entity.Brand, error)
-	GetById(ctx context.Context, id int32) (*entity.Brand, error)
-	Insert(ctx context.Context, e *entity.Brand) error
-	Update(ctx context.Context, e *entity.Brand) (int64, error)
+	GetAll(ctx context.Context) ([]*domain.Brand, error)
+	GetByIds(ctx context.Context, ids []int32) ([]*domain.Brand, error)
+	GetById(ctx context.Context, id int32) (*domain.Brand, error)
+	Insert(ctx context.Context, e *domain.Brand) error
+	Update(ctx context.Context, e *domain.Brand) (int64, error)
 	Delete(ctx context.Context, id int32) (int64, error)
 	DeleteByIds(ctx context.Context, ids []int32) (int64, error)
 	Count(ctx context.Context) (int64, error)
 
-	Upsert(ctx context.Context, e *entity.Brand) error
-	BulkInsert(ctx context.Context, list []*entity.Brand) (int64, error)
-	BulkUpdate(ctx context.Context, list []*entity.Brand) (int64, error)
-	BulkInsertTran(ctx context.Context, list []*entity.Brand) error
-	BulkUpdateTran(ctx context.Context, list []*entity.Brand) error
+	Upsert(ctx context.Context, e *domain.Brand) error
+	BulkInsert(ctx context.Context, list []*domain.Brand) (int64, error)
+	BulkUpdate(ctx context.Context, list []*domain.Brand) (int64, error)
+	BulkInsertTran(ctx context.Context, list []*domain.Brand) error
+	BulkUpdateTran(ctx context.Context, list []*domain.Brand) error
 }
 
 type brandRepository struct {
@@ -36,8 +36,8 @@ func NewBrandRepository(db *database.DB) BrandRepository {
 	return &brandRepository{db: db}
 }
 
-func scanBrand(row pgx.Row) (*entity.Brand, error) {
-	e := &entity.Brand{}
+func scanBrand(row pgx.Row) (*domain.Brand, error) {
+	e := &domain.Brand{}
 
 	err := row.Scan(&e.Id, &e.Name, &e.Slug, &e.Logo, &e.CreatedBy, &e.CreatedAt, &e.UpdatedBy, &e.UpdatedAt)
 	if err != nil {
@@ -50,7 +50,7 @@ func scanBrand(row pgx.Row) (*entity.Brand, error) {
 }
 
 // GetAll ...
-func (repo *brandRepository) GetAll(ctx context.Context) ([]*entity.Brand, error) {
+func (repo *brandRepository) GetAll(ctx context.Context) ([]*domain.Brand, error) {
 	// WARNING: Unbounded query. Added safety limit.
 	// TODO: Update interface to support pagination.
 	const stmt string = "SELECT * FROM catalog.brands LIMIT 1000"
@@ -61,9 +61,9 @@ func (repo *brandRepository) GetAll(ctx context.Context) ([]*entity.Brand, error
 	}
 	defer rows.Close()
 
-	var list []*entity.Brand
+	var list []*domain.Brand
 	for rows.Next() {
-		e := &entity.Brand{}
+		e := &domain.Brand{}
 		err := rows.Scan(&e.Id, &e.Name, &e.Slug, &e.Logo, &e.CreatedBy, &e.CreatedAt, &e.UpdatedBy, &e.UpdatedAt)
 		if err != nil {
 			return nil, errors.WithMessage(err, rowScanError)
@@ -79,9 +79,9 @@ func (repo *brandRepository) GetAll(ctx context.Context) ([]*entity.Brand, error
 }
 
 // GetByIds ...
-func (repo *brandRepository) GetByIds(ctx context.Context, ids []int32) ([]*entity.Brand, error) {
+func (repo *brandRepository) GetByIds(ctx context.Context, ids []int32) ([]*domain.Brand, error) {
 	if len(ids) == 0 {
-		return []*entity.Brand{}, nil
+		return []*domain.Brand{}, nil
 	}
 
 	const stmt string = "SELECT * FROM catalog.brands WHERE id = ANY($1)"
@@ -92,9 +92,9 @@ func (repo *brandRepository) GetByIds(ctx context.Context, ids []int32) ([]*enti
 	}
 	defer rows.Close()
 
-	var list []*entity.Brand
+	var list []*domain.Brand
 	for rows.Next() {
-		e := &entity.Brand{}
+		e := &domain.Brand{}
 		err := rows.Scan(&e.Id, &e.Name, &e.Slug, &e.Logo, &e.CreatedBy, &e.CreatedAt, &e.UpdatedBy, &e.UpdatedAt)
 		if err != nil {
 			return nil, errors.WithMessage(err, rowScanError)
@@ -110,7 +110,7 @@ func (repo *brandRepository) GetByIds(ctx context.Context, ids []int32) ([]*enti
 }
 
 // GetById ...
-func (repo *brandRepository) GetById(ctx context.Context, id int32) (*entity.Brand, error) {
+func (repo *brandRepository) GetById(ctx context.Context, id int32) (*domain.Brand, error) {
 	const stmt string = "SELECT * FROM catalog.brands WHERE id=$1"
 
 	row := repo.db.Pool().QueryRow(ctx, stmt, id)
@@ -126,7 +126,7 @@ func (repo *brandRepository) GetById(ctx context.Context, id int32) (*entity.Bra
 }
 
 // Insert ...
-func (repo *brandRepository) Insert(ctx context.Context, e *entity.Brand) error {
+func (repo *brandRepository) Insert(ctx context.Context, e *domain.Brand) error {
 	const command string = `
 		INSERT INTO catalog.brands (name, slug, logo, created_by, created_at) 
 		VALUES ($1, $2, $3, $4, $5)
@@ -148,7 +148,7 @@ func (repo *brandRepository) Insert(ctx context.Context, e *entity.Brand) error 
 }
 
 // Update ...
-func (repo *brandRepository) Update(ctx context.Context, e *entity.Brand) (int64, error) {
+func (repo *brandRepository) Update(ctx context.Context, e *domain.Brand) (int64, error) {
 	const command string = `
 		UPDATE catalog.brands 
 		SET name=$2, slug=$3, logo=$4, updated_by=$5, updated_at=$6 
@@ -204,7 +204,7 @@ func (repo *brandRepository) Count(ctx context.Context) (int64, error) {
 }
 
 // Upsert ...
-func (repo *brandRepository) Upsert(ctx context.Context, e *entity.Brand) error {
+func (repo *brandRepository) Upsert(ctx context.Context, e *domain.Brand) error {
 	// If Id is missing, treating as Insert creates a record with ID 0 on some systems
 	// or fails validation. For auto-increment, we must delegate to Insert.
 	if e.Id == 0 {
@@ -240,7 +240,7 @@ func (repo *brandRepository) Upsert(ctx context.Context, e *entity.Brand) error 
 }
 
 // BulkInsert ...
-func (repo *brandRepository) BulkInsert(ctx context.Context, list []*entity.Brand) (int64, error) {
+func (repo *brandRepository) BulkInsert(ctx context.Context, list []*domain.Brand) (int64, error) {
 	if len(list) == 0 {
 		return 0, nil
 	}
@@ -271,7 +271,7 @@ func (repo *brandRepository) BulkInsert(ctx context.Context, list []*entity.Bran
 }
 
 // BulkUpdate ...
-func (repo *brandRepository) BulkUpdate(ctx context.Context, list []*entity.Brand) (int64, error) {
+func (repo *brandRepository) BulkUpdate(ctx context.Context, list []*domain.Brand) (int64, error) {
 	if len(list) == 0 {
 		return 0, nil
 	}
@@ -348,7 +348,7 @@ func (repo *brandRepository) BulkUpdate(ctx context.Context, list []*entity.Bran
 const batchSize = 1000
 
 // BulkInsert ...
-func (repo *brandRepository) BulkInsertTran(ctx context.Context, list []*entity.Brand) error {
+func (repo *brandRepository) BulkInsertTran(ctx context.Context, list []*domain.Brand) error {
 	if len(list) == 0 {
 		return nil
 	}
@@ -400,7 +400,7 @@ func (repo *brandRepository) BulkInsertTran(ctx context.Context, list []*entity.
 }
 
 // BulkUpdate ...
-func (repo *brandRepository) BulkUpdateTran(ctx context.Context, list []*entity.Brand) error {
+func (repo *brandRepository) BulkUpdateTran(ctx context.Context, list []*domain.Brand) error {
 	if len(list) == 0 {
 		return nil
 	}

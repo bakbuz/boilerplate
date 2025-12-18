@@ -1,7 +1,7 @@
 package service
 
 import (
-	"codegen/internal/entity"
+	"codegen/internal/domain"
 	"codegen/internal/repository"
 	"codegen/pkg/errx"
 	"context"
@@ -13,14 +13,14 @@ import (
 )
 
 type BrandService interface {
-	GetAll(ctx context.Context) ([]*entity.Brand, error)
-	GetByIds(ctx context.Context, ids []int32) ([]*entity.Brand, error)
-	GetById(ctx context.Context, id int32) (*entity.Brand, error)
-	Create(ctx context.Context, e *entity.Brand) error
-	Update(ctx context.Context, e *entity.Brand) (int64, error)
+	GetAll(ctx context.Context) ([]*domain.Brand, error)
+	GetByIds(ctx context.Context, ids []int32) ([]*domain.Brand, error)
+	GetById(ctx context.Context, id int32) (*domain.Brand, error)
+	Create(ctx context.Context, e *domain.Brand) error
+	Update(ctx context.Context, e *domain.Brand) (int64, error)
 	Delete(ctx context.Context, id int32) (int64, error)
 	Count(ctx context.Context) (int64, error)
-	BulkInsert(ctx context.Context, list []*entity.Brand) (int64, error)
+	BulkInsert(ctx context.Context, list []*domain.Brand) (int64, error)
 }
 
 type brandService struct {
@@ -33,7 +33,7 @@ func NewBrandService(repo repository.BrandRepository) BrandService {
 }
 
 // validateBrand ...
-func (s *brandService) validateBrand(e *entity.Brand) error {
+func (s *brandService) validateBrand(e *domain.Brand) error {
 	if e == nil {
 		return errx.ErrInvalidInput
 	}
@@ -54,21 +54,21 @@ func (s *brandService) validateBrand(e *entity.Brand) error {
 }
 
 // GetAll ...
-func (s *brandService) GetAll(ctx context.Context) ([]*entity.Brand, error) {
+func (s *brandService) GetAll(ctx context.Context) ([]*domain.Brand, error) {
 	return s.repo.GetAll(ctx)
 }
 
 // GetByIds ...
-func (s *brandService) GetByIds(ctx context.Context, ids []int32) ([]*entity.Brand, error) {
+func (s *brandService) GetByIds(ctx context.Context, ids []int32) ([]*domain.Brand, error) {
 	if len(ids) == 0 {
-		return []*entity.Brand{}, nil
+		return []*domain.Brand{}, nil
 	}
 
 	return s.repo.GetByIds(ctx, ids)
 }
 
 // GetById ...
-func (s *brandService) GetById(ctx context.Context, id int32) (*entity.Brand, error) {
+func (s *brandService) GetById(ctx context.Context, id int32) (*domain.Brand, error) {
 	if id == 0 {
 		return nil, errx.ErrInvalidInput
 	}
@@ -86,7 +86,7 @@ func (s *brandService) GetById(ctx context.Context, id int32) (*entity.Brand, er
 }
 
 // Create ...
-func (s *brandService) Create(ctx context.Context, e *entity.Brand) error {
+func (s *brandService) Create(ctx context.Context, e *domain.Brand) error {
 	if err := s.validateBrand(e); err != nil {
 		return err
 	}
@@ -95,7 +95,7 @@ func (s *brandService) Create(ctx context.Context, e *entity.Brand) error {
 }
 
 // Update ...
-func (s *brandService) Update(ctx context.Context, e *entity.Brand) (int64, error) {
+func (s *brandService) Update(ctx context.Context, e *domain.Brand) (int64, error) {
 	if err := s.validateBrand(e); err != nil {
 		return -1, err
 	}
@@ -122,7 +122,7 @@ func (s *brandService) Count(ctx context.Context) (int64, error) {
 }
 
 // BulkInsert ...
-func (s *brandService) BulkInsert(ctx context.Context, list []*entity.Brand) (int64, error) {
+func (s *brandService) BulkInsert(ctx context.Context, list []*domain.Brand) (int64, error) {
 	if len(list) == 0 {
 		return -1, errx.ErrInvalidInput
 	}

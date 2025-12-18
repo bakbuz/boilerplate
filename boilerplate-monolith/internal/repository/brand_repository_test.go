@@ -1,7 +1,7 @@
 package repository_test
 
 import (
-	"codegen/internal/entity"
+	"codegen/internal/domain"
 	"codegen/internal/repository"
 	"context"
 	"testing"
@@ -24,7 +24,7 @@ func TestBrandRepository_Integration(t *testing.T) {
 	require.NoError(t, err)
 
 	// 1. Insert
-	newBrand := &entity.Brand{
+	newBrand := &domain.Brand{
 		Name:      "Test Brand",
 		Slug:      "test-brand-" + uuid.New().String(),
 		Logo:      "logo.png",
@@ -82,14 +82,14 @@ func TestBrandRepository_Integration(t *testing.T) {
 	assert.Nil(t, fetchedDeleted)
 
 	// 6. DeleteByIds
-	brandToDelete1 := &entity.Brand{
+	brandToDelete1 := &domain.Brand{
 		Name:      "DeleteByIds 1",
 		Slug:      "del-1-" + uuid.New().String(),
 		Logo:      "logo1.png",
 		CreatedBy: uuid.New(),
 		CreatedAt: time.Now(),
 	}
-	brandToDelete2 := &entity.Brand{
+	brandToDelete2 := &domain.Brand{
 		Name:      "DeleteByIds 2",
 		Slug:      "del-2-" + uuid.New().String(),
 		Logo:      "logo2.png",
@@ -138,7 +138,7 @@ func TestBrandRepository_Upsert(t *testing.T) {
 
 	// 1. Upsert (Insert Scenario - Auto Id)
 	t.Run("InsertNewBrand_AutoId", func(t *testing.T) {
-		brand := &entity.Brand{
+		brand := &domain.Brand{
 			Name:      "New Brand AutoId " + uuid.New().String(),
 			Slug:      "new-brand-auto-" + uuid.New().String(),
 			CreatedAt: time.Now(),
@@ -156,7 +156,7 @@ func TestBrandRepository_Upsert(t *testing.T) {
 		// Clean up potential leftover
 		_, _ = repo.Delete(ctx, upsertId)
 
-		upsertBrand := &entity.Brand{
+		upsertBrand := &domain.Brand{
 			Id:        upsertId,
 			Name:      "Upsert Brand Explicit",
 			Slug:      "upsert-explicit-" + uuid.New().String(),
@@ -177,7 +177,7 @@ func TestBrandRepository_Upsert(t *testing.T) {
 	// 3. Upsert (Update Scenario)
 	t.Run("UpdateExistingBrand", func(t *testing.T) {
 		// First Insert
-		brand := &entity.Brand{
+		brand := &domain.Brand{
 			Name:      "Old Name " + uuid.New().String(),
 			Slug:      "old-name-" + uuid.New().String(),
 			CreatedAt: time.Now(),
@@ -212,9 +212,9 @@ func TestBrandRepository_BulkInsert(t *testing.T) {
 	ctx := context.Background()
 
 	count := 10
-	list := make([]*entity.Brand, count)
+	list := make([]*domain.Brand, count)
 	for i := 0; i < count; i++ {
-		list[i] = &entity.Brand{
+		list[i] = &domain.Brand{
 			Name:      "CopyFrom Brand " + uuid.New().String(),
 			Slug:      "copyfrom-brand-" + uuid.New().String(),
 			CreatedAt: time.Now(),
@@ -235,13 +235,13 @@ func TestBrandRepository_BulkUpdate(t *testing.T) {
 	ctx := context.Background()
 
 	// Setup
-	brand1 := &entity.Brand{
+	brand1 := &domain.Brand{
 		Name:      "Pre-Update-Copy 1",
 		Slug:      "pre-upd-copy-1-" + uuid.New().String(),
 		CreatedAt: time.Now(),
 		CreatedBy: uuid.New(),
 	}
-	brand2 := &entity.Brand{
+	brand2 := &domain.Brand{
 		Name:      "Pre-Update-Copy 2",
 		Slug:      "pre-upd-copy-2-" + uuid.New().String(),
 		CreatedAt: time.Now(),
@@ -263,7 +263,7 @@ func TestBrandRepository_BulkUpdate(t *testing.T) {
 	brand2.UpdatedAt = &newTime
 
 	// Execute BulkUpdate
-	count, err := repo.BulkUpdate(ctx, []*entity.Brand{brand1, brand2})
+	count, err := repo.BulkUpdate(ctx, []*domain.Brand{brand1, brand2})
 	require.NoError(t, err)
 	assert.Equal(t, int64(2), count)
 
@@ -290,9 +290,9 @@ func TestBrandRepository_BulkInsertTran(t *testing.T) {
 	ctx := context.Background()
 
 	count := 10
-	list := make([]*entity.Brand, count)
+	list := make([]*domain.Brand, count)
 	for i := 0; i < count; i++ {
-		list[i] = &entity.Brand{
+		list[i] = &domain.Brand{
 			Name:      "Bulk Brand " + uuid.New().String(),
 			Slug:      "bulk-brand-" + uuid.New().String(),
 			CreatedAt: time.Now(),
@@ -315,14 +315,14 @@ func TestBrandRepository_BulkUpdateTran(t *testing.T) {
 	ctx := context.Background()
 
 	// 1. Prepare data (Insert two brands)
-	brand1 := &entity.Brand{
+	brand1 := &domain.Brand{
 		Name:      "To Update 1",
 		Slug:      "upd-1-" + uuid.New().String(),
 		Logo:      "logo1.png",
 		CreatedBy: uuid.New(),
 		CreatedAt: time.Now(),
 	}
-	brand2 := &entity.Brand{
+	brand2 := &domain.Brand{
 		Name:      "To Update 2",
 		Slug:      "upd-2-" + uuid.New().String(),
 		Logo:      "logo2.png",
@@ -348,7 +348,7 @@ func TestBrandRepository_BulkUpdateTran(t *testing.T) {
 	brand2.UpdatedAt = &updatedAt
 
 	// 3. Bulk Update
-	err = repo.BulkUpdateTran(ctx, []*entity.Brand{brand1, brand2})
+	err = repo.BulkUpdateTran(ctx, []*domain.Brand{brand1, brand2})
 	require.NoError(t, err)
 
 	// 4. Verify
@@ -376,9 +376,9 @@ func TestBrandRepository_BulkInsert_Large(t *testing.T) {
 
 	// 2005 items to test chunking (batchSize=1000, so 3 chunks: 1000, 1000, 5)
 	count := 2005
-	list := make([]*entity.Brand, count)
+	list := make([]*domain.Brand, count)
 	for i := 0; i < count; i++ {
-		list[i] = &entity.Brand{
+		list[i] = &domain.Brand{
 			Name:      "Large Brand " + uuid.New().String(),
 			Slug:      "large-brand-" + uuid.New().String(),
 			CreatedAt: time.Now(),

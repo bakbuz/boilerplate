@@ -2,7 +2,7 @@ package handler
 
 import (
 	catalogv1 "codegen/api/gen/catalog/v1"
-	"codegen/internal/entity"
+	"codegen/internal/domain"
 	"codegen/internal/service"
 	"codegen/pkg/errx"
 	"codegen/pkg/text"
@@ -31,7 +31,7 @@ func NewBrandHandler(svc service.BrandService) *brandHandler {
 // ============================================================================
 
 // brandEntityToProto converts a Brand entity to protobuf Brand message
-func brandEntityToProto(b *entity.Brand) *catalogv1.Brand {
+func brandEntityToProto(b *domain.Brand) *catalogv1.Brand {
 	if b == nil {
 		return nil
 	}
@@ -45,8 +45,8 @@ func brandEntityToProto(b *entity.Brand) *catalogv1.Brand {
 }
 
 // brandCreateProtoToEntity converts CreateBrandRequest to Brand entity
-func brandCreateProtoToEntity(req *catalogv1.CreateBrandRequest, currentUserId uuid.UUID) *entity.Brand {
-	return &entity.Brand{
+func brandCreateProtoToEntity(req *catalogv1.CreateBrandRequest, currentUserId uuid.UUID) *domain.Brand {
+	return &domain.Brand{
 		Name:      req.Name,
 		Slug:      text.Slugify(req.Name),
 		Logo:      req.Logo,
@@ -56,9 +56,9 @@ func brandCreateProtoToEntity(req *catalogv1.CreateBrandRequest, currentUserId u
 }
 
 // brandUpdateProtoToEntity converts UpdateBrandRequest to Brand entity
-func brandUpdateProtoToEntity(req *catalogv1.UpdateBrandRequest, currentUserId uuid.UUID) *entity.Brand {
+func brandUpdateProtoToEntity(req *catalogv1.UpdateBrandRequest, currentUserId uuid.UUID) *domain.Brand {
 	now := time.Now().UTC()
-	return &entity.Brand{
+	return &domain.Brand{
 		Id:        req.Id,
 		Name:      req.Name,
 		Slug:      text.Slugify(req.Name),

@@ -2,7 +2,7 @@ package e2e_test
 
 import (
 	catalogv1 "codegen/api/gen/catalog/v1"
-	"codegen/internal/entity"
+	"codegen/internal/domain"
 	"codegen/internal/service"
 	"codegen/internal/transport/handler"
 	"codegen/internal/transport/interceptor"
@@ -45,20 +45,20 @@ func bufDialer(context.Context, string) (net.Conn, error) {
 }
 
 type InMemoryProductRepo struct {
-	items map[string]*entity.Product
+	items map[string]*domain.Product
 	mu    sync.RWMutex
 }
 
 func NewInMemoryProductRepo() *InMemoryProductRepo {
 	return &InMemoryProductRepo{
-		items: make(map[string]*entity.Product),
+		items: make(map[string]*domain.Product),
 	}
 }
 
-func (r *InMemoryProductRepo) GetAll(ctx context.Context) ([]*entity.Product, error) {
+func (r *InMemoryProductRepo) GetAll(ctx context.Context) ([]*domain.Product, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	var result []*entity.Product
+	var result []*domain.Product
 	for _, p := range r.items {
 		if !p.Deleted {
 			result = append(result, p)
@@ -67,10 +67,10 @@ func (r *InMemoryProductRepo) GetAll(ctx context.Context) ([]*entity.Product, er
 	return result, nil
 }
 
-func (r *InMemoryProductRepo) GetByIds(ctx context.Context, ids []uuid.UUID) ([]*entity.Product, error) {
+func (r *InMemoryProductRepo) GetByIds(ctx context.Context, ids []uuid.UUID) ([]*domain.Product, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	var result []*entity.Product
+	var result []*domain.Product
 	for _, id := range ids {
 		if p, exists := r.items[id.String()]; exists && !p.Deleted {
 			result = append(result, p)
@@ -79,7 +79,7 @@ func (r *InMemoryProductRepo) GetByIds(ctx context.Context, ids []uuid.UUID) ([]
 	return result, nil
 }
 
-func (r *InMemoryProductRepo) GetById(ctx context.Context, id uuid.UUID) (*entity.Product, error) {
+func (r *InMemoryProductRepo) GetById(ctx context.Context, id uuid.UUID) (*domain.Product, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	if p, exists := r.items[id.String()]; exists && !p.Deleted {
@@ -88,14 +88,14 @@ func (r *InMemoryProductRepo) GetById(ctx context.Context, id uuid.UUID) (*entit
 	return nil, nil
 }
 
-func (r *InMemoryProductRepo) Insert(ctx context.Context, e *entity.Product) (int64, error) {
+func (r *InMemoryProductRepo) Insert(ctx context.Context, e *domain.Product) (int64, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.items[e.Id.String()] = e
 	return 1, nil
 }
 
-func (r *InMemoryProductRepo) Update(ctx context.Context, e *entity.Product) (int64, error) {
+func (r *InMemoryProductRepo) Update(ctx context.Context, e *domain.Product) (int64, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if _, exists := r.items[e.Id.String()]; exists {
@@ -153,14 +153,14 @@ func (r *InMemoryProductRepo) Count(ctx context.Context) (int64, error) {
 	return count, nil
 }
 
-func (r *InMemoryProductRepo) Upsert(ctx context.Context, e *entity.Product) error {
+func (r *InMemoryProductRepo) Upsert(ctx context.Context, e *domain.Product) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.items[e.Id.String()] = e
 	return nil
 }
 
-func (r *InMemoryProductRepo) BulkInsert(ctx context.Context, list []*entity.Product) (int64, error) {
+func (r *InMemoryProductRepo) BulkInsert(ctx context.Context, list []*domain.Product) (int64, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	for _, e := range list {
@@ -169,7 +169,7 @@ func (r *InMemoryProductRepo) BulkInsert(ctx context.Context, list []*entity.Pro
 	return int64(len(list)), nil
 }
 
-func (r *InMemoryProductRepo) BulkUpdate(ctx context.Context, list []*entity.Product) (int64, error) {
+func (r *InMemoryProductRepo) BulkUpdate(ctx context.Context, list []*domain.Product) (int64, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	count := int64(0)
@@ -186,9 +186,9 @@ func (r *InMemoryProductRepo) RunInTx(ctx context.Context, fn func(ctx context.C
 	return nil
 }
 
-func (r *InMemoryProductRepo) Search(ctx context.Context, filter *entity.ProductSearchFilter) (*entity.ProductSearchResult, error) {
+func (r *InMemoryProductRepo) Search(ctx context.Context, filter *domain.ProductSearchFilter) (*domain.ProductSearchResult, error) {
 	// Not implemented for test
-	return &entity.ProductSearchResult{}, nil
+	return &domain.ProductSearchResult{}, nil
 }
 
 func setupTestServer(t *testing.T) (catalogv1.ProductServiceClient, func()) {

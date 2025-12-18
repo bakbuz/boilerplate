@@ -2,7 +2,7 @@ package e2e_test
 
 import (
 	catalogv1 "codegen/api/gen/catalog/v1"
-	"codegen/internal/entity"
+	"codegen/internal/domain"
 	"codegen/internal/service"
 	"codegen/internal/transport/handler"
 	"codegen/internal/transport/interceptor"
@@ -45,7 +45,7 @@ func brandBufDialer(context.Context, string) (net.Conn, error) {
 
 // InMemoryBrandRepo implements repository.BrandRepository
 type InMemoryBrandRepo struct {
-	items map[int32]*entity.Brand
+	items map[int32]*domain.Brand
 	mu    sync.RWMutex
 	// Auto-increment counter
 	nextId int32
@@ -53,25 +53,25 @@ type InMemoryBrandRepo struct {
 
 func NewInMemoryBrandRepo() *InMemoryBrandRepo {
 	return &InMemoryBrandRepo{
-		items:  make(map[int32]*entity.Brand),
+		items:  make(map[int32]*domain.Brand),
 		nextId: 1,
 	}
 }
 
-func (r *InMemoryBrandRepo) GetAll(ctx context.Context) ([]*entity.Brand, error) {
+func (r *InMemoryBrandRepo) GetAll(ctx context.Context) ([]*domain.Brand, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	var result []*entity.Brand
+	var result []*domain.Brand
 	for _, b := range r.items {
 		result = append(result, b)
 	}
 	return result, nil
 }
 
-func (r *InMemoryBrandRepo) GetByIds(ctx context.Context, ids []int32) ([]*entity.Brand, error) {
+func (r *InMemoryBrandRepo) GetByIds(ctx context.Context, ids []int32) ([]*domain.Brand, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	var result []*entity.Brand
+	var result []*domain.Brand
 	for _, id := range ids {
 		if b, exists := r.items[id]; exists {
 			result = append(result, b)
@@ -80,7 +80,7 @@ func (r *InMemoryBrandRepo) GetByIds(ctx context.Context, ids []int32) ([]*entit
 	return result, nil
 }
 
-func (r *InMemoryBrandRepo) GetById(ctx context.Context, id int32) (*entity.Brand, error) {
+func (r *InMemoryBrandRepo) GetById(ctx context.Context, id int32) (*domain.Brand, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	if b, exists := r.items[id]; exists {
@@ -89,7 +89,7 @@ func (r *InMemoryBrandRepo) GetById(ctx context.Context, id int32) (*entity.Bran
 	return nil, nil // Return nil, nil for not found as per repository pattern seen in product
 }
 
-func (r *InMemoryBrandRepo) Insert(ctx context.Context, e *entity.Brand) error {
+func (r *InMemoryBrandRepo) Insert(ctx context.Context, e *domain.Brand) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if e.Id == 0 {
@@ -100,7 +100,7 @@ func (r *InMemoryBrandRepo) Insert(ctx context.Context, e *entity.Brand) error {
 	return nil
 }
 
-func (r *InMemoryBrandRepo) Update(ctx context.Context, e *entity.Brand) (int64, error) {
+func (r *InMemoryBrandRepo) Update(ctx context.Context, e *domain.Brand) (int64, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if _, exists := r.items[e.Id]; exists {
@@ -139,7 +139,7 @@ func (r *InMemoryBrandRepo) Count(ctx context.Context) (int64, error) {
 	return int64(len(r.items)), nil
 }
 
-func (r *InMemoryBrandRepo) Upsert(ctx context.Context, e *entity.Brand) error {
+func (r *InMemoryBrandRepo) Upsert(ctx context.Context, e *domain.Brand) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if e.Id == 0 {
@@ -150,7 +150,7 @@ func (r *InMemoryBrandRepo) Upsert(ctx context.Context, e *entity.Brand) error {
 	return nil
 }
 
-func (r *InMemoryBrandRepo) BulkInsert(ctx context.Context, list []*entity.Brand) (int64, error) {
+func (r *InMemoryBrandRepo) BulkInsert(ctx context.Context, list []*domain.Brand) (int64, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	for _, e := range list {
@@ -163,7 +163,7 @@ func (r *InMemoryBrandRepo) BulkInsert(ctx context.Context, list []*entity.Brand
 	return int64(len(list)), nil
 }
 
-func (r *InMemoryBrandRepo) BulkUpdate(ctx context.Context, list []*entity.Brand) (int64, error) {
+func (r *InMemoryBrandRepo) BulkUpdate(ctx context.Context, list []*domain.Brand) (int64, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	count := int64(0)
@@ -176,12 +176,12 @@ func (r *InMemoryBrandRepo) BulkUpdate(ctx context.Context, list []*entity.Brand
 	return count, nil
 }
 
-func (r *InMemoryBrandRepo) BulkInsertTran(ctx context.Context, list []*entity.Brand) error {
+func (r *InMemoryBrandRepo) BulkInsertTran(ctx context.Context, list []*domain.Brand) error {
 	_, err := r.BulkInsert(ctx, list)
 	return err
 }
 
-func (r *InMemoryBrandRepo) BulkUpdateTran(ctx context.Context, list []*entity.Brand) error {
+func (r *InMemoryBrandRepo) BulkUpdateTran(ctx context.Context, list []*domain.Brand) error {
 	_, err := r.BulkUpdate(ctx, list)
 	return err
 }
