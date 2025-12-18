@@ -64,9 +64,17 @@ func (repo *productRepository) GetAll(ctx context.Context) ([]*entity.Product, e
 	}
 	defer rows.Close()
 
-	list, err := pgx.CollectRows(rows, pgx.RowToAddrOfStructByName[entity.Product])
-	if err != nil {
-		return nil, errors.WithMessage(err, failedToCollectRows)
+	var list []*entity.Product
+	for rows.Next() {
+		product, err := scanProduct(rows)
+		if err != nil {
+			return nil, errors.WithMessage(err, rowScanError)
+		}
+		list = append(list, product)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, errors.WithMessage(err, listQueryRowError)
 	}
 
 	return list, nil
@@ -86,9 +94,17 @@ func (repo *productRepository) GetByIds(ctx context.Context, ids []uuid.UUID) ([
 	}
 	defer rows.Close()
 
-	list, err := pgx.CollectRows(rows, pgx.RowToAddrOfStructByName[entity.Product])
-	if err != nil {
-		return nil, errors.WithMessage(err, failedToCollectRows)
+	var list []*entity.Product
+	for rows.Next() {
+		product, err := scanProduct(rows)
+		if err != nil {
+			return nil, errors.WithMessage(err, rowScanError)
+		}
+		list = append(list, product)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, errors.WithMessage(err, listQueryRowError)
 	}
 
 	return list, nil
