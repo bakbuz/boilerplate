@@ -1,6 +1,12 @@
 package repository
 
-import "errors"
+import (
+	"context"
+	"errors"
+
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
+)
 
 var ErrNotFound = errors.New("record not found")
 
@@ -44,3 +50,18 @@ func (r *PostgresRepo) CreateOrder(ctx context.Context, o *domain.Order) error {
 	return tx.Commit(ctx)
 }
 */
+
+type txContextType string
+
+const txContextKey txContextType = "tx"
+
+// Internal Helper: Context'te Tx varsa onu, yoksa Pool'u kullan
+func (repo *productRepository) getDb(ctx context.Context) interface {
+	Exec(context.Context, string, ...interface{}) (pgconn.CommandTag, error)
+	QueryRow(context.Context, string, ...interface{}) pgx.Row
+} {
+	if tx, ok := ctx.Value(txContextKey).(pgx.Tx); ok {
+		return tx
+	}
+	return repo.db.Pool()
+}
