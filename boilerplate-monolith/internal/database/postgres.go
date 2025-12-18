@@ -27,12 +27,11 @@ func NewPool(ctx context.Context, connString string) (*DB, error) {
 		return nil, fmt.Errorf("config parse error: %w", err)
 	}
 
-	// t2.micro optimizasyonu: Bağlantı havuzunu sınırlı tut.
-	// Çok fazla bağlantı RAM tüketir ve CPU context switch artırır.
-	config.MaxConns = 10
-	config.MinConns = 2
-	config.MaxConnLifetime = 1 * time.Hour
-	config.MaxConnIdleTime = 30 * time.Minute
+	// 1GB RAM & Supabase Kısıtları
+	config.MaxConns = 10 // Max 15 limitine saygı
+	config.MinConns = 0  // Boşta kaynak tüketme
+	config.MaxConnLifetime = 30 * time.Minute
+	config.MaxConnIdleTime = 5 * time.Minute
 	config.ConnConfig.ConnectTimeout = 30 * time.Second
 
 	// Connection health checks
