@@ -3,7 +3,6 @@ package repository
 import (
 	"codegen/internal/database"
 	"codegen/internal/entity"
-	"codegen/internal/repository/dto"
 	"context"
 	"fmt"
 	"time"
@@ -29,7 +28,7 @@ type ProductRepository interface {
 	BulkInsert(ctx context.Context, list []*entity.Product) (int64, error)
 	BulkUpdate(ctx context.Context, list []*entity.Product) (int64, error)
 	RunInTx(ctx context.Context, fn func(ctx context.Context) error) error
-	Search(ctx context.Context, filter *dto.ProductSearchFilter) (*dto.ProductSearchResult, error)
+	Search(ctx context.Context, filter *entity.ProductSearchFilter) (*entity.ProductSearchResult, error)
 }
 
 type productRepository struct {
@@ -401,38 +400,39 @@ func (repo *productRepository) RunInTx(ctx context.Context, fn func(ctx context.
 	return tx.Commit(ctx)
 }
 
-func (repo *productRepository) Search(ctx context.Context, filter *dto.ProductSearchFilter) (*dto.ProductSearchResult, error) {
+func (repo *productRepository) Search(ctx context.Context, filter *entity.ProductSearchFilter) (*entity.ProductSearchResult, error) {
 	where, args := buildSearchWhere(filter)
 
 	countQuery := "SELECT COUNT(*) FROM catalog.products WHERE deleted=false" + where
 
 	// Get total count
-	var total int
+	var total int64
 	err := repo.db.Pool().QueryRow(ctx, countQuery, args...).Scan(&total)
 	if err != nil {
 		return nil, errors.WithMessage(err, failedToCount)
 	}
 
 	if total == 0 {
-		return &dto.ProductSearchResult{
-			Total: 0,
-			Items: []*entity.Product{},
-		}, nil
+		return &entity.ProductSearchResult{}, nil
 	}
 
 	// Add pagination
-	query := "SELECT id, brand_id, name, sku, summary, storyline, stock_quantity, price::numeric, deleted, created_by, created_at, updated_by, updated_at, deleted_by, deleted_at FROM catalog.products WHERE deleted=false" + where + " ORDER BY created_at DESC"
+	query := `SELECT p.id, p.name, p.price::numeric, p.brand_id, b.name AS brand_name
+	FROM catalog.products AS p
+	JOIN catalog.brands AS b ON p.brand_id = b.id
+	WHERE p.deleted=false ` + where + ` 
+	ORDER BY p.id DESC`
 
 	argIndex := len(args) + 1
-	if filter.Take > 0 {
+	if filter.Limit > 0 {
 		query += fmt.Sprintf(" LIMIT $%d", argIndex)
-		args = append(args, filter.Take)
+		args = append(args, filter.Limit)
 		argIndex++
 	}
 
-	if filter.Skip > 0 {
+	if filter.Offset > 0 {
 		query += fmt.Sprintf(" OFFSET $%d", argIndex)
-		args = append(args, filter.Skip)
+		args = append(args, filter.Offset)
 	}
 
 	// Execute query
@@ -442,27 +442,30 @@ func (repo *productRepository) Search(ctx context.Context, filter *dto.ProductSe
 	}
 	defer rows.Close()
 
-	items, err := pgx.CollectRows(rows, pgx.RowToAddrOfStructByName[entity.Product])
-	if err != nil {
-		return nil, errors.WithMessage(err, failedToCollectRows)
+	var items []entity.ProductSummary
+	for rows.Next() {
+		e := entity.ProductSummary{}
+		err := rows.Scan(&e.Id, &e.Name, &e.Price, &e.BrandId, &e.BrandName)
+		if err != nil {
+			return nil, errors.WithMessage(err, rowScanError)
+		}
+		items = append(items, e)
 	}
 
-	return &dto.ProductSearchResult{
+	if err := rows.Err(); err != nil {
+		return nil, errors.WithMessage(err, listQueryRowError)
+	}
+
+	return &entity.ProductSearchResult{
 		Total: total,
 		Items: items,
 	}, nil
 }
 
-func buildSearchWhere(filter *dto.ProductSearchFilter) (string, []any) {
+func buildSearchWhere(filter *entity.ProductSearchFilter) (string, []any) {
 	var where string
 	var args []any
 	argIndex := 1
-
-	if filter.Id != nil {
-		where += fmt.Sprintf(" AND id=$%d", argIndex)
-		args = append(args, *filter.Id)
-		argIndex++
-	}
 
 	if filter.BrandId > 0 {
 		where += fmt.Sprintf(" AND brand_id=$%d", argIndex)

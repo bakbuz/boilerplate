@@ -61,11 +61,18 @@ func (repo *brandRepository) GetAll(ctx context.Context) ([]*entity.Brand, error
 	}
 	defer rows.Close()
 
-	list, err := pgx.CollectRows(rows, func(row pgx.CollectableRow) (*entity.Brand, error) {
-		return scanBrand(row)
-	})
-	if err != nil {
-		return nil, errors.WithMessage(err, failedToCollectRows)
+	var list []*entity.Brand
+	for rows.Next() {
+		e := &entity.Brand{}
+		err := rows.Scan(&e.Id, &e.Name, &e.Slug, &e.Logo, &e.CreatedBy, &e.CreatedAt, &e.UpdatedBy, &e.UpdatedAt)
+		if err != nil {
+			return nil, errors.WithMessage(err, rowScanError)
+		}
+		list = append(list, e)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, errors.WithMessage(err, listQueryRowError)
 	}
 
 	return list, nil
@@ -85,11 +92,18 @@ func (repo *brandRepository) GetByIds(ctx context.Context, ids []int32) ([]*enti
 	}
 	defer rows.Close()
 
-	list, err := pgx.CollectRows(rows, func(row pgx.CollectableRow) (*entity.Brand, error) {
-		return scanBrand(row)
-	})
-	if err != nil {
-		return nil, errors.WithMessage(err, failedToCollectRows)
+	var list []*entity.Brand
+	for rows.Next() {
+		e := &entity.Brand{}
+		err := rows.Scan(&e.Id, &e.Name, &e.Slug, &e.Logo, &e.CreatedBy, &e.CreatedAt, &e.UpdatedBy, &e.UpdatedAt)
+		if err != nil {
+			return nil, errors.WithMessage(err, rowScanError)
+		}
+		list = append(list, e)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, errors.WithMessage(err, listQueryRowError)
 	}
 
 	return list, nil

@@ -3,7 +3,6 @@ package e2e_test
 import (
 	catalogv1 "codegen/api/gen/catalog/v1"
 	"codegen/internal/entity"
-	"codegen/internal/repository/dto"
 	"codegen/internal/service"
 	"codegen/internal/transport/handler"
 	"codegen/internal/transport/interceptor"
@@ -187,9 +186,9 @@ func (r *InMemoryProductRepo) RunInTx(ctx context.Context, fn func(ctx context.C
 	return nil
 }
 
-func (r *InMemoryProductRepo) Search(ctx context.Context, filter *dto.ProductSearchFilter) (*dto.ProductSearchResult, error) {
+func (r *InMemoryProductRepo) Search(ctx context.Context, filter *entity.ProductSearchFilter) (*entity.ProductSearchResult, error) {
 	// Not implemented for test
-	return &dto.ProductSearchResult{}, nil
+	return &entity.ProductSearchResult{}, nil
 }
 
 func setupTestServer(t *testing.T) (catalogv1.ProductServiceClient, func()) {

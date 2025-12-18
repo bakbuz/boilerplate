@@ -2,7 +2,6 @@ package service
 
 import (
 	"codegen/internal/entity"
-	"codegen/internal/repository/dto"
 	"codegen/pkg/errx"
 	"context"
 	"errors"
@@ -92,12 +91,12 @@ func (m *MockProductRepository) RunInTx(ctx context.Context, fn func(ctx context
 	return args.Error(0)
 }
 
-func (m *MockProductRepository) Search(ctx context.Context, filter *dto.ProductSearchFilter) (*dto.ProductSearchResult, error) {
+func (m *MockProductRepository) Search(ctx context.Context, filter *entity.ProductSearchFilter) (*entity.ProductSearchResult, error) {
 	args := m.Called(ctx, filter)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*dto.ProductSearchResult), args.Error(1)
+	return args.Get(0).(*entity.ProductSearchResult), args.Error(1)
 }
 
 func TestProductService_Create(t *testing.T) {
@@ -284,10 +283,10 @@ func TestProductService_Search(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		repo := new(MockProductRepository)
 		svc := NewProductService(repo)
-		filter := &dto.ProductSearchFilter{Take: 10, Skip: 0}
-		expectedResult := &dto.ProductSearchResult{Total: 1, Items: []*entity.Product{{Name: "Search Result"}}}
-		repo.On("Search", ctx, mock.MatchedBy(func(f *dto.ProductSearchFilter) bool {
-			return f.Take == 10
+		filter := &entity.ProductSearchFilter{Limit: 10, Offset: 0}
+		expectedResult := &entity.ProductSearchResult{Total: 1, Items: []entity.ProductSummary{{Name: "Search Result"}}}
+		repo.On("Search", ctx, mock.MatchedBy(func(f *entity.ProductSearchFilter) bool {
+			return f.Limit == 10
 		})).Return(expectedResult, nil)
 
 		result, err := svc.Search(ctx, filter)
@@ -298,10 +297,10 @@ func TestProductService_Search(t *testing.T) {
 	t.Run("default pagination", func(t *testing.T) {
 		repo := new(MockProductRepository)
 		svc := NewProductService(repo)
-		filter := &dto.ProductSearchFilter{} // Take 0
-		repo.On("Search", ctx, mock.MatchedBy(func(f *dto.ProductSearchFilter) bool {
-			return f.Take == 10 // Should default to 10
-		})).Return(&dto.ProductSearchResult{}, nil)
+		filter := &entity.ProductSearchFilter{} // Take 0
+		repo.On("Search", ctx, mock.MatchedBy(func(f *entity.ProductSearchFilter) bool {
+			return f.Limit == 10 // Should default to 10
+		})).Return(&entity.ProductSearchResult{}, nil)
 
 		_, err := svc.Search(ctx, filter)
 		assert.NoError(t, err)
@@ -310,10 +309,10 @@ func TestProductService_Search(t *testing.T) {
 	t.Run("invalid pagination", func(t *testing.T) {
 		repo := new(MockProductRepository)
 		svc := NewProductService(repo)
-		filter := &dto.ProductSearchFilter{Take: 1001}
+		filter := &entity.ProductSearchFilter{Limit: 1001}
 		result, err := svc.Search(ctx, filter)
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "take parameter must not exceed 1000")
+		assert.Contains(t, err.Error(), "limit parameter must not exceed 1000")
 		assert.Nil(t, result)
 	})
 }

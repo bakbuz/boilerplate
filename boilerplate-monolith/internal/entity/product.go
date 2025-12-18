@@ -101,3 +101,29 @@ func (e *Product) Validate() error {
 
 	return nil
 }
+
+// ProductSearchFilter: Arama kriterleri.
+// Primitive tiplerde zero-value (0, "") kontrolü yapacaksan pointer kullanmana gerek yok.
+// Ama "0" değeri anlamlıysa (örn: status enum), pointer kalabilir.
+type ProductSearchFilter struct {
+	BrandId int    // Opsiyonel filtre ise pointer kalabilir.
+	Name    string // Empty string kontrolü yeterli, pointer'a gerek yok.
+	Offset  int    // int16 ASLA kullanma.
+	Limit   int
+}
+
+// ProductSearchResult: Liste dönüşü.
+type ProductSearchResult struct {
+	Total int64            // int64 daha güvenli.
+	Items []ProductSummary // DİKKAT: Pointer (*) kaldırdım. Value slice.
+}
+
+// ProductSummary: (Daha önceki cevaptan hatırlatma)
+// Bu struct aynı pakette olduğu için import prefix'ine (entity.) gerek yok.
+type ProductSummary struct {
+	Id        uuid.UUID // Veya string, projendeki ID tipine göre
+	Name      string
+	Price     float64
+	BrandId   int32
+	BrandName string
+}

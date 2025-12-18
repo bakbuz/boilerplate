@@ -3,7 +3,6 @@ package service
 import (
 	"codegen/internal/entity"
 	"codegen/internal/repository"
-	"codegen/internal/repository/dto"
 	"codegen/pkg/errx"
 	"context"
 
@@ -22,7 +21,7 @@ type ProductService interface {
 	Count(ctx context.Context) (int64, error)
 	BulkInsert(ctx context.Context, list []*entity.Product) (int64, error)
 	RunInTx(ctx context.Context, fn func(ctx context.Context) error) error
-	Search(ctx context.Context, filter *dto.ProductSearchFilter) (*dto.ProductSearchResult, error)
+	Search(ctx context.Context, filter *entity.ProductSearchFilter) (*entity.ProductSearchResult, error)
 }
 
 type productService struct {
@@ -155,28 +154,28 @@ func (s *productService) RunInTx(ctx context.Context, fn func(ctx context.Contex
 }
 
 // Search searches products based on filter criteria
-func (s *productService) Search(ctx context.Context, filter *dto.ProductSearchFilter) (*dto.ProductSearchResult, error) {
+func (s *productService) Search(ctx context.Context, filter *entity.ProductSearchFilter) (*entity.ProductSearchResult, error) {
 	if filter == nil {
 		return nil, errx.ErrInvalidInput
 	}
 
 	// Validate pagination parameters
-	if filter.Take < 0 {
-		return nil, errors.New("take parameter must be non-negative")
+	if filter.Limit < 0 {
+		return nil, errors.New("limit parameter must be non-negative")
 	}
 
-	if filter.Skip < 0 {
-		return nil, errors.New("skip parameter must be non-negative")
+	if filter.Offset < 0 {
+		return nil, errors.New("offset parameter must be non-negative")
 	}
 
 	// Set default pagination if not provided
-	if filter.Take == 0 {
-		filter.Take = 10 // Default page size
+	if filter.Limit == 0 {
+		filter.Limit = 10 // Default page size
 	}
 
 	// Limit maximum page size to prevent excessive data retrieval
-	if filter.Take > 1000 {
-		return nil, errors.New("take parameter must not exceed 1000")
+	if filter.Limit > 1000 {
+		return nil, errors.New("limit parameter must not exceed 1000")
 	}
 
 	return s.repo.Search(ctx, filter)

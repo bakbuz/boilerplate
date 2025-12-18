@@ -3,7 +3,6 @@ package repository_test
 import (
 	"codegen/internal/entity"
 	"codegen/internal/repository"
-	"codegen/internal/repository/dto"
 	"context"
 	"fmt"
 	"testing"
@@ -356,31 +355,23 @@ func TestProductRepository_Search(t *testing.T) {
 	require.NoError(t, err)
 
 	// Test 1: Search by Name (Partial)
-	res, err := repo.Search(ctx, &dto.ProductSearchFilter{
-		Name: "Alpha",
-		Take: 10,
+	res, err := repo.Search(ctx, &entity.ProductSearchFilter{
+		Name:  "Alpha",
+		Limit: 10,
 	})
 	require.NoError(t, err)
-	assert.Equal(t, 2, res.Total)
+	assert.Equal(t, int64(2), res.Total)
 	assert.Len(t, res.Items, 2)
 
 	// Test 2: Search with Pagination
-	res, err = repo.Search(ctx, &dto.ProductSearchFilter{
-		Name: "Alpha",
-		Take: 1,
-		Skip: 0,
+	res, err = repo.Search(ctx, &entity.ProductSearchFilter{
+		Name:   "Alpha",
+		Limit:  1,
+		Offset: 0,
 	})
 	require.NoError(t, err)
-	assert.Equal(t, 2, res.Total) // Total should still be 2
-	assert.Len(t, res.Items, 1)   // But we only took 1
-
-	// Test 3: Search by Id
-	res, err = repo.Search(ctx, &dto.ProductSearchFilter{
-		Id: &p3.Id,
-	})
-	require.NoError(t, err)
-	assert.Equal(t, 1, res.Total)
-	assert.Equal(t, "Gamma Product", res.Items[0].Name)
+	assert.Equal(t, int64(2), res.Total) // Total should still be 2
+	assert.Len(t, res.Items, 1)          // But we only took 1
 }
 
 func TestProductRepository_SoftDelete(t *testing.T) {

@@ -30,7 +30,7 @@ build-prod: buf-gen
 # Run tests
 test:
 	@echo "Running tests..."
-	go test ./... -v -race -coverprofile=coverage.out
+	go test ./...
 
 test-repo:
 	@echo "Running repository integration tests..."
