@@ -137,7 +137,7 @@ grpc-highperf-backend/
 │   ├── database/
 │   │   ├── postgres.go
 │   │   └── postgres_test.go
-│   ├── entity/
+│   ├── domain/
 │   │   ├── brand.go
 │   │   └── product.go
 │   ├── repository/
