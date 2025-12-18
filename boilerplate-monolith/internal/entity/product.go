@@ -28,7 +28,7 @@ type Product struct {
 }
 
 // Factory Method
-func NewProduct(name string, brandId int, price float64, createdBy uuid.UUID) *Product {
+func NewProduct(brandId int, name string, price float64, createdBy uuid.UUID) *Product {
 	return &Product{
 		Id:        uuid.Must(uuid.NewV7()),
 		BrandId:   brandId,
