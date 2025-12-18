@@ -11,18 +11,12 @@ import (
 func getCurrentUserId(ctx context.Context) (uuid.UUID, error) {
 	val := ctx.Value(interceptor.UserIdKey)
 	if val == nil {
-		return uuid.Nil, errors.New("user context is missing")
+		return uuid.Nil, errors.New("user_id context is missing")
 	}
 
-	idStr, ok := val.(string)
+	userId, ok := val.(uuid.UUID)
 	if !ok {
-		return uuid.Nil, errors.New("invalid user id type")
+		return uuid.Nil, errors.New("user_id context has invalid type")
 	}
-
-	uid, err := uuid.Parse(idStr)
-	if err != nil {
-		return uuid.Nil, errors.Wrap(err, "failed to parse user id")
-	}
-
-	return uid, nil
+	return userId, nil
 }
