@@ -41,7 +41,7 @@ func NewProductRepository(db *database.DB) ProductRepository {
 	return &productRepository{db: db}
 }
 
-func mapToProduct(row pgx.Row) (*entity.Product, error) {
+func scanProduct(row pgx.Row) (*entity.Product, error) {
 	e := &entity.Product{}
 
 	err := row.Scan(&e.Id, &e.BrandId, &e.Name, &e.Sku, &e.Summary, &e.Storyline, &e.StockQuantity, &e.Price, &e.Deleted, &e.CreatedBy, &e.CreatedAt, &e.UpdatedBy, &e.UpdatedAt, &e.DeletedBy, &e.DeletedAt)
@@ -99,7 +99,7 @@ func (repo *productRepository) GetById(ctx context.Context, id uuid.UUID) (*enti
 	const stmt string = "SELECT id, brand_id, name, sku, summary, storyline, stock_quantity, price::numeric, deleted, created_by, created_at, updated_by, updated_at, deleted_by, deleted_at FROM catalog.products WHERE deleted=false AND id=$1"
 
 	row := repo.db.Pool().QueryRow(ctx, stmt, id)
-	item, err := mapToProduct(row)
+	item, err := scanProduct(row)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
