@@ -27,6 +27,18 @@ type Product struct {
 	DeletedAt     *time.Time `json:"-"`
 }
 
+// Factory Method
+func NewProduct(name string, brandId int, price float64, createdBy uuid.UUID) *Product {
+	return &Product{
+		Id:        uuid.Must(uuid.NewV7()),
+		BrandId:   brandId,
+		Name:      strings.TrimSpace(name),
+		Price:     price,
+		CreatedBy: createdBy,
+		CreatedAt: time.Now().UTC(),
+	}
+}
+
 // Validate product entity for create/update operations
 func (e *Product) Validate() error {
 	if e == nil {
