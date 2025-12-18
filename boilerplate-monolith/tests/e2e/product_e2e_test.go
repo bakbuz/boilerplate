@@ -183,6 +183,10 @@ func (r *InMemoryProductRepo) BulkUpdate(ctx context.Context, list []*entity.Pro
 	return count, nil
 }
 
+func (r *InMemoryProductRepo) RunInTx(ctx context.Context, fn func(ctx context.Context) error) error {
+	return nil
+}
+
 func (r *InMemoryProductRepo) Search(ctx context.Context, filter *dto.ProductSearchFilter) (*dto.ProductSearchResult, error) {
 	// Not implemented for test
 	return &dto.ProductSearchResult{}, nil
