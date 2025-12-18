@@ -114,7 +114,4 @@ grpc-highperf-backend/
 ├── config.dev.json
 ├── docker-compose.yaml
 ├── go.mod
-├── go.sum
-├── main.go
-├── prompt.txt
-└── tree_output.txt
+└── go.sum
