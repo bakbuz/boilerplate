@@ -420,7 +420,7 @@ func (repo *productRepository) Search(ctx context.Context, filter *domain.Produc
 	query := `SELECT p.id, p.name, p.price::numeric, p.brand_id, b.name AS brand_name
 	FROM catalog.products AS p
 	JOIN catalog.brands AS b ON p.brand_id = b.id
-	WHERE p.deleted=false ` + where + ` 
+	WHERE p.deleted=false AND p.id > @last_seen_id` + where + ` 
 	ORDER BY p.id DESC`
 
 	argIndex := len(args) + 1

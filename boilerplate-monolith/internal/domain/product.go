@@ -106,10 +106,11 @@ func (e *Product) Validate() error {
 // Primitive tiplerde zero-value (0, "") kontrolü yapacaksan pointer kullanmana gerek yok.
 // Ama "0" değeri anlamlıysa (örn: status enum), pointer kalabilir.
 type ProductSearchFilter struct {
-	BrandId int    // Opsiyonel filtre ise pointer kalabilir.
-	Name    string // Empty string kontrolü yeterli, pointer'a gerek yok.
-	Offset  int    // int16 ASLA kullanma.
-	Limit   int
+	BrandId    int    // Opsiyonel filtre ise pointer kalabilir.
+	Name       string // Empty string kontrolü yeterli, pointer'a gerek yok.
+	LastSeenId uuid.UUID
+	Offset     int // int16 ASLA kullanma.
+	Limit      int
 }
 
 // ProductSearchResult: Liste dönüşü.
