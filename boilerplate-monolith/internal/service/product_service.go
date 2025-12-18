@@ -6,7 +6,6 @@ import (
 	"codegen/internal/repository/dto"
 	"codegen/pkg/errx"
 	"context"
-	"strings"
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
@@ -32,69 +31,6 @@ type productService struct {
 // NewProductService ...
 func NewProductService(repo repository.ProductRepository) ProductService {
 	return &productService{repo: repo}
-}
-
-// sanitizeAndValidate validates product entity for create/update operations
-func (s *productService) sanitizeAndValidate(e *entity.Product) error {
-	if e == nil {
-		return errx.ErrInvalidInput
-	}
-
-	// Sanitize strings
-	e.Name = strings.TrimSpace(e.Name)
-	if e.Sku != nil {
-		trimmed := strings.TrimSpace(*e.Sku)
-		e.Sku = &trimmed
-	}
-	if e.Summary != nil {
-		trimmed := strings.TrimSpace(*e.Summary)
-		e.Summary = &trimmed
-	}
-	if e.Storyline != nil {
-		trimmed := strings.TrimSpace(*e.Storyline)
-		e.Storyline = &trimmed
-	}
-
-	// Validate product name
-	if e.Name == "" {
-		return errors.New("product name is required")
-	}
-
-	if len(e.Name) > 255 {
-		return errors.New("product name must not exceed 255 characters")
-	}
-
-	// Validate SKU if provided
-	if e.Sku != nil && len(*e.Sku) > 100 {
-		return errors.New("product SKU must not exceed 100 characters")
-	}
-
-	// Validate summary if provided
-	if e.Summary != nil && len(*e.Summary) > 500 {
-		return errors.New("product summary must not exceed 500 characters")
-	}
-
-	// Validate storyline if provided
-	if e.Storyline != nil && len(*e.Storyline) > 2000 {
-		return errors.New("product storyline must not exceed 2000 characters")
-	}
-
-	// Validate brand Id
-	if e.BrandId <= 0 {
-		return errors.New("valid brand Id is required")
-	}
-
-	// Validate stock quantity
-	if e.StockQuantity < 0 {
-		return errors.New("stock quantity cannot be negative")
-	}
-
-	// Validate price
-	if e.Price < 0 {
-		return errors.New("price cannot be negative")
-	}
-
-	return nil
 }
 
 // validateProductId validates that product Id is not empty
@@ -139,7 +75,7 @@ func (s *productService) GetById(ctx context.Context, id uuid.UUID) (*entity.Pro
 
 // Create creates a new product
 func (s *productService) Create(ctx context.Context, e *entity.Product) (int64, error) {
-	if err := s.sanitizeAndValidate(e); err != nil {
+	if err := e.Validate(); err != nil {
 		return -1, err
 	}
 
@@ -153,7 +89,7 @@ func (s *productService) Create(ctx context.Context, e *entity.Product) (int64, 
 
 // Update updates an existing product
 func (s *productService) Update(ctx context.Context, e *entity.Product) (int64, error) {
-	if err := s.sanitizeAndValidate(e); err != nil {
+	if err := e.Validate(); err != nil {
 		return -1, err
 	}
 
@@ -199,7 +135,7 @@ func (s *productService) BulkInsert(ctx context.Context, list []*entity.Product)
 
 	// Validate all products before inserting
 	for i, product := range list {
-		if err := s.sanitizeAndValidate(product); err != nil {
+		if err := product.Validate(); err != nil {
 			return -1, errors.Wrapf(err, "validation failed for product at index %d", i)
 		}
 
