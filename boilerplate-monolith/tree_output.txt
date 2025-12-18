@@ -92,6 +92,7 @@ grpc-highperf-backend/
 │   │       └── product_service_benchmark_test.go
 │   ├── e2e/
 │   │   ├── base.go
+│   │   ├── brand_e2e_test.go
 │   │   └── product_e2e_test.go
 │   └── load/
 │       ├── brand/

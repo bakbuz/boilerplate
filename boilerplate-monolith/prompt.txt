@@ -65,7 +65,7 @@ Rolün: “Kıdemli Backend/Platform mimarı + Go/gRPC performans mühendisi + g
 
 Bağlam:
 Ben bir gRPC backend servis boilerplate’i hazırladım. Layered architecture kullanıyorum:
-handler (gRPC) -> service (iş mantığı) -> repository (DB erişimi) -> database (pool/conn).
+handler (gRPC) -> service (iş mantığı) -> repository (DB erişimi) -> entity (domain model).
 
 Mevcut akışım:
 
@@ -129,6 +129,7 @@ Kısıtlar:
 - gRPC + protobuf.
 - Düşük kaynak (1GB RAM gibi) senaryolarında da iyi çalışmalı.
 - Overengineering istemiyorum: “yeterince basit ama büyümeye hazır” hedefi.
+- layered architecture
 
 Başla:
 Önce en riskli 10 problemi söyle, sonra önerdiğin ideal akışa göre bir refactor planı çıkar. Mümkün olduğunca somut ol: örnek interface’ler, error tipleri, interceptor zinciri, transaction sınırı nerede olmalı, mapping nerede olmalı.
