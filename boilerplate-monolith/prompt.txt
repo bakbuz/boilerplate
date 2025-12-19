@@ -141,8 +141,6 @@ grpc-highperf-backend/
 │   │   ├── brand.go
 │   │   └── product.go
 │   ├── repository/
-│   │   ├── dto/
-│   │   │   └── product_dto.go
 │   │   ├── brand_repository.go
 │   │   ├── brand_repository_test.go
 │   │   ├── product_repository.go
