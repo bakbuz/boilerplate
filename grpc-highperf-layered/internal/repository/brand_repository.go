@@ -56,7 +56,6 @@ func scanBrand(row pgx.Row) (*domain.Brand, error) {
 // GetAll ...
 func (repo *brandRepository) GetAll(ctx context.Context) ([]*domain.Brand, error) {
 	// WARNING: Unbounded query. Added safety limit.
-	// TODO: Update interface to support pagination.
 	const stmt string = "SELECT * FROM catalog.brands LIMIT 1000"
 
 	rows, err := repo.db.Pool().Query(ctx, stmt)
