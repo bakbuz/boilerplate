@@ -61,13 +61,18 @@ func (r *repositoryMock) Upsert(ctx context.Context, e *domain.Product) error {
 	return args.Error(0)
 }
 
-func (r *repositoryMock) BulkInsert(ctx context.Context, list []*domain.Product) (int64, error) {
+func (r *repositoryMock) BulkInsertOneShot(ctx context.Context, list []*domain.Product) (int64, error) {
 	args := r.Called(ctx, list)
 	return args.Get(0).(int64), args.Error(1)
 }
 
-func (r *repositoryMock) BulkUpdate(ctx context.Context, list []*domain.Product) (int64, error) {
-	args := r.Called(ctx, list)
+func (r *repositoryMock) BulkInsert(ctx context.Context, list []*domain.Product, batchSize int) (int64, error) {
+	args := r.Called(ctx, list, batchSize)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (r *repositoryMock) BulkUpdate(ctx context.Context, list []*domain.Product, batchSize int) (int64, error) {
+	args := r.Called(ctx, list, batchSize)
 	return args.Get(0).(int64), args.Error(1)
 }
 
