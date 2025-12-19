@@ -10,6 +10,7 @@ const (
 	failedToCollectRows = "failed to collect rows"
 	listQueryRowError   = "list query row returned an error"
 	rowScanError        = "row scan error"
+	rowsIterationError  = "rows iteration error"
 	failedToCount       = "failed to count records"
 	failedToInsert      = "failed to insert record"
 	failedToUpdate      = "failed to update record"

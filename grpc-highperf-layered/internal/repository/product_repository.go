@@ -512,54 +512,30 @@ func (repo *productRepository) runInTx(ctx context.Context, fn func(ctx context.
 */
 
 func (repo *productRepository) Search(ctx context.Context, filter *domain.ProductSearchFilter) (*domain.ProductSearchResult, error) {
-	// 1. Base Query
-	baseQuery := " FROM catalog.products p JOIN catalog.brands b ON p.brand_id = b.id WHERE p.deleted=false "
+	// 1. Where clause
+	var whereClause string
+
 	var args []any
 	argId := 1
 
 	// 2. Dynamic Filters
 	if filter.BrandId > 0 {
-		baseQuery += fmt.Sprintf(" AND p.brand_id = $%d", argId)
+		whereClause += fmt.Sprintf(" AND p.brand_id = $%d", argId)
 		args = append(args, filter.BrandId)
 		argId++
 	}
 
 	if filter.Name != "" {
-		baseQuery += fmt.Sprintf(" AND p.name ILIKE '%%' || $%d || '%%'", argId)
+		whereClause += fmt.Sprintf(" AND p.name ILIKE '%%' || $%d || '%%'", argId)
 		args = append(args, filter.Name)
 		argId++
 	}
 
-	if filter.LastSeenId != uuid.Nil {
-		baseQuery += fmt.Sprintf(" AND p.id < $%d", argId)
-		args = append(args, filter.LastSeenId)
-		argId++
-	}
-
 	// 3. Count Query
-	// We rebuild count query to exclude cursor/pagination filters if needed,
-	// but here we only have LastSeenId as pagination filter.
-	// As discussed, we count based on business filters (Brand, Name).
-
-	countBaseQuery := "FROM catalog.products p WHERE p.deleted=false"
-	var countArgs []any
-	countArgId := 1
-
-	if filter.BrandId > 0 {
-		countBaseQuery += fmt.Sprintf(" AND p.brand_id = $%d", countArgId)
-		countArgs = append(countArgs, filter.BrandId)
-		countArgId++
-	}
-	if filter.Name != "" {
-		countBaseQuery += fmt.Sprintf(" AND p.name ILIKE '%%' || $%d || '%%'", countArgId)
-		countArgs = append(countArgs, filter.Name)
-		countArgId++
-	}
-
-	finalCountQuery := "SELECT COUNT(*) " + countBaseQuery
+	countQuery := "SELECT COUNT(*) FROM catalog.products p WHERE p.deleted=false" + whereClause
 
 	var total int64
-	err := repo.db.Pool().QueryRow(ctx, finalCountQuery, countArgs...).Scan(&total)
+	err := repo.db.Pool().QueryRow(ctx, countQuery, args...).Scan(&total)
 	if err != nil {
 		return nil, errors.WithMessage(err, failedToCount)
 	}
@@ -568,15 +544,23 @@ func (repo *productRepository) Search(ctx context.Context, filter *domain.Produc
 		return &domain.ProductSearchResult{Total: 0, Items: []domain.ProductSummary{}}, nil
 	}
 
-	// 4. Data Query
-	// Limit default
+	// 4. Limit default
 	limit := 10
 	if filter.Limit > 0 {
 		limit = filter.Limit
 	}
 
+	if filter.LastSeenId != uuid.Nil {
+		whereClause += fmt.Sprintf(" AND p.id < $%d", argId)
+		args = append(args, filter.LastSeenId)
+		argId++
+	}
+
+	// 5. Select Query
+	selectBaseQuery := "SELECT p.id, p.name, p.price::numeric, p.brand_id, b.name AS brand_name FROM catalog.products p JOIN catalog.brands b ON p.brand_id = b.id WHERE p.deleted=false "
+
 	// Select columns
-	selectQuery := "SELECT p.id, p.name, p.price::numeric, p.brand_id, b.name AS brand_name " + baseQuery + " ORDER BY p.id DESC LIMIT " + fmt.Sprintf("$%d", argId)
+	selectQuery := selectBaseQuery + whereClause + " ORDER BY p.id DESC LIMIT " + fmt.Sprintf("$%d", argId)
 	args = append(args, limit)
 
 	rows, err := repo.db.Pool().Query(ctx, selectQuery, args...)
@@ -597,7 +581,7 @@ func (repo *productRepository) Search(ctx context.Context, filter *domain.Produc
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, errors.WithMessage(err, listQueryRowError)
+		return nil, errors.WithMessage(err, rowsIterationError)
 	}
 
 	return &domain.ProductSearchResult{
