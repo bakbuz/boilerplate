@@ -238,7 +238,7 @@ func TestProductRepository_BulkInsert(t *testing.T) {
 		}
 	}
 
-	insertedCount, err := repo.BulkInsertAll(ctx, list)
+	insertedCount, err := repo.BulkInsertOneShot(ctx, list)
 	require.NoError(t, err)
 	assert.Equal(t, int64(count), insertedCount)
 

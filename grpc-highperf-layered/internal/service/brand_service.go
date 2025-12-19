@@ -19,7 +19,7 @@ type BrandService interface {
 	Update(ctx context.Context, e *domain.Brand) (int64, error)
 	Delete(ctx context.Context, id int32) (int64, error)
 	Count(ctx context.Context) (int64, error)
-	BulkInsertAll(ctx context.Context, list []*domain.Brand) (int64, error)
+	BulkInsertOneShot(ctx context.Context, list []*domain.Brand) (int64, error)
 	BulkInsert(ctx context.Context, list []*domain.Brand, batchSize int) (int64, error)
 	BulkUpdate(ctx context.Context, list []*domain.Brand, batchSize int) (int64, error)
 }
@@ -122,8 +122,8 @@ func (s *brandService) Count(ctx context.Context) (int64, error) {
 	return s.repo.Count(ctx)
 }
 
-// BulkInsertAll ...
-func (s *brandService) BulkInsertAll(ctx context.Context, list []*domain.Brand) (int64, error) {
+// BulkInsertOneShot ...
+func (s *brandService) BulkInsertOneShot(ctx context.Context, list []*domain.Brand) (int64, error) {
 	if len(list) == 0 {
 		return -1, errx.ErrInvalidInput
 	}
@@ -134,7 +134,7 @@ func (s *brandService) BulkInsertAll(ctx context.Context, list []*domain.Brand) 
 		}
 	}
 
-	return s.repo.BulkInsertAll(ctx, list)
+	return s.repo.BulkInsertOneShot(ctx, list)
 }
 
 // BulkInsert ...

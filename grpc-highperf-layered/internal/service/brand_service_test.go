@@ -71,7 +71,7 @@ func (m *MockBrandRepository) Upsert(ctx context.Context, e *domain.Brand) error
 	return args.Error(0)
 }
 
-func (m *MockBrandRepository) BulkInsertAll(ctx context.Context, list []*domain.Brand) (int64, error) {
+func (m *MockBrandRepository) BulkInsertOneShot(ctx context.Context, list []*domain.Brand) (int64, error) {
 	args := m.Called(ctx, list)
 	return args.Get(0).(int64), args.Error(1)
 }

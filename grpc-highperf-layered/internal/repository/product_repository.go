@@ -27,7 +27,7 @@ type ProductRepository interface {
 	Count(ctx context.Context) (int64, error)
 
 	Upsert(ctx context.Context, e *domain.Product) error
-	BulkInsertAll(ctx context.Context, list []*domain.Product) (int64, error)
+	BulkInsertOneShot(ctx context.Context, list []*domain.Product) (int64, error)
 	BulkInsert(ctx context.Context, list []*domain.Product, batchSize int) (int64, error)
 	BulkUpdate(ctx context.Context, list []*domain.Product, batchSize int) (int64, error)
 	Search(ctx context.Context, filter *domain.ProductSearchFilter) (*domain.ProductSearchResult, error)
@@ -270,7 +270,7 @@ func (repo *productRepository) Upsert(ctx context.Context, e *domain.Product) er
 	return nil
 }
 
-func (repo *productRepository) BulkInsertAll(ctx context.Context, list []*domain.Product) (int64, error) {
+func (repo *productRepository) BulkInsertOneShot(ctx context.Context, list []*domain.Product) (int64, error) {
 	if len(list) == 0 {
 		return 0, nil
 	}

@@ -26,7 +26,7 @@ type BrandRepository interface {
 	Count(ctx context.Context) (int64, error)
 
 	Upsert(ctx context.Context, e *domain.Brand) error
-	BulkInsertAll(ctx context.Context, list []*domain.Brand) (int64, error)
+	BulkInsertOneShot(ctx context.Context, list []*domain.Brand) (int64, error)
 	BulkInsert(ctx context.Context, list []*domain.Brand, batchSize int) (int64, error)
 	BulkUpdate(ctx context.Context, list []*domain.Brand, batchSize int) (int64, error)
 }
@@ -243,8 +243,8 @@ func (repo *brandRepository) Upsert(ctx context.Context, e *domain.Brand) error 
 	return nil
 }
 
-// BulkInsertAll ...
-func (repo *brandRepository) BulkInsertAll(ctx context.Context, list []*domain.Brand) (int64, error) {
+// BulkInsertOneShot ...
+func (repo *brandRepository) BulkInsertOneShot(ctx context.Context, list []*domain.Brand) (int64, error) {
 	if len(list) == 0 {
 		return 0, nil
 	}
