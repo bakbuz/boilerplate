@@ -27,6 +27,11 @@ build-prod: buf-gen
 	@echo "Building with Profile Guided Optimization..."
 	go build -pgo=auto -o bin/$(BINARY_NAME)-prod ./cmd/server
 
+# Run formatter
+fmt:
+	@echo "Running formatter..."
+	go fmt ./...
+
 # Run tests
 test:
 	@echo "Running tests..."

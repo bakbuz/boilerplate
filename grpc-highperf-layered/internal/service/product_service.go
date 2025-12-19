@@ -20,7 +20,6 @@ type ProductService interface {
 	SoftDelete(ctx context.Context, id uuid.UUID, deletedBy uuid.UUID) (int64, error)
 	Count(ctx context.Context) (int64, error)
 	BulkInsert(ctx context.Context, list []*domain.Product) (int64, error)
-	RunInTx(ctx context.Context, fn func(ctx context.Context) error) error
 	Search(ctx context.Context, filter *domain.ProductSearchFilter) (*domain.ProductSearchResult, error)
 }
 
@@ -146,11 +145,6 @@ func (s *productService) BulkInsert(ctx context.Context, list []*domain.Product)
 	}
 
 	return s.repo.BulkInsert(ctx, list)
-}
-
-// RunInTx executes a function within a transaction
-func (s *productService) RunInTx(ctx context.Context, fn func(ctx context.Context) error) error {
-	return s.repo.RunInTx(ctx, fn)
 }
 
 // Search searches products based on filter criteria

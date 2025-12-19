@@ -13,8 +13,8 @@ handler (gRPC) -> service (iş mantığı) -> repository (DB erişimi) -> domain
 Mevcut akışım:
 
 - Handler katmanında gRPC implementation var ve input validation burada yapılmakta. authentication gerekiyorsa yine burada yapılmakta. Özetle handler katmanı request, input validation, proto->entity conversion, entity->proto conversion ve grpc implementation yapmaktadır. Auth, Interceptor katmanında (Middleware) merkezi olarak çözülmekte ve Context'e inject edilmekte.
-- Service katmanı iş kuralları ve yetkilendirme gerekiyorsa (authorization) burada yapılmakta. Business validation burada yapılmakta. Ayrıca iş mantığı ve audit gibi işlemler burada yapılmakta. Gerektiği durumda RunInTx ile transaction burada başlatılmaktadır.
-- Repository katmanı ise sadece DB erişimi yapmaktadır. Ayrıca pagination, optimistic locking, soft delete, transaction gibi işlemler burada yapılmakta. ayrıca dışa açılan RunInTx adında generic bir transaction yönetimi mevcut.
+- Service katmanı iş kuralları ve yetkilendirme gerekiyorsa (authorization) burada yapılmakta. Business validation burada yapılmakta. Ayrıca iş mantığı ve audit gibi işlemler burada yapılmakta.
+- Repository katmanı ise sadece DB erişimi yapmaktadır. Ayrıca pagination, optimistic locking, soft delete, transaction gibi işlemler burada yapılmakta. transaction yönetimi mevcut.
 - Domain katmanı ise domain model yapmaktadır.
 - Service’den dönen sonucu tekrar Handler’a alıp oradan response üretiyorum.
 

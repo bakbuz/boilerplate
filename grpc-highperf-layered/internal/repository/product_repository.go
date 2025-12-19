@@ -27,7 +27,6 @@ type ProductRepository interface {
 	Upsert(ctx context.Context, e *domain.Product) error
 	BulkInsert(ctx context.Context, list []*domain.Product) (int64, error)
 	BulkUpdate(ctx context.Context, list []*domain.Product) (int64, error)
-	RunInTx(ctx context.Context, fn func(ctx context.Context) error) error
 	Search(ctx context.Context, filter *domain.ProductSearchFilter) (*domain.ProductSearchResult, error)
 }
 
@@ -384,7 +383,7 @@ func (repo *productRepository) BulkUpdate(ctx context.Context, list []*domain.Pr
 	return cmdTag.RowsAffected(), nil
 }
 
-func (repo *productRepository) RunInTx(ctx context.Context, fn func(ctx context.Context) error) error {
+func (repo *productRepository) runInTx(ctx context.Context, fn func(ctx context.Context) error) error {
 	tx, err := repo.db.Pool().Begin(ctx)
 	if err != nil {
 		return err

@@ -182,10 +182,6 @@ func (r *InMemoryProductRepo) BulkUpdate(ctx context.Context, list []*domain.Pro
 	return count, nil
 }
 
-func (r *InMemoryProductRepo) RunInTx(ctx context.Context, fn func(ctx context.Context) error) error {
-	return nil
-}
-
 func (r *InMemoryProductRepo) Search(ctx context.Context, filter *domain.ProductSearchFilter) (*domain.ProductSearchResult, error) {
 	// Not implemented for test
 	return &domain.ProductSearchResult{}, nil
