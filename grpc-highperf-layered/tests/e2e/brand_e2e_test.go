@@ -33,7 +33,7 @@ func init() {
 func brandTestInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	// Set a dummy user ID if not set
 	if ctx.Value(interceptor.UserIdKey) == nil {
-		ctx = context.WithValue(ctx, interceptor.UserIdKey, uuid.New().String())
+		ctx = context.WithValue(ctx, interceptor.UserIdKey, uuid.New())
 	}
 	return handler(ctx, req)
 }
@@ -150,7 +150,7 @@ func (r *InMemoryBrandRepo) Upsert(ctx context.Context, e *domain.Brand) error {
 	return nil
 }
 
-func (r *InMemoryBrandRepo) BulkInsert(ctx context.Context, list []*domain.Brand) (int64, error) {
+func (r *InMemoryBrandRepo) BulkInsert(ctx context.Context, list []*domain.Brand, batchSize int) (int64, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	for _, e := range list {
@@ -163,7 +163,7 @@ func (r *InMemoryBrandRepo) BulkInsert(ctx context.Context, list []*domain.Brand
 	return int64(len(list)), nil
 }
 
-func (r *InMemoryBrandRepo) BulkUpdate(ctx context.Context, list []*domain.Brand) (int64, error) {
+func (r *InMemoryBrandRepo) BulkUpdate(ctx context.Context, list []*domain.Brand, batchSize int) (int64, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	count := int64(0)
@@ -176,13 +176,18 @@ func (r *InMemoryBrandRepo) BulkUpdate(ctx context.Context, list []*domain.Brand
 	return count, nil
 }
 
+func (r *InMemoryBrandRepo) BulkInsertOneShot(ctx context.Context, list []*domain.Brand) (int64, error) {
+	// Re-use BulkInsert logic for in-memory
+	return r.BulkInsert(ctx, list, 0)
+}
+
 func (r *InMemoryBrandRepo) BulkInsertTran(ctx context.Context, list []*domain.Brand) error {
-	_, err := r.BulkInsert(ctx, list)
+	_, err := r.BulkInsert(ctx, list, 100)
 	return err
 }
 
 func (r *InMemoryBrandRepo) BulkUpdateTran(ctx context.Context, list []*domain.Brand) error {
-	_, err := r.BulkUpdate(ctx, list)
+	_, err := r.BulkUpdate(ctx, list, 100)
 	return err
 }
 
@@ -231,7 +236,7 @@ func TestBrandService_E2E(t *testing.T) {
 	client, teardown := setupBrandTestServer(t)
 	defer teardown()
 
-	userId := uuid.New().String()
+	userId := uuid.New()
 	ctx := context.WithValue(context.Background(), interceptor.UserIdKey, userId)
 	var createdId int32
 

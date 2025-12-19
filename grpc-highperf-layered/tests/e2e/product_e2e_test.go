@@ -34,7 +34,7 @@ func init() {
 func testInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	// Set a dummy user ID if not set
 	if ctx.Value(interceptor.UserIdKey) == nil {
-		ctx = context.WithValue(ctx, interceptor.UserIdKey, uuid.New().String())
+		ctx = context.WithValue(ctx, interceptor.UserIdKey, uuid.New())
 	}
 	return handler(ctx, req)
 }
@@ -160,7 +160,7 @@ func (r *InMemoryProductRepo) Upsert(ctx context.Context, e *domain.Product) err
 	return nil
 }
 
-func (r *InMemoryProductRepo) BulkInsert(ctx context.Context, list []*domain.Product) (int64, error) {
+func (r *InMemoryProductRepo) BulkInsert(ctx context.Context, list []*domain.Product, batchSize int) (int64, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	for _, e := range list {
@@ -169,7 +169,7 @@ func (r *InMemoryProductRepo) BulkInsert(ctx context.Context, list []*domain.Pro
 	return int64(len(list)), nil
 }
 
-func (r *InMemoryProductRepo) BulkUpdate(ctx context.Context, list []*domain.Product) (int64, error) {
+func (r *InMemoryProductRepo) BulkUpdate(ctx context.Context, list []*domain.Product, batchSize int) (int64, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	count := int64(0)
@@ -180,6 +180,11 @@ func (r *InMemoryProductRepo) BulkUpdate(ctx context.Context, list []*domain.Pro
 		}
 	}
 	return count, nil
+}
+
+func (r *InMemoryProductRepo) BulkInsertOneShot(ctx context.Context, list []*domain.Product) (int64, error) {
+	// Re-use BulkInsert logic for in-memory
+	return r.BulkInsert(ctx, list, 0)
 }
 
 func (r *InMemoryProductRepo) Search(ctx context.Context, filter *domain.ProductSearchFilter) (*domain.ProductSearchResult, error) {
@@ -233,7 +238,7 @@ func TestProductService_E2E(t *testing.T) {
 	client, teardown := setupTestServer(t)
 	defer teardown()
 
-	userId := uuid.New().String()
+	userId := uuid.New()
 	ctx := context.WithValue(context.Background(), interceptor.UserIdKey, userId)
 	var createdId string
 
