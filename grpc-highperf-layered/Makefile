@@ -40,6 +40,14 @@ lint:
 	@echo "Running linter..."
 	golangci-lint run
 
+# Run linter
+lint2:
+	cls
+	@echo "linter version"
+	golangci-lint --version
+	@echo "Running linter..."
+	golangci-lint run -- 
+
 # Security scan
 security:
 	gosec ./...	

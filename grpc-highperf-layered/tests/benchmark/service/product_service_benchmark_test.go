@@ -50,8 +50,6 @@ func (r *repositoryMock) Count(ctx context.Context) (int64, error) {
 	return args.Get(0).(int64), args.Error(1)
 }
 
-//var _ repository.TodoRepository = (repositoryMock)(nil)
-
 func BenchmarkGetLists(b *testing.B) {
 	r := new(repositoryMock)
 	//s := service.NewTodoService(&r)
