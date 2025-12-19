@@ -243,6 +243,39 @@ func (repo *brandRepository) Upsert(ctx context.Context, e *domain.Brand) error 
 	return nil
 }
 
+// BulkInsert ...
+func (repo *brandRepository) BulkInsert(ctx context.Context, list []*domain.Brand) (int64, error) {
+	if len(list) == 0 {
+		return 0, nil
+	}
+
+	// 1. Tüm batch için TEK BİR zaman damgası oluştur (Consistency)
+	now := time.Now().UTC()
+
+	// 2. pgx'in beklediği veri yapısına (slice of slices) dönüştür
+	// Kapasiteyi önceden belirlemek (make) memory allocation maliyetini düşürür.
+	rows := make([][]any, len(list))
+	for i, e := range list {
+		e.CreatedAt = now
+		rows[i] = []any{e.Name, e.Slug, e.Logo, e.CreatedBy, e.CreatedAt}
+	}
+
+	// 3. PostgreSQL COPY Protokolü ile Veriyi Akıt
+	// Bu işlem standart INSERT'ten yaklaşık 5-10 kat daha hızlıdır.
+	count, err := repo.db.Pool().CopyFrom(
+		ctx,
+		pgx.Identifier{"catalog", "brands"},
+		[]string{"name", "slug", "logo", "created_by", "created_at"},
+		pgx.CopyFromRows(rows),
+	)
+
+	if err != nil {
+		return 0, errors.WithMessage(err, failedToBulkInsert)
+	}
+
+	return count, nil
+}
+
 // batchSize parametresi ile chunk boyutunu belirleyebilirsiniz.
 // batchSize = 0 ise varsayılan BatchSize kullanılır.
 func (repo *brandRepository) BulkInsertWithBatch(ctx context.Context, brands []*domain.Brand, batchSize int) (int64, error) {
@@ -254,6 +287,7 @@ func (repo *brandRepository) BulkInsertWithBatch(ctx context.Context, brands []*
 	if batchSize == 0 {
 		batchSize = defaultBatchSize
 	}
+
 	var totalCount int64 = 0
 
 	// 2. Transaction Başlat
@@ -280,7 +314,8 @@ func (repo *brandRepository) BulkInsertWithBatch(ctx context.Context, brands []*
 		rows := make([][]any, 0, len(chunk))
 
 		for i, e := range chunk {
-			rows[i] = []any{e.Name, e.Slug, e.Logo, e.CreatedBy, now}
+			e.CreatedAt = now
+			rows[i] = []any{e.Name, e.Slug, e.Logo, e.CreatedBy, e.CreatedAt}
 		}
 
 		// 5. Copy Protokolü ile Yazma (High Performance Insert)
@@ -309,38 +344,6 @@ func (repo *brandRepository) BulkInsertWithBatch(ctx context.Context, brands []*
 	}
 
 	return totalCount, nil
-}
-
-// BulkInsert ...
-func (repo *brandRepository) BulkInsert(ctx context.Context, list []*domain.Brand) (int64, error) {
-	if len(list) == 0 {
-		return 0, nil
-	}
-
-	// 1. Tüm batch için TEK BİR zaman damgası oluştur (Consistency)
-	batchTime := time.Now().UTC()
-
-	// 2. pgx'in beklediği veri yapısına (slice of slices) dönüştür
-	// Kapasiteyi önceden belirlemek (make) memory allocation maliyetini düşürür.
-	rows := make([][]any, len(list))
-	for i, e := range list {
-		rows[i] = []any{e.Name, e.Slug, e.Logo, e.CreatedBy, batchTime}
-	}
-
-	// 3. PostgreSQL COPY Protokolü ile Veriyi Akıt
-	// Bu işlem standart INSERT'ten yaklaşık 5-10 kat daha hızlıdır.
-	count, err := repo.db.Pool().CopyFrom(
-		ctx,
-		pgx.Identifier{"catalog", "brands"},
-		[]string{"name", "slug", "logo", "created_by", "created_at"},
-		pgx.CopyFromRows(rows),
-	)
-
-	if err != nil {
-		return 0, errors.WithMessage(err, failedToBulkInsert)
-	}
-
-	return count, nil
 }
 
 // BulkUpdate, büyük veri setlerini güvenli parçalar halinde günceller.

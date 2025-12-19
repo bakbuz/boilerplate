@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/pkg/errors"
 )
 
@@ -26,6 +27,7 @@ type ProductRepository interface {
 
 	Upsert(ctx context.Context, e *domain.Product) error
 	BulkInsert(ctx context.Context, list []*domain.Product) (int64, error)
+	BulkInsertWithBatch(ctx context.Context, list []*domain.Product, batchSize int) (int64, error)
 	BulkUpdate(ctx context.Context, list []*domain.Product) (int64, error)
 	Search(ctx context.Context, filter *domain.ProductSearchFilter) (*domain.ProductSearchResult, error)
 }
@@ -273,7 +275,7 @@ func (repo *productRepository) BulkInsert(ctx context.Context, list []*domain.Pr
 	}
 
 	// 1. Tüm batch için TEK BİR zaman damgası oluştur (Consistency)
-	// batchTime := time.Now().UTC()
+	now := time.Now().UTC()
 
 	// 2. pgx'in beklediği veri yapısına (slice of slices) dönüştür
 	// Kapasiteyi önceden belirlemek (make) memory allocation maliyetini düşürür.
@@ -286,6 +288,7 @@ func (repo *productRepository) BulkInsert(ctx context.Context, list []*domain.Pr
 			}
 			e.Id = newId
 		}
+		e.CreatedAt = now
 		rows[i] = []any{e.Id, e.BrandId, e.Name, e.Sku, e.Summary, e.Storyline, e.StockQuantity, e.Price, e.Deleted, e.CreatedBy, e.CreatedAt}
 	}
 
@@ -303,6 +306,76 @@ func (repo *productRepository) BulkInsert(ctx context.Context, list []*domain.Pr
 	}
 
 	return count, nil
+}
+
+// batchSize parametresi ile chunk boyutunu belirleyebilirsiniz.
+// batchSize = 0 ise varsayılan BatchSize kullanılır.
+func (repo *productRepository) BulkInsertWithBatch(ctx context.Context, products []*domain.Product, batchSize int) (int64, error) {
+	// 1. Veri yoksa işlem yapma
+	if len(products) == 0 {
+		return 0, nil
+	}
+
+	if batchSize == 0 {
+		batchSize = defaultBatchSize
+	}
+
+	var totalCount int64 = 0
+
+	// 2. Transaction Başlat
+	// Bu çok kritiktir. 5. parçada hata alırsak, önceki 4 parçayı da geri almalıyız.
+	tx, err := repo.db.Pool().Begin(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("transaction başlatılamadı: %w", err)
+	}
+	// Fonksiyondan çıkarken hata varsa Rollback yapar, Commit edildiyse etkisizdir.
+	defer tx.Rollback(ctx)
+
+	// 3. Ortak Zaman Damgası
+	// Tüm batch'in aynı saniyede oluştuğunu görmek loglama açısından temizdir.
+	now := time.Now().UTC()
+
+	// 4. Chunking (Parçalama) Döngüsü
+	for i := 0; i < len(products); i += batchSize {
+		end := i + batchSize
+		if end > len(products) {
+			end = len(products)
+		}
+
+		chunk := products[i:end]
+		rows := make([][]any, 0, len(chunk))
+
+		for i, e := range chunk {
+			e.CreatedAt = now
+			rows[i] = []any{e.Id, e.BrandId, e.Name, e.Sku, e.Summary, e.Storyline, e.StockQuantity, e.Price, e.Deleted, e.CreatedBy, e.CreatedAt}
+		}
+
+		// 5. Copy Protokolü ile Yazma (High Performance Insert)
+		count, err := repo.db.Pool().CopyFrom(
+			ctx,
+			pgx.Identifier{"catalog", "products"},
+			[]string{"id", "brand_id", "name", "sku", "summary", "storyline", "stock_quantity", "price", "deleted", "created_by", "created_at"},
+			pgx.CopyFromRows(rows),
+		)
+
+		if err != nil {
+			// Hata detayını yakala (Örn: Unique Constraint ihlali varsa)
+			if pgErr, ok := err.(*pgconn.PgError); ok {
+				return 0, fmt.Errorf("bulk insert hatası (SQL State: %s): %s", pgErr.Code, pgErr.Message)
+			}
+			return 0, fmt.Errorf("bulk insert bilinmeyen hata: %w", err)
+		}
+
+		totalCount += count
+	}
+
+	// 6. Transaction Commit
+	// Buraya kadar geldiyse tüm parçalar hatasız yazılmıştır.
+	if err := tx.Commit(ctx); err != nil {
+		return 0, fmt.Errorf("transaction commit hatası: %w", err)
+	}
+
+	return totalCount, nil
 }
 
 func (repo *productRepository) BulkUpdate(ctx context.Context, list []*domain.Product) (int64, error) {
