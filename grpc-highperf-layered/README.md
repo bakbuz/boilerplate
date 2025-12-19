@@ -30,3 +30,10 @@ docker-compose up -d
 go install github.com/bufbuild/buf/cmd/buf@latest
 buf config init
 buf lint api/protos
+
+
+# golangci-lint
+
+go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+golangci-lint --version
+golangci-lint run

@@ -1,4 +1,4 @@
-.PHONY: buf-gen buf-lint build build_sm build-prod test test-integration clean docker docker-run deploy profile lint security u r
+.PHONY: buf-gen buf-lint build build_sm build-prod fmt lint security test test-integration clean docker docker-run deploy profile u r
 
 # Variables
 BINARY_OUTPUT=.bin/server
@@ -31,6 +31,18 @@ build-prod: buf-gen
 fmt:
 	@echo "Running formatter..."
 	go fmt ./...
+
+# Run linter
+lint:
+	cls
+	@echo "linter version"
+	golangci-lint --version
+	@echo "Running linter..."
+	golangci-lint run
+
+# Security scan
+security:
+	gosec ./...	
 
 # Run tests
 test:
@@ -84,14 +96,6 @@ deploy: build
 profile:
 	@echo "Starting CPU profiling..."
 	go test -cpuprofile=cpu.prof -memprofile=mem.prof ./...
-
-# Lint
-lint:
-	golangci-lint run ./...
-
-# Security scan
-security:
-	gosec ./...	
 
 u:
 	cls
