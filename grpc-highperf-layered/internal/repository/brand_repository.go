@@ -4,7 +4,10 @@ import (
 	"codegen/internal/domain"
 	"codegen/internal/infrastructure/database"
 	"context"
+	"sort"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/pkg/errors"
 )
@@ -23,8 +26,6 @@ type BrandRepository interface {
 	Upsert(ctx context.Context, e *domain.Brand) error
 	BulkInsert(ctx context.Context, list []*domain.Brand) (int64, error)
 	BulkUpdate(ctx context.Context, list []*domain.Brand) (int64, error)
-	BulkInsertTran(ctx context.Context, list []*domain.Brand) error
-	BulkUpdateTran(ctx context.Context, list []*domain.Brand) error
 }
 
 type brandRepository struct {
@@ -270,185 +271,97 @@ func (repo *brandRepository) BulkInsert(ctx context.Context, list []*domain.Bran
 	return count, nil
 }
 
-// BulkUpdate ...
+// BulkUpdate, büyük veri setlerini güvenli parçalar halinde günceller.
 func (repo *brandRepository) BulkUpdate(ctx context.Context, list []*domain.Brand) (int64, error) {
 	if len(list) == 0 {
 		return 0, nil
 	}
 
+	// 1. ÖN HAZIRLIK: DEADLOCK KORUMASI
+	// Veriyi işlemeye başlamadan önce ID'ye göre sıralıyoruz.
+	// Bu, tüm batch'lerin her zaman aynı sırada kilit almasını garanti eder.
+	sort.Slice(list, func(i, j int) bool {
+		return list[i].Id < list[j].Id
+	})
+
+	// 2. TRANSACTION BAŞLATMA
+	// Tüm parçaların (chunks) ya hep ya hiç (all-or-nothing) mantığıyla
+	// işlenmesi için tek bir transaction başlatıyoruz.
 	tx, err := repo.db.Pool().Begin(ctx)
 	if err != nil {
-		return 0, err
+		return 0, errors.WithMessage(err, "failed to begin transaction")
 	}
+	// Hata durumunda rollback, başarı durumunda commit öncesi no-op olur.
 	defer tx.Rollback(ctx)
 
-	// Create temp table
-	_, err = tx.Exec(ctx, `
-		CREATE TEMP TABLE tmp_brands_update (
-			id int,
-			name text,
-			slug text,
-			logo text,
-			updated_by uuid,
-			updated_at timestamp
-		) ON COMMIT DROP
-	`)
-	if err != nil {
-		return 0, errors.WithMessage(err, "failed to create temp table")
-	}
+	const batchSize = 2000 // İdeal batch boyutu (2000-5000 arası genelde güvenlidir)
+	var totalAffected int64 = 0
 
-	// Prepare rows for CopyFrom
-	rows := make([][]any, len(list))
-	for i, e := range list {
-		rows[i] = []any{
-			e.Id,
-			e.Name,
-			e.Slug,
-			e.Logo,
-			e.UpdatedBy,
-			e.UpdatedAt,
+	// 3. CHUNKING DÖNGÜSÜ
+	for i := 0; i < len(list); i += batchSize {
+		end := i + batchSize
+		if end > len(list) {
+			end = len(list)
 		}
+
+		batch := list[i:end]
+
+		// Batch için slice'ları hazırla (Memory Allocation optimization)
+		// Her turda yeniden oluşturuyoruz ki GC eski batch'i temizleyebilsin.
+		count := len(batch)
+		ids := make([]int32, count)
+		names := make([]string, count)
+		slugs := make([]string, count)
+		logos := make([]string, count)
+		updatedBys := make([]*uuid.UUID, count)
+		updatedAts := make([]*time.Time, count)
+
+		for k, e := range batch {
+			ids[k] = int32(e.Id)
+			names[k] = e.Name
+			slugs[k] = e.Slug
+			logos[k] = e.Logo
+			updatedBys[k] = e.UpdatedBy
+			updatedAts[k] = e.UpdatedAt
+		}
+
+		// UNNEST Sorgusu
+		// $1...$6 parametreleri o anki batch'in arrayleridir.
+		const query = `
+			UPDATE catalog.brands b
+			SET 
+				name = data.name,
+				slug = data.slug,
+				logo = data.logo,
+				updated_by = data.updated_by,
+				updated_at = data.updated_at
+			FROM (
+				SELECT * FROM UNNEST(
+					$1::int[], 
+					$2::text[], 
+					$3::text[], 
+					$4::text[], 
+					$5::uuid[], 
+					$6::timestamp[]
+				) AS t(id, name, slug, logo, updated_by, updated_at)
+			) AS data
+			WHERE b.id = data.id
+		`
+
+		// Batch'i Transaction context'i ile çalıştır
+		cmdTag, err := tx.Exec(ctx, query, ids, names, slugs, logos, updatedBys, updatedAts)
+		if err != nil {
+			// Hata detayını hangi batch'te olduğunu belirterek dönüyoruz
+			return 0, errors.WithMessagef(err, "failed to update batch starting at index %d", i)
+		}
+
+		totalAffected += cmdTag.RowsAffected()
 	}
 
-	// Copy data into temp table
-	_, err = tx.CopyFrom(
-		ctx,
-		pgx.Identifier{"tmp_brands_update"},
-		[]string{"id", "name", "slug", "logo", "updated_by", "updated_at"},
-		pgx.CopyFromRows(rows),
-	)
-	if err != nil {
-		return 0, errors.WithMessage(err, "failed to copy to temp table")
-	}
-
-	// Execute Update from temp table
-	cmdTag, err := tx.Exec(ctx, `
-		UPDATE catalog.brands b
-		SET 
-			name = t.name,
-			slug = t.slug,
-			logo = t.logo,
-			updated_by = t.updated_by,
-			updated_at = t.updated_at
-		FROM tmp_brands_update t
-		WHERE b.id = t.id
-	`)
-	if err != nil {
-		return 0, errors.WithMessage(err, failedToBulkUpdate)
-	}
-
+	// 4. COMMIT
 	if err := tx.Commit(ctx); err != nil {
-		return 0, err
+		return 0, errors.WithMessage(err, "failed to commit bulk update transaction")
 	}
 
-	return cmdTag.RowsAffected(), nil
-}
-
-// Default batch size to prevent memory pressure
-const batchSize = 1000
-
-// BulkInsert ...
-func (repo *brandRepository) BulkInsertTran(ctx context.Context, list []*domain.Brand) error {
-	if len(list) == 0 {
-		return nil
-	}
-
-	tx, err := repo.db.Pool().Begin(ctx)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback(ctx)
-
-	const command string = `
-		INSERT INTO catalog.brands (name, slug, logo, created_by, created_at) 
-		VALUES ($1, $2, $3, $4, $5)`
-
-	// Chunking logic
-	for i := 0; i < len(list); i += batchSize {
-		batch := &pgx.Batch{}
-		end := i + batchSize
-		if end > len(list) {
-			end = len(list)
-		}
-
-		for _, e := range list[i:end] {
-			batch.Queue(command,
-				e.Name,
-				e.Slug,
-				e.Logo,
-				e.CreatedBy,
-				e.CreatedAt,
-			)
-		}
-
-		batchResults := tx.SendBatch(ctx, batch)
-
-		for j := 0; j < (end - i); j++ {
-			_, err := batchResults.Exec()
-			if err != nil {
-				batchResults.Close()
-				return errors.WithMessage(err, failedToBulkInsert)
-			}
-		}
-
-		if err := batchResults.Close(); err != nil {
-			return err
-		}
-	}
-
-	return tx.Commit(ctx)
-}
-
-// BulkUpdate ...
-func (repo *brandRepository) BulkUpdateTran(ctx context.Context, list []*domain.Brand) error {
-	if len(list) == 0 {
-		return nil
-	}
-
-	tx, err := repo.db.Pool().Begin(ctx)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback(ctx)
-
-	const command string = `
-		UPDATE catalog.brands 
-		SET name=$2, slug=$3, logo=$4, updated_by=$5, updated_at=$6 
-		WHERE id=$1`
-
-	// Chunking logic
-	for i := 0; i < len(list); i += batchSize {
-		batch := &pgx.Batch{}
-		end := i + batchSize
-		if end > len(list) {
-			end = len(list)
-		}
-
-		for _, e := range list[i:end] {
-			batch.Queue(command,
-				e.Id,
-				e.Name,
-				e.Slug,
-				e.Logo,
-				e.UpdatedBy,
-				e.UpdatedAt,
-			)
-		}
-
-		batchResults := tx.SendBatch(ctx, batch)
-
-		for j := 0; j < (end - i); j++ {
-			_, err := batchResults.Exec()
-			if err != nil {
-				batchResults.Close()
-				return errors.WithMessage(err, failedToBulkUpdate)
-			}
-		}
-
-		if err := batchResults.Close(); err != nil {
-			return err
-		}
-	}
-
-	return tx.Commit(ctx)
+	return totalAffected, nil
 }

@@ -44,9 +44,91 @@ Output format:
 
 --------------------------------------------------------------------------
 
-Evet, kesinlikle var. Buna literatürde "Prompt Engineering" (İstem Mühendisliği) deniyor. Gemini (ve diğer büyük dil modelleri) ile konuşurken belirsizliği ortadan kaldırmak, alacağın cevabın kalitesini doğrudan artırır.
+Evet, kesinlikle var. Buna literatürde "Prompt Engineering" (İstem Mühendisliği) deniyor. 
+Gemini (ve diğer büyük dil modelleri) ile konuşurken belirsizliği ortadan kaldırmak, alacağın cevabın kalitesini doğrudan artırır.
 
-Verimli bir kullanım için **"R-B-G-K Formülü"**nü (Rol, Bağlam, Görev, Kısıt) uygulamanı öneririm. İşte bu yapının detayları:
+Verimli bir kullanım için **"R-B-G-K Formülü"**nü (Rol, Bağlam, Görev, Kısıt) uygulamanı öneririm. 
+
+İşte bu yapının detayları:
 
 --------------------------------------------------------------------------
 
+Rol: Sen bir golang mühendisi ve postgresql veritabanı uzmanısın.
+Bağlam: Go ile kusursuz bir BulkUpdate implementasyonu
+Görev: Bu sorguyu analiz edeceksin.
+Kısıtlar: yok
+Başla: Üretim ortamında sorunsuz çalışan bir refactor planı çıkar
+
+
+func (repo *brandRepository) BulkUpdate(ctx context.Context, list []*domain.Brand) (int64, error) {
+	if len(list) == 0 {
+		return 0, nil
+	}
+
+	tx, err := repo.db.Pool().Begin(ctx)
+	if err != nil {
+		return 0, err
+	}
+	defer tx.Rollback(ctx)
+
+	// Create temp table
+	_, err = tx.Exec(ctx, `
+		CREATE TEMP TABLE tmp_brands_update (
+			id int,
+			name text,
+			slug text,
+			logo text,
+			updated_by uuid,
+			updated_at timestamp
+		) ON COMMIT DROP
+	`)
+	if err != nil {
+		return 0, errors.WithMessage(err, "failed to create temp table")
+	}
+
+	// Prepare rows for CopyFrom
+	rows := make([][]any, len(list))
+	for i, e := range list {
+		rows[i] = []any{
+			e.Id,
+			e.Name,
+			e.Slug,
+			e.Logo,
+			e.UpdatedBy,
+			e.UpdatedAt,
+		}
+	}
+
+	// Copy data into temp table
+	_, err = tx.CopyFrom(
+		ctx,
+		pgx.Identifier{"tmp_brands_update"},
+		[]string{"id", "name", "slug", "logo", "updated_by", "updated_at"},
+		pgx.CopyFromRows(rows),
+	)
+	if err != nil {
+		return 0, errors.WithMessage(err, "failed to copy to temp table")
+	}
+
+	// Execute Update from temp table
+	cmdTag, err := tx.Exec(ctx, `
+		UPDATE catalog.brands b
+		SET 
+			name = t.name,
+			slug = t.slug,
+			logo = t.logo,
+			updated_by = t.updated_by,
+			updated_at = t.updated_at
+		FROM tmp_brands_update t
+		WHERE b.id = t.id
+	`)
+	if err != nil {
+		return 0, errors.WithMessage(err, failedToBulkUpdate)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return 0, err
+	}
+
+	return cmdTag.RowsAffected(), nil
+}
