@@ -26,9 +26,9 @@ type BrandRepository interface {
 	Count(ctx context.Context) (int64, error)
 
 	Upsert(ctx context.Context, e *domain.Brand) error
-	BulkInsert(ctx context.Context, list []*domain.Brand) (int64, error)
-	BulkInsertWithBatch(ctx context.Context, list []*domain.Brand, batchSize int) (int64, error)
-	BulkUpdate(ctx context.Context, list []*domain.Brand) (int64, error)
+	BulkInsertAll(ctx context.Context, list []*domain.Brand) (int64, error)
+	BulkInsert(ctx context.Context, list []*domain.Brand, batchSize int) (int64, error)
+	BulkUpdate(ctx context.Context, list []*domain.Brand, batchSize int) (int64, error)
 }
 
 type brandRepository struct {
@@ -243,8 +243,8 @@ func (repo *brandRepository) Upsert(ctx context.Context, e *domain.Brand) error 
 	return nil
 }
 
-// BulkInsert ...
-func (repo *brandRepository) BulkInsert(ctx context.Context, list []*domain.Brand) (int64, error) {
+// BulkInsertAll ...
+func (repo *brandRepository) BulkInsertAll(ctx context.Context, list []*domain.Brand) (int64, error) {
 	if len(list) == 0 {
 		return 0, nil
 	}
@@ -278,7 +278,7 @@ func (repo *brandRepository) BulkInsert(ctx context.Context, list []*domain.Bran
 
 // batchSize parametresi ile chunk boyutunu belirleyebilirsiniz.
 // batchSize = 0 ise varsayılan BatchSize kullanılır.
-func (repo *brandRepository) BulkInsertWithBatch(ctx context.Context, brands []*domain.Brand, batchSize int) (int64, error) {
+func (repo *brandRepository) BulkInsert(ctx context.Context, brands []*domain.Brand, batchSize int) (int64, error) {
 	// 1. Veri yoksa işlem yapma
 	if len(brands) == 0 {
 		return 0, nil
@@ -347,9 +347,13 @@ func (repo *brandRepository) BulkInsertWithBatch(ctx context.Context, brands []*
 }
 
 // BulkUpdate, büyük veri setlerini güvenli parçalar halinde günceller.
-func (repo *brandRepository) BulkUpdate(ctx context.Context, list []*domain.Brand) (int64, error) {
+func (repo *brandRepository) BulkUpdate(ctx context.Context, list []*domain.Brand, batchSize int) (int64, error) {
 	if len(list) == 0 {
 		return 0, nil
+	}
+
+	if batchSize == 0 {
+		batchSize = defaultBatchSize
 	}
 
 	// 1. ÖN HAZIRLIK: DEADLOCK KORUMASI
@@ -369,7 +373,6 @@ func (repo *brandRepository) BulkUpdate(ctx context.Context, list []*domain.Bran
 	// Hata durumunda rollback, başarı durumunda commit öncesi no-op olur.
 	defer tx.Rollback(ctx)
 
-	const batchSize = 2000 // İdeal batch boyutu (2000-5000 arası genelde güvenlidir)
 	var totalAffected int64 = 0
 
 	// 3. CHUNKING DÖNGÜSÜ

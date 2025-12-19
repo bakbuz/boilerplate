@@ -222,7 +222,7 @@ func TestBrandRepository_BulkInsert(t *testing.T) {
 		}
 	}
 
-	insertedCount, err := repo.BulkInsert(ctx, list)
+	insertedCount, err := repo.BulkInsertAll(ctx, list)
 	require.NoError(t, err)
 	assert.Equal(t, int64(count), insertedCount)
 }
@@ -263,7 +263,7 @@ func TestBrandRepository_BulkUpdate(t *testing.T) {
 	brand2.UpdatedAt = &newTime
 
 	// Execute BulkUpdate
-	count, err := repo.BulkUpdate(ctx, []*domain.Brand{brand1, brand2})
+	count, err := repo.BulkUpdate(ctx, []*domain.Brand{brand1, brand2}, 0)
 	require.NoError(t, err)
 	assert.Equal(t, int64(2), count)
 
@@ -288,6 +288,7 @@ func TestBrandRepository_BulkInsert_Large(t *testing.T) {
 
 	repo := repository.NewBrandRepository(db)
 	ctx := context.Background()
+	batchSize := 1000
 
 	// 2005 items to test chunking (batchSize=1000, so 3 chunks: 1000, 1000, 5)
 	count := 2005
@@ -301,7 +302,7 @@ func TestBrandRepository_BulkInsert_Large(t *testing.T) {
 		}
 	}
 
-	insertedCount, err := repo.BulkInsert(ctx, list)
+	insertedCount, err := repo.BulkInsert(ctx, list, batchSize)
 	require.NoError(t, err)
 	assert.Equal(t, int64(count), insertedCount)
 

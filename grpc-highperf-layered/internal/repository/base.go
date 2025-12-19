@@ -62,4 +62,4 @@ func (repo *productRepository) getDb(ctx context.Context) interface {
 }
 */
 
-const defaultBatchSize = 2000 // İdeal bir chunk boyutu
+const defaultBatchSize = 2000 // İdeal batch boyutu (2000-5000 arası genelde güvenlidir)

@@ -5,6 +5,7 @@ import (
 	"codegen/internal/infrastructure/database"
 	"context"
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/google/uuid"
@@ -26,9 +27,9 @@ type ProductRepository interface {
 	Count(ctx context.Context) (int64, error)
 
 	Upsert(ctx context.Context, e *domain.Product) error
-	BulkInsert(ctx context.Context, list []*domain.Product) (int64, error)
-	BulkInsertWithBatch(ctx context.Context, list []*domain.Product, batchSize int) (int64, error)
-	BulkUpdate(ctx context.Context, list []*domain.Product) (int64, error)
+	BulkInsertAll(ctx context.Context, list []*domain.Product) (int64, error)
+	BulkInsert(ctx context.Context, list []*domain.Product, batchSize int) (int64, error)
+	BulkUpdate(ctx context.Context, list []*domain.Product, batchSize int) (int64, error)
 	Search(ctx context.Context, filter *domain.ProductSearchFilter) (*domain.ProductSearchResult, error)
 }
 
@@ -269,7 +270,7 @@ func (repo *productRepository) Upsert(ctx context.Context, e *domain.Product) er
 	return nil
 }
 
-func (repo *productRepository) BulkInsert(ctx context.Context, list []*domain.Product) (int64, error) {
+func (repo *productRepository) BulkInsertAll(ctx context.Context, list []*domain.Product) (int64, error) {
 	if len(list) == 0 {
 		return 0, nil
 	}
@@ -310,7 +311,7 @@ func (repo *productRepository) BulkInsert(ctx context.Context, list []*domain.Pr
 
 // batchSize parametresi ile chunk boyutunu belirleyebilirsiniz.
 // batchSize = 0 ise varsayılan BatchSize kullanılır.
-func (repo *productRepository) BulkInsertWithBatch(ctx context.Context, products []*domain.Product, batchSize int) (int64, error) {
+func (repo *productRepository) BulkInsert(ctx context.Context, products []*domain.Product, batchSize int) (int64, error) {
 	// 1. Veri yoksa işlem yapma
 	if len(products) == 0 {
 		return 0, nil
@@ -378,89 +379,118 @@ func (repo *productRepository) BulkInsertWithBatch(ctx context.Context, products
 	return totalCount, nil
 }
 
-func (repo *productRepository) BulkUpdate(ctx context.Context, list []*domain.Product) (int64, error) {
+// BulkUpdate, büyük veri setlerini güvenli parçalar halinde günceller.
+func (repo *productRepository) BulkUpdate(ctx context.Context, list []*domain.Product, batchSize int) (int64, error) {
 	if len(list) == 0 {
 		return 0, nil
 	}
 
+	if batchSize == 0 {
+		batchSize = defaultBatchSize
+	}
+
+	// 1. ÖN HAZIRLIK: DEADLOCK KORUMASI
+	// Veriyi işlemeye başlamadan önce ID'ye göre sıralıyoruz.
+	// Bu, tüm batch'lerin her zaman aynı sırada kilit almasını garanti eder.
+	sort.Slice(list, func(i, j time.Time) bool {
+		return list[i].CreatedAt < list[j].CreatedAt
+	})
+
+	// 2. TRANSACTION BAŞLATMA
+	// Tüm parçaların (chunks) ya hep ya hiç (all-or-nothing) mantığıyla
+	// işlenmesi için tek bir transaction başlatıyoruz.
 	tx, err := repo.db.Pool().Begin(ctx)
 	if err != nil {
-		return 0, err
+		return 0, errors.WithMessage(err, "failed to begin transaction")
 	}
+	// Hata durumunda rollback, başarı durumunda commit öncesi no-op olur.
 	defer tx.Rollback(ctx)
 
-	// Create temp table
-	_, err = tx.Exec(ctx, `
-		CREATE TEMP TABLE tmp_products_update (
-			id uuid,
-			brand_id int,
-			name text,
-			sku text,
-			summary text,
-			storyline text,
-			stock_quantity int,
-			price numeric,
-			updated_by uuid,
-			updated_at timestamp
-		) ON COMMIT DROP
-	`)
-	if err != nil {
-		return 0, errors.WithMessage(err, "failed to create temp table")
-	}
+	var totalAffected int64 = 0
 
-	// Prepare rows for CopyFrom
-	rows := make([][]any, len(list))
-	for i, e := range list {
-		rows[i] = []any{
-			e.Id,
-			e.BrandId,
-			e.Name,
-			e.Sku,
-			e.Summary,
-			e.Storyline,
-			e.StockQuantity,
-			e.Price,
-			e.UpdatedBy,
-			e.UpdatedAt,
+	// 3. CHUNKING DÖNGÜSÜ
+	for i := 0; i < len(list); i += batchSize {
+		end := i + batchSize
+		if end > len(list) {
+			end = len(list)
 		}
+
+		batch := list[i:end]
+
+		// Batch için slice'ları hazırla (Memory Allocation optimization)
+		// Her turda yeniden oluşturuyoruz ki GC eski batch'i temizleyebilsin.
+		count := len(batch)
+		ids := make([]uuid.UUID, count)
+		brandIds := make([]int32, count)
+		names := make([]string, count)
+		skus := make([]*string, count)
+		summaries := make([]*string, count)
+		storylines := make([]*string, count)
+		stockQuantities := make([]int32, count)
+		prices := make([]float64, count)
+		updatedBys := make([]*uuid.UUID, count)
+		updatedAts := make([]*time.Time, count)
+
+		for k, e := range batch {
+			ids[k] = e.Id
+			brandIds[k] = int32(e.BrandId)
+			names[k] = e.Name
+			skus[k] = e.Sku
+			summaries[k] = e.Summary
+			storylines[k] = e.Storyline
+			stockQuantities[k] = int32(e.StockQuantity)
+			prices[k] = e.Price
+			updatedBys[k] = e.UpdatedBy
+			updatedAts[k] = e.UpdatedAt
+		}
+
+		// UNNEST Sorgusu
+		// $1...$10 parametreleri o anki batch'in arrayleridir.
+		const query = `
+			UPDATE catalog.products p
+			SET 
+				brand_id = data.brand_id,
+				name = data.name,
+				sku = data.sku,
+				summary = data.summary,
+				storyline = data.storyline,
+				stock_quantity = data.stock_quantity,
+				price = data.price,
+				updated_by = data.updated_by,
+				updated_at = data.updated_at
+			FROM (
+				SELECT * FROM UNNEST(
+					$1::uuid[], 
+					$2::int[], 
+					$3::text[], 
+					$4::text[], 
+					$5::text[], 
+					$6::text[], 
+					$7::int[], 
+					$8::numeric[], 
+					$9::uuid[], 
+					$10::timestamp[]
+				) AS t(id, brand_id, name, sku, summary, storyline, stock_quantity, price, updated_by, updated_at)
+			) AS data
+			WHERE p.id = data.id
+		`
+
+		// Batch'i Transaction context'i ile çalıştır
+		cmdTag, err := tx.Exec(ctx, query, ids, brandIds, names, skus, summaries, storylines, stockQuantities, prices, updatedBys, updatedAts)
+		if err != nil {
+			// Hata detayını hangi batch'te olduğunu belirterek dönüyoruz
+			return 0, errors.WithMessagef(err, "failed to update batch starting at index %d", i)
+		}
+
+		totalAffected += cmdTag.RowsAffected()
 	}
 
-	// Copy data into temp table
-	_, err = tx.CopyFrom(
-		ctx,
-		pgx.Identifier{"tmp_products_update"},
-		[]string{"id", "brand_id", "name", "sku", "summary", "storyline", "stock_quantity", "price", "updated_by", "updated_at"},
-		pgx.CopyFromRows(rows),
-	)
-	if err != nil {
-		return 0, errors.WithMessage(err, "failed to copy to temp table")
-	}
-
-	// Execute Update from temp table
-	cmdTag, err := tx.Exec(ctx, `
-		UPDATE catalog.products p
-		SET 
-			brand_id = t.brand_id,
-			name = t.name,
-			sku = t.sku,
-			summary = t.summary,
-			storyline = t.storyline,
-			stock_quantity = t.stock_quantity,
-			price = t.price,
-			updated_by = t.updated_by,
-			updated_at = t.updated_at
-		FROM tmp_products_update t
-		WHERE p.id = t.id
-	`)
-	if err != nil {
-		return 0, errors.WithMessage(err, failedToBulkUpdate)
-	}
-
+	// 4. COMMIT
 	if err := tx.Commit(ctx); err != nil {
-		return 0, err
+		return 0, errors.WithMessage(err, "failed to commit bulk update transaction")
 	}
 
-	return cmdTag.RowsAffected(), nil
+	return totalAffected, nil
 }
 
 /*
