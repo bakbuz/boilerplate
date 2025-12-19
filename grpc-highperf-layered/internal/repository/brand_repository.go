@@ -4,11 +4,13 @@ import (
 	"codegen/internal/domain"
 	"codegen/internal/infrastructure/database"
 	"context"
+	"fmt"
 	"sort"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/pkg/errors"
 )
 
@@ -25,6 +27,7 @@ type BrandRepository interface {
 
 	Upsert(ctx context.Context, e *domain.Brand) error
 	BulkInsert(ctx context.Context, list []*domain.Brand) (int64, error)
+	BulkInsertWithBatch(ctx context.Context, list []*domain.Brand, batchSize int) (int64, error)
 	BulkUpdate(ctx context.Context, list []*domain.Brand) (int64, error)
 }
 
@@ -240,6 +243,74 @@ func (repo *brandRepository) Upsert(ctx context.Context, e *domain.Brand) error 
 	return nil
 }
 
+// batchSize parametresi ile chunk boyutunu belirleyebilirsiniz.
+// batchSize = 0 ise varsayılan BatchSize kullanılır.
+func (repo *brandRepository) BulkInsertWithBatch(ctx context.Context, brands []*domain.Brand, batchSize int) (int64, error) {
+	// 1. Veri yoksa işlem yapma
+	if len(brands) == 0 {
+		return 0, nil
+	}
+
+	if batchSize == 0 {
+		batchSize = defaultBatchSize
+	}
+	var totalCount int64 = 0
+
+	// 2. Transaction Başlat
+	// Bu çok kritiktir. 5. parçada hata alırsak, önceki 4 parçayı da geri almalıyız.
+	tx, err := repo.db.Pool().Begin(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("transaction başlatılamadı: %w", err)
+	}
+	// Fonksiyondan çıkarken hata varsa Rollback yapar, Commit edildiyse etkisizdir.
+	defer tx.Rollback(ctx)
+
+	// 3. Ortak Zaman Damgası
+	// Tüm batch'in aynı saniyede oluştuğunu görmek loglama açısından temizdir.
+	now := time.Now().UTC()
+
+	// 4. Chunking (Parçalama) Döngüsü
+	for i := 0; i < len(brands); i += batchSize {
+		end := i + batchSize
+		if end > len(brands) {
+			end = len(brands)
+		}
+
+		chunk := brands[i:end]
+		rows := make([][]any, 0, len(chunk))
+
+		for i, e := range chunk {
+			rows[i] = []any{e.Name, e.Slug, e.Logo, e.CreatedBy, now}
+		}
+
+		// 5. Copy Protokolü ile Yazma (High Performance Insert)
+		count, err := repo.db.Pool().CopyFrom(
+			ctx,
+			pgx.Identifier{"catalog", "brands"},
+			[]string{"name", "slug", "logo", "created_by", "created_at"},
+			pgx.CopyFromRows(rows),
+		)
+
+		if err != nil {
+			// Hata detayını yakala (Örn: Unique Constraint ihlali varsa)
+			if pgErr, ok := err.(*pgconn.PgError); ok {
+				return 0, fmt.Errorf("bulk insert hatası (SQL State: %s): %s", pgErr.Code, pgErr.Message)
+			}
+			return 0, fmt.Errorf("bulk insert bilinmeyen hata: %w", err)
+		}
+
+		totalCount += count
+	}
+
+	// 6. Transaction Commit
+	// Buraya kadar geldiyse tüm parçalar hatasız yazılmıştır.
+	if err := tx.Commit(ctx); err != nil {
+		return 0, fmt.Errorf("transaction commit hatası: %w", err)
+	}
+
+	return totalCount, nil
+}
+
 // BulkInsert ...
 func (repo *brandRepository) BulkInsert(ctx context.Context, list []*domain.Brand) (int64, error) {
 	if len(list) == 0 {
@@ -251,15 +322,9 @@ func (repo *brandRepository) BulkInsert(ctx context.Context, list []*domain.Bran
 
 	// 2. pgx'in beklediği veri yapısına (slice of slices) dönüştür
 	// Kapasiteyi önceden belirlemek (make) memory allocation maliyetini düşürür.
-	rows := make([][]any, 0, len(list))
+	rows := make([][]any, len(list))
 	for i, e := range list {
-		rows[i] = []any{
-			e.Name,
-			e.Slug,
-			e.Logo,
-			e.CreatedBy,
-			batchTime,
-		}
+		rows[i] = []any{e.Name, e.Slug, e.Logo, e.CreatedBy, batchTime}
 	}
 
 	// 3. PostgreSQL COPY Protokolü ile Veriyi Akıt

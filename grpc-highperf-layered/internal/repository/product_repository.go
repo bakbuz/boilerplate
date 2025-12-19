@@ -272,6 +272,11 @@ func (repo *productRepository) BulkInsert(ctx context.Context, list []*domain.Pr
 		return 0, nil
 	}
 
+	// 1. Tüm batch için TEK BİR zaman damgası oluştur (Consistency)
+	// batchTime := time.Now().UTC()
+
+	// 2. pgx'in beklediği veri yapısına (slice of slices) dönüştür
+	// Kapasiteyi önceden belirlemek (make) memory allocation maliyetini düşürür.
 	rows := make([][]any, len(list))
 	for i, e := range list {
 		if e.Id == uuid.Nil {
@@ -284,6 +289,8 @@ func (repo *productRepository) BulkInsert(ctx context.Context, list []*domain.Pr
 		rows[i] = []any{e.Id, e.BrandId, e.Name, e.Sku, e.Summary, e.Storyline, e.StockQuantity, e.Price, e.Deleted, e.CreatedBy, e.CreatedAt}
 	}
 
+	// 3. PostgreSQL COPY Protokolü ile Veriyi Akıt
+	// Bu işlem standart INSERT'ten yaklaşık 5-10 kat daha hızlıdır.
 	count, err := repo.db.Pool().CopyFrom(
 		ctx,
 		pgx.Identifier{"catalog", "products"},
@@ -383,6 +390,7 @@ func (repo *productRepository) BulkUpdate(ctx context.Context, list []*domain.Pr
 	return cmdTag.RowsAffected(), nil
 }
 
+/*
 func (repo *productRepository) runInTx(ctx context.Context, fn func(ctx context.Context) error) error {
 	tx, err := repo.db.Pool().Begin(ctx)
 	if err != nil {
@@ -398,6 +406,7 @@ func (repo *productRepository) runInTx(ctx context.Context, fn func(ctx context.
 
 	return tx.Commit(ctx)
 }
+*/
 
 func (repo *productRepository) Search(ctx context.Context, filter *domain.ProductSearchFilter) (*domain.ProductSearchResult, error) {
 	where, args := buildSearchWhere(filter)

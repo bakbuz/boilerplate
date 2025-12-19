@@ -1,11 +1,7 @@
 package repository
 
 import (
-	"context"
 	"errors"
-
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 )
 
 var ErrNotFound = errors.New("record not found")
@@ -49,7 +45,6 @@ func (r *PostgresRepo) CreateOrder(ctx context.Context, o *domain.Order) error {
 
 	return tx.Commit(ctx)
 }
-*/
 
 type txContextType string
 
@@ -65,3 +60,6 @@ func (repo *productRepository) getDb(ctx context.Context) interface {
 	}
 	return repo.db.Pool()
 }
+*/
+
+const defaultBatchSize = 2000 // İdeal bir chunk boyutu
