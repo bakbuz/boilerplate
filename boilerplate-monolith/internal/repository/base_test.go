@@ -1,7 +1,7 @@
 package repository_test
 
 import (
-	"codegen/internal/database"
+	"codegen/internal/infrastructure/database"
 	"context"
 	"os"
 	"testing"

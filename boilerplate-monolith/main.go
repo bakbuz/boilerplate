@@ -4,7 +4,7 @@ import (
 	catalogv1 "codegen/api/gen/catalog/v1"
 	demov1 "codegen/api/gen/demo/v1"
 	"codegen/internal/config"
-	"codegen/internal/database"
+	"codegen/internal/infrastructure/database"
 	"codegen/internal/repository"
 	"codegen/internal/service"
 	"codegen/internal/transport/handler"

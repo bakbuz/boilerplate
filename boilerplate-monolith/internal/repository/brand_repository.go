@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"codegen/internal/database"
 	"codegen/internal/domain"
+	"codegen/internal/infrastructure/database"
 	"context"
 
 	"github.com/jackc/pgx/v5"
