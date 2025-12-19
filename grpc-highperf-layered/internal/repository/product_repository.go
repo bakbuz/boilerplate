@@ -544,12 +544,7 @@ func (repo *productRepository) Search(ctx context.Context, filter *domain.Produc
 		return &domain.ProductSearchResult{Total: 0, Items: []domain.ProductSummary{}}, nil
 	}
 
-	// 4. Limit default
-	limit := 10
-	if filter.Limit > 0 {
-		limit = filter.Limit
-	}
-
+	// 4. Keyset Pagination
 	if filter.LastSeenId != uuid.Nil {
 		whereClause += fmt.Sprintf(" AND p.id < $%d", argId)
 		args = append(args, filter.LastSeenId)
@@ -561,7 +556,7 @@ func (repo *productRepository) Search(ctx context.Context, filter *domain.Produc
 
 	// Select columns
 	selectQuery := selectBaseQuery + whereClause + " ORDER BY p.id DESC LIMIT " + fmt.Sprintf("$%d", argId)
-	args = append(args, limit)
+	args = append(args, filter.Limit)
 
 	rows, err := repo.db.Pool().Query(ctx, selectQuery, args...)
 	if err != nil {

@@ -243,7 +243,7 @@ func TestProductService_Search(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		repo := new(MockProductRepository)
 		svc := NewProductService(repo)
-		filter := &domain.ProductSearchFilter{Limit: 10, Offset: 0}
+		filter := &domain.ProductSearchFilter{Limit: 10}
 		expectedResult := &domain.ProductSearchResult{Total: 1, Items: []domain.ProductSummary{{Name: "Search Result"}}}
 		repo.On("Search", ctx, mock.MatchedBy(func(f *domain.ProductSearchFilter) bool {
 			return f.Limit == 10

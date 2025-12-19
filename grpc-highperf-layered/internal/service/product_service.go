@@ -158,10 +158,6 @@ func (s *productService) Search(ctx context.Context, filter *domain.ProductSearc
 		return nil, errors.New("limit parameter must be non-negative")
 	}
 
-	if filter.Offset < 0 {
-		return nil, errors.New("offset parameter must be non-negative")
-	}
-
 	// Set default pagination if not provided
 	if filter.Limit == 0 {
 		filter.Limit = 10 // Default page size
