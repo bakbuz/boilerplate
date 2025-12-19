@@ -512,13 +512,12 @@ func (repo *productRepository) runInTx(ctx context.Context, fn func(ctx context.
 */
 
 func (repo *productRepository) Search(ctx context.Context, filter *domain.ProductSearchFilter) (*domain.ProductSearchResult, error) {
-	where, args := buildSearchWhere(filter)
 
-	countQuery := "SELECT COUNT(*) FROM catalog.products WHERE deleted=false" + where
+	countQuery := "SELECT COUNT(*) FROM catalog.products WHERE deleted=false"
 
 	// Get total count
 	var total int64
-	err := repo.db.Pool().QueryRow(ctx, countQuery, args...).Scan(&total)
+	err := repo.db.Pool().QueryRow(ctx, countQuery).Scan(&total)
 	if err != nil {
 		return nil, errors.WithMessage(err, failedToCount)
 	}
@@ -528,26 +527,16 @@ func (repo *productRepository) Search(ctx context.Context, filter *domain.Produc
 	}
 
 	// Add pagination
-	query := `SELECT p.id, p.name, p.price::numeric, p.brand_id, b.name AS brand_name
-	FROM catalog.products AS p
-	JOIN catalog.brands AS b ON p.brand_id = b.id
-	WHERE p.deleted=false AND p.id > @last_seen_id` + where + ` 
-	ORDER BY p.id DESC`
-
-	argIndex := len(args) + 1
-	if filter.Limit > 0 {
-		query += fmt.Sprintf(" LIMIT $%d", argIndex)
-		args = append(args, filter.Limit)
-		argIndex++
-	}
-
-	if filter.Offset > 0 {
-		query += fmt.Sprintf(" OFFSET $%d", argIndex)
-		args = append(args, filter.Offset)
-	}
+	query := `
+SELECT p.id, p.name, p.price::numeric, p.brand_id, b.name AS brand_name
+FROM catalog.products AS p
+JOIN catalog.brands AS b ON p.brand_id = b.id
+WHERE p.deleted=false AND p.id > @last_seen_id
+ORDER BY p.id DESC
+LIMIT @limit`
 
 	// Execute query
-	rows, err := repo.db.Pool().Query(ctx, query, args...)
+	rows, err := repo.db.Pool().Query(ctx, query)
 	if err != nil {
 		return nil, errors.WithMessage(err, listQueryRowError)
 	}
@@ -571,23 +560,4 @@ func (repo *productRepository) Search(ctx context.Context, filter *domain.Produc
 		Total: total,
 		Items: items,
 	}, nil
-}
-
-func buildSearchWhere(filter *domain.ProductSearchFilter) (string, []any) {
-	var where string
-	var args []any
-	argIndex := 1
-
-	if filter.BrandId > 0 {
-		where += fmt.Sprintf(" AND brand_id=$%d", argIndex)
-		args = append(args, filter.BrandId)
-		argIndex++
-	}
-
-	if filter.Name != "" {
-		where += fmt.Sprintf(" AND name ILIKE $%d", argIndex)
-		args = append(args, "%"+filter.Name+"%")
-		argIndex++
-	}
-	return where, args
 }
