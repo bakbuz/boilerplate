@@ -22,7 +22,7 @@ docker-compose up -d
 ```
 
 
-# grpc-highperf-backend
+# grpc-highperf-layered
 
 
 # buf.yaml

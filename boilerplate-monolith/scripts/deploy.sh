@@ -6,7 +6,7 @@ echo "🚀 Starting deployment..."
 
 # Variables
 EC2_INSTANCE="ec2-user@your-ec2-instance"
-APP_NAME="grpc-highperf-backend"
+APP_NAME="grpc-highperf-layered"
 INSTALL_DIR="/opt/$APP_NAME"
 SERVICE_NAME="grpc-backend"
 

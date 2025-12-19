@@ -90,9 +90,9 @@ Başla:
 Önce en riskli 10 problemi söyle, sonra önerdiğin ideal akışa göre bir refactor planı çıkar. Mümkün olduğunca somut ol: örnek interface’ler, error tipleri, interceptor zinciri, transaction sınırı nerede olmalı, mapping nerede olmalı.
 
 
-grpc-highperf-backend/
+grpc-highperf-layered/
 ├── api/
-│   ├── gen/                         # protoc çıktıları (gitignore veya CI'de generate)
+│   ├── gen/
 │   │   ├── catalog/
 │   │   │   └── v1/
 │   │   │       ├── brand.pb.go
@@ -127,13 +127,20 @@ grpc-highperf-backend/
 │       └── main.go
 ├── internal/
 │   ├── config/
-│   │   └── config.go           # github.com/ilyakaznacheev/cleanenv ile JSON parse edilmekte.    
-│   ├── database/
-│   │   ├── postgres.go
-│   │   └── postgres_test.go
+│   │   └── config.go
 │   ├── domain/
 │   │   ├── brand.go
 │   │   └── product.go
+│   ├── infrastructure/
+│   │   ├── database/
+│   │   │   ├── conn.go
+│   │   │   └── conn_test.go
+│   │   ├── rabbitmq/
+│   │   │   └── conn.go
+│   │   ├── redis/
+│   │   │   └── client.go
+│   │   └── storage/
+│   │       └── client.go
 │   ├── repository/
 │   │   ├── brand_repository.go
 │   │   ├── brand_repository_test.go
@@ -151,7 +158,11 @@ grpc-highperf-backend/
 │   │   │   ├── demo_handler.go
 │   │   │   └── product_handler.go
 │   │   └── interceptor/
-│   │       └── auth_interceptor.go
+│   │       ├── auth_interceptor.go
+│   │       └── log_interceptor.txt
+│   └── utility/
+│       └── object_pool/
+│           └── object_pool.go
 ├── migrations/
 │   ├── 000_queries.sql
 │   ├── 001_initial_schema.up.sql

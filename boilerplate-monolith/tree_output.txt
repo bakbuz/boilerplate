@@ -1,4 +1,4 @@
-grpc-highperf-backend/
+grpc-highperf-layered/
 ├── api/
 │   ├── gen/
 │   │   ├── catalog/
@@ -36,12 +36,19 @@ grpc-highperf-backend/
 ├── internal/
 │   ├── config/
 │   │   └── config.go
-│   ├── database/
-│   │   ├── postgres.go
-│   │   └── postgres_test.go
 │   ├── domain/
 │   │   ├── brand.go
 │   │   └── product.go
+│   ├── infrastructure/
+│   │   ├── database/
+│   │   │   ├── conn.go
+│   │   │   └── conn_test.go
+│   │   ├── rabbitmq/
+│   │   │   └── conn.go
+│   │   ├── redis/
+│   │   │   └── client.go
+│   │   └── storage/
+│   │       └── client.go
 │   ├── repository/
 │   │   ├── brand_repository.go
 │   │   ├── brand_repository_test.go
