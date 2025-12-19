@@ -207,7 +207,7 @@ func setupBrandTestServer(t *testing.T) (catalogv1.BrandServiceClient, func()) {
 	// Launch server on dedicated listener
 	go func() {
 		if err := s.Serve(brandLis); err != nil {
-			// We might expect error on Close
+			t.Errorf("Server exited with error: %v", err)
 		}
 	}()
 
