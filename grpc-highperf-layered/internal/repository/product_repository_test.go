@@ -238,7 +238,7 @@ func TestProductRepository_BulkInsert(t *testing.T) {
 		}
 	}
 
-	insertedCount, err := repo.BulkInsert(ctx, list)
+	insertedCount, err := repo.BulkInsertAll(ctx, list)
 	require.NoError(t, err)
 	assert.Equal(t, int64(count), insertedCount)
 
@@ -285,7 +285,7 @@ func TestProductRepository_BulkUpdate(t *testing.T) {
 		}
 	}
 
-	_, err = repo.BulkInsert(ctx, list)
+	_, err = repo.BulkInsert(ctx, list, 0)
 	require.NoError(t, err)
 
 	// 2. Modify products
@@ -301,7 +301,7 @@ func TestProductRepository_BulkUpdate(t *testing.T) {
 	}
 
 	// 3. BulkUpdate
-	affected, err := repo.BulkUpdate(ctx, list)
+	affected, err := repo.BulkUpdate(ctx, list, 0)
 	require.NoError(t, err)
 	assert.Equal(t, int64(count), affected)
 
@@ -351,7 +351,7 @@ func TestProductRepository_Search(t *testing.T) {
 		Sku:     strPtr("S-3"),
 		Price:   30,
 	}
-	_, err := repo.BulkInsert(ctx, []*domain.Product{p1, p2, p3})
+	_, err := repo.BulkInsert(ctx, []*domain.Product{p1, p2, p3}, 0)
 	require.NoError(t, err)
 
 	// Test 1: Search by Name (Partial)

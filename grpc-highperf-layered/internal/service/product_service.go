@@ -144,7 +144,7 @@ func (s *productService) BulkInsert(ctx context.Context, list []*domain.Product)
 		}
 	}
 
-	return s.repo.BulkInsert(ctx, list)
+	return s.repo.BulkInsert(ctx, list, 0)
 }
 
 // Search searches products based on filter criteria

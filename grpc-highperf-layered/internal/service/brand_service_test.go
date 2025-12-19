@@ -71,24 +71,19 @@ func (m *MockBrandRepository) Upsert(ctx context.Context, e *domain.Brand) error
 	return args.Error(0)
 }
 
-func (m *MockBrandRepository) BulkInsert(ctx context.Context, list []*domain.Brand) (int64, error) {
+func (m *MockBrandRepository) BulkInsertAll(ctx context.Context, list []*domain.Brand) (int64, error) {
 	args := m.Called(ctx, list)
 	return args.Get(0).(int64), args.Error(1)
 }
 
-func (m *MockBrandRepository) BulkUpdate(ctx context.Context, list []*domain.Brand) (int64, error) {
-	args := m.Called(ctx, list)
+func (m *MockBrandRepository) BulkInsert(ctx context.Context, list []*domain.Brand, batchSize int) (int64, error) {
+	args := m.Called(ctx, list, batchSize)
 	return args.Get(0).(int64), args.Error(1)
 }
 
-func (m *MockBrandRepository) BulkInsertTran(ctx context.Context, list []*domain.Brand) error {
-	args := m.Called(ctx, list)
-	return args.Error(0)
-}
-
-func (m *MockBrandRepository) BulkUpdateTran(ctx context.Context, list []*domain.Brand) error {
-	args := m.Called(ctx, list)
-	return args.Error(0)
+func (m *MockBrandRepository) BulkUpdate(ctx context.Context, list []*domain.Brand, batchSize int) (int64, error) {
+	args := m.Called(ctx, list, batchSize)
+	return args.Get(0).(int64), args.Error(1)
 }
 
 func TestBrandService_GetAll(t *testing.T) {

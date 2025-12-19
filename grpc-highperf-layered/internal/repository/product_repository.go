@@ -392,8 +392,8 @@ func (repo *productRepository) BulkUpdate(ctx context.Context, list []*domain.Pr
 	// 1. ÖN HAZIRLIK: DEADLOCK KORUMASI
 	// Veriyi işlemeye başlamadan önce ID'ye göre sıralıyoruz.
 	// Bu, tüm batch'lerin her zaman aynı sırada kilit almasını garanti eder.
-	sort.Slice(list, func(i, j time.Time) bool {
-		return list[i].CreatedAt < list[j].CreatedAt
+	sort.Slice(list, func(i, j int) bool {
+		return list[i].CreatedAt.Before(list[j].CreatedAt)
 	})
 
 	// 2. TRANSACTION BAŞLATMA

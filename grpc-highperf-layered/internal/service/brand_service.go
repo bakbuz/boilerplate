@@ -6,7 +6,6 @@ import (
 	"codegen/pkg/errx"
 	"context"
 	"strings"
-	"time"
 	"unicode/utf8"
 
 	"github.com/pkg/errors"
@@ -20,7 +19,9 @@ type BrandService interface {
 	Update(ctx context.Context, e *domain.Brand) (int64, error)
 	Delete(ctx context.Context, id int32) (int64, error)
 	Count(ctx context.Context) (int64, error)
-	BulkInsert(ctx context.Context, list []*domain.Brand) (int64, error)
+	BulkInsertAll(ctx context.Context, list []*domain.Brand) (int64, error)
+	BulkInsert(ctx context.Context, list []*domain.Brand, batchSize int) (int64, error)
+	BulkUpdate(ctx context.Context, list []*domain.Brand, batchSize int) (int64, error)
 }
 
 type brandService struct {
@@ -121,8 +122,8 @@ func (s *brandService) Count(ctx context.Context) (int64, error) {
 	return s.repo.Count(ctx)
 }
 
-// BulkInsert ...
-func (s *brandService) BulkInsert(ctx context.Context, list []*domain.Brand) (int64, error) {
+// BulkInsertAll ...
+func (s *brandService) BulkInsertAll(ctx context.Context, list []*domain.Brand) (int64, error) {
 	if len(list) == 0 {
 		return -1, errx.ErrInvalidInput
 	}
@@ -131,8 +132,37 @@ func (s *brandService) BulkInsert(ctx context.Context, list []*domain.Brand) (in
 		if err := s.validateBrand(brand); err != nil {
 			return -1, err
 		}
-		brand.CreatedAt = time.Now().UTC()
 	}
 
-	return s.repo.BulkInsert(ctx, list)
+	return s.repo.BulkInsertAll(ctx, list)
+}
+
+// BulkInsert ...
+func (s *brandService) BulkInsert(ctx context.Context, list []*domain.Brand, batchSize int) (int64, error) {
+	if len(list) == 0 {
+		return -1, errx.ErrInvalidInput
+	}
+
+	for _, brand := range list {
+		if err := s.validateBrand(brand); err != nil {
+			return -1, err
+		}
+	}
+
+	return s.repo.BulkInsert(ctx, list, batchSize)
+}
+
+// BulkUpdate ...
+func (s *brandService) BulkUpdate(ctx context.Context, list []*domain.Brand, batchSize int) (int64, error) {
+	if len(list) == 0 {
+		return -1, errx.ErrInvalidInput
+	}
+
+	for _, brand := range list {
+		if err := s.validateBrand(brand); err != nil {
+			return -1, err
+		}
+	}
+
+	return s.repo.BulkUpdate(ctx, list, batchSize)
 }

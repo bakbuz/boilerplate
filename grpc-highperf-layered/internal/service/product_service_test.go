@@ -75,13 +75,18 @@ func (m *MockProductRepository) Upsert(ctx context.Context, e *domain.Product) e
 	return args.Error(0)
 }
 
-func (m *MockProductRepository) BulkInsert(ctx context.Context, list []*domain.Product) (int64, error) {
+func (m *MockProductRepository) BulkInsertAll(ctx context.Context, list []*domain.Product) (int64, error) {
 	args := m.Called(ctx, list)
 	return args.Get(0).(int64), args.Error(1)
 }
 
-func (m *MockProductRepository) BulkUpdate(ctx context.Context, list []*domain.Product) (int64, error) {
-	args := m.Called(ctx, list)
+func (m *MockProductRepository) BulkInsert(ctx context.Context, list []*domain.Product, batchSize int) (int64, error) {
+	args := m.Called(ctx, list, batchSize)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockProductRepository) BulkUpdate(ctx context.Context, list []*domain.Product, batchSize int) (int64, error) {
+	args := m.Called(ctx, list, batchSize)
 	return args.Get(0).(int64), args.Error(1)
 }
 
