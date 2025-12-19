@@ -324,7 +324,6 @@ func TestProductRepository_Search(t *testing.T) {
 	brandRepo := repository.NewBrandRepository(db)
 	ctx := context.Background()
 
-	// Setup data: 1 Brand, 3 Products
 	brand := &domain.Brand{
 		Name:      "Search Brand " + uuid.New().String(),
 		Slug:      "search-brand-" + uuid.New().String(),
@@ -333,45 +332,67 @@ func TestProductRepository_Search(t *testing.T) {
 	}
 	require.NoError(t, brandRepo.Insert(ctx, brand))
 
-	p1 := &domain.Product{
-		BrandId: int(brand.Id),
-		Name:    "Alpha Product",
-		Sku:     strPtr("S-1"),
-		Price:   10,
-	}
-	p2 := &domain.Product{
-		BrandId: int(brand.Id),
-		Name:    "Alpha Beta Product",
-		Sku:     strPtr("S-2"),
-		Price:   20,
-	}
-	p3 := &domain.Product{
-		BrandId: int(brand.Id),
-		Name:    "Gamma Product",
-		Sku:     strPtr("S-3"),
-		Price:   30,
-	}
+	// Generate 3 products with known order
+	// p3 > p2 > p1 (Time based)
+	p1 := domain.NewProduct(int(brand.Id), "Alpha Product", 10, uuid.New())
+	time.Sleep(10 * time.Millisecond)
+	p2 := domain.NewProduct(int(brand.Id), "Alpha Beta Product", 20, uuid.New())
+	time.Sleep(10 * time.Millisecond)
+	p3 := domain.NewProduct(int(brand.Id), "Gamma Product", 30, uuid.New())
+
+	// Product name manual override to ensure fit test case
+	p1.Name = "Alpha Product"
+	p2.Name = "Alpha Beta Product"
+	p3.Name = "Gamma Product"
+
 	_, err := repo.BulkInsert(ctx, []*domain.Product{p1, p2, p3}, 0)
 	require.NoError(t, err)
 
-	// Test 1: Search by Name (Partial)
+	// Test 1: Search by Name "Alpha" -> Should find p2, p1 (Desc order)
 	res, err := repo.Search(ctx, &domain.ProductSearchFilter{
 		Name:  "Alpha",
 		Limit: 10,
 	})
 	require.NoError(t, err)
 	assert.Equal(t, int64(2), res.Total)
-	assert.Len(t, res.Items, 2)
+	require.Len(t, res.Items, 2)
+	assert.Equal(t, p2.Id, res.Items[0].Id) // Newest first
+	assert.Equal(t, p1.Id, res.Items[1].Id)
 
-	// Test 2: Search with Pagination
+	// Test 2: Pagination with Limit 1 -> Should get only p2 (Total 2)
 	res, err = repo.Search(ctx, &domain.ProductSearchFilter{
-		Name:   "Alpha",
-		Limit:  1,
-		Offset: 0,
+		Name:  "Alpha",
+		Limit: 1,
 	})
 	require.NoError(t, err)
-	assert.Equal(t, int64(2), res.Total) // Total should still be 2
-	assert.Len(t, res.Items, 1)          // But we only took 1
+	assert.Equal(t, int64(2), res.Total) // Total match
+	require.Len(t, res.Items, 1)
+	assert.Equal(t, p2.Id, res.Items[0].Id)
+
+	// Test 3: Pagination Next Page (LastSeenId = p2.Id) -> Should get p1
+	res, err = repo.Search(ctx, &domain.ProductSearchFilter{
+		Name:       "Alpha",
+		Limit:      10,
+		LastSeenId: p2.Id,
+	})
+	require.NoError(t, err)
+	// Total count logic: In my implementation, count ignores LastSeenId?
+	// Let's check implementation behavior. We decided to ignore LastSeenId for count.
+	// So Total should still be 2.
+	assert.Equal(t, int64(2), res.Total)
+	require.Len(t, res.Items, 1)
+	assert.Equal(t, p1.Id, res.Items[0].Id)
+
+	// Test 4: Filter by Brand
+	res, err = repo.Search(ctx, &domain.ProductSearchFilter{
+		BrandId: int(brand.Id),
+	})
+	require.NoError(t, err)
+	assert.Equal(t, int64(3), res.Total)
+
+	// Test 5: Default Limit (Should be 10, here we have 3 items)
+	// Just check if we get all 3
+	require.Len(t, res.Items, 3)
 }
 
 func TestProductRepository_SoftDelete(t *testing.T) {

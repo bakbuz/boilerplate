@@ -344,7 +344,7 @@ func (repo *productRepository) BulkInsert(ctx context.Context, products []*domai
 		}
 
 		chunk := products[i:end]
-		rows := make([][]any, 0, len(chunk))
+		rows := make([][]any, len(chunk))
 
 		for i, e := range chunk {
 			e.CreatedAt = now
@@ -512,31 +512,74 @@ func (repo *productRepository) runInTx(ctx context.Context, fn func(ctx context.
 */
 
 func (repo *productRepository) Search(ctx context.Context, filter *domain.ProductSearchFilter) (*domain.ProductSearchResult, error) {
+	// 1. Base Query
+	baseQuery := " FROM catalog.products p JOIN catalog.brands b ON p.brand_id = b.id WHERE p.deleted=false "
+	var args []any
+	argId := 1
 
-	countQuery := "SELECT COUNT(*) FROM catalog.products WHERE deleted=false"
+	// 2. Dynamic Filters
+	if filter.BrandId > 0 {
+		baseQuery += fmt.Sprintf(" AND p.brand_id = $%d", argId)
+		args = append(args, filter.BrandId)
+		argId++
+	}
 
-	// Get total count
+	if filter.Name != "" {
+		baseQuery += fmt.Sprintf(" AND p.name ILIKE '%%' || $%d || '%%'", argId)
+		args = append(args, filter.Name)
+		argId++
+	}
+
+	if filter.LastSeenId != uuid.Nil {
+		baseQuery += fmt.Sprintf(" AND p.id < $%d", argId)
+		args = append(args, filter.LastSeenId)
+		argId++
+	}
+
+	// 3. Count Query
+	// We rebuild count query to exclude cursor/pagination filters if needed,
+	// but here we only have LastSeenId as pagination filter.
+	// As discussed, we count based on business filters (Brand, Name).
+
+	countBaseQuery := "FROM catalog.products p WHERE p.deleted=false"
+	var countArgs []any
+	countArgId := 1
+
+	if filter.BrandId > 0 {
+		countBaseQuery += fmt.Sprintf(" AND p.brand_id = $%d", countArgId)
+		countArgs = append(countArgs, filter.BrandId)
+		countArgId++
+	}
+	if filter.Name != "" {
+		countBaseQuery += fmt.Sprintf(" AND p.name ILIKE '%%' || $%d || '%%'", countArgId)
+		countArgs = append(countArgs, filter.Name)
+		countArgId++
+	}
+
+	finalCountQuery := "SELECT COUNT(*) " + countBaseQuery
+
 	var total int64
-	err := repo.db.Pool().QueryRow(ctx, countQuery).Scan(&total)
+	err := repo.db.Pool().QueryRow(ctx, finalCountQuery, countArgs...).Scan(&total)
 	if err != nil {
 		return nil, errors.WithMessage(err, failedToCount)
 	}
 
 	if total == 0 {
-		return &domain.ProductSearchResult{}, nil
+		return &domain.ProductSearchResult{Total: 0, Items: []domain.ProductSummary{}}, nil
 	}
 
-	// Add pagination
-	query := `
-SELECT p.id, p.name, p.price::numeric, p.brand_id, b.name AS brand_name
-FROM catalog.products AS p
-JOIN catalog.brands AS b ON p.brand_id = b.id
-WHERE p.deleted=false AND p.id > @last_seen_id
-ORDER BY p.id DESC
-LIMIT @limit`
+	// 4. Data Query
+	// Limit default
+	limit := 10
+	if filter.Limit > 0 {
+		limit = filter.Limit
+	}
 
-	// Execute query
-	rows, err := repo.db.Pool().Query(ctx, query)
+	// Select columns
+	selectQuery := "SELECT p.id, p.name, p.price::numeric, p.brand_id, b.name AS brand_name " + baseQuery + " ORDER BY p.id DESC LIMIT " + fmt.Sprintf("$%d", argId)
+	args = append(args, limit)
+
+	rows, err := repo.db.Pool().Query(ctx, selectQuery, args...)
 	if err != nil {
 		return nil, errors.WithMessage(err, listQueryRowError)
 	}
@@ -545,6 +588,7 @@ LIMIT @limit`
 	var items []domain.ProductSummary
 	for rows.Next() {
 		e := domain.ProductSummary{}
+		// Scan matches the SELECT columns order
 		err := rows.Scan(&e.Id, &e.Name, &e.Price, &e.BrandId, &e.BrandName)
 		if err != nil {
 			return nil, errors.WithMessage(err, rowScanError)
