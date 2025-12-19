@@ -30,8 +30,8 @@ func main() {
 
 	root := filepath.Clean(filepath.Join(currentDir, "../../"))
 
-	fmt.Fprintf(writer, "Tarama Yolu: %s\n", root)
-	fmt.Fprintln(writer, strings.Repeat("-", 30))
+	//fmt.Fprintf(writer, "Tarama Yolu: %s\n", root)
+	//fmt.Fprintln(writer, strings.Repeat("-", 30))
 	fmt.Fprintln(writer, filepath.Base(root)+"/")
 
 	if err := printTree(writer, root, ""); err != nil {
