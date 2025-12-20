@@ -61,6 +61,24 @@ func (repo *productRepository) getDb(ctx context.Context) interface {
 	}
 	return repo.db.Pool()
 }
+
+-- service
+func (repo *productRepository) runInTx(ctx context.Context, fn func(ctx context.Context) error) error {
+	tx, err := repo.db.Pool().Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	// Context'e tx ekle
+	txCtx := context.WithValue(ctx, txContextKey, tx)
+	if err := fn(txCtx); err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
+}
+
 */
 
 const defaultBatchSize = 2000 // İdeal batch boyutu (2000-5000 arası genelde güvenlidir)

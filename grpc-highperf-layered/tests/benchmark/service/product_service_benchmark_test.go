@@ -110,6 +110,9 @@ func BenchmarkGetLists(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		s.GetAll(context.Background())
+		_, err := s.GetAll(context.Background())
+		if err != nil {
+			b.Error(err)
+		}
 	}
 }

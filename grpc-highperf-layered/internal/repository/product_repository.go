@@ -493,24 +493,6 @@ func (repo *productRepository) BulkUpdate(ctx context.Context, list []*domain.Pr
 	return totalAffected, nil
 }
 
-/*
-func (repo *productRepository) runInTx(ctx context.Context, fn func(ctx context.Context) error) error {
-	tx, err := repo.db.Pool().Begin(ctx)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback(ctx)
-
-	// Context'e tx ekle
-	txCtx := context.WithValue(ctx, txContextKey, tx)
-	if err := fn(txCtx); err != nil {
-		return err
-	}
-
-	return tx.Commit(ctx)
-}
-*/
-
 func (repo *productRepository) Search(ctx context.Context, filter *domain.ProductSearchFilter) (*domain.ProductSearchResult, error) {
 	// 1. Where clause
 	var whereClause string
