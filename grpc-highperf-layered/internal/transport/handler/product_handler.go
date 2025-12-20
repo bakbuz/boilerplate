@@ -316,3 +316,50 @@ func (h *productHandler) Delete(ctx context.Context, req *catalogv1.DeleteProduc
 
 	return &emptypb.Empty{}, nil
 }
+
+func (h *productHandler) Search(ctx context.Context, req *catalogv1.SearchProductsRequest) (*catalogv1.SearchProductsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "request is required")
+	}
+
+	// 1. MAPPING: Proto -> Domain Filter
+	filter := &domain.ProductSearchFilter{
+		BrandId: int(req.BrandId),
+		Name:    req.Name,
+		Limit:   int(req.Limit),
+	}
+
+	if req.LastSeenId != "" {
+		lastSeenUUID, err := uuid.Parse(req.LastSeenId)
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid last_seen_id: %v", err)
+		}
+		filter.LastSeenId = lastSeenUUID
+	}
+
+	// 2. Service Call
+	result, err := h.svc.Search(ctx, filter)
+	if err != nil {
+		if errors.Is(err, errx.ErrInvalidInput) {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid input: %v", err)
+		}
+		return nil, status.Errorf(codes.Internal, "failed to search products: %v", err)
+	}
+
+	// 3. MAPPING: Domain Result -> Proto Response
+	protoItems := make([]*catalogv1.ProductSummary, len(result.Items))
+	for i, item := range result.Items {
+		protoItems[i] = &catalogv1.ProductSummary{
+			Id:        item.Id.String(),
+			Name:      item.Name,
+			Price:     item.Price,
+			BrandId:   item.BrandId,
+			BrandName: item.BrandName,
+		}
+	}
+
+	return &catalogv1.SearchProductsResponse{
+		Total: result.Total,
+		Items: protoItems,
+	}, nil
+}

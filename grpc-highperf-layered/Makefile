@@ -111,3 +111,8 @@ r:
 	go run main.go
 
 
+k6:
+	cls
+	k6 run -e GRPC_ADDR=127.0.0.1:50051 -e TOKEN="..." test.js
+ tests/load/product/search.js
+

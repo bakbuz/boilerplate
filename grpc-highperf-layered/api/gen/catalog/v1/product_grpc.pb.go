@@ -25,6 +25,7 @@ const (
 	ProductService_Create_FullMethodName = "/catalog.v1.ProductService/Create"
 	ProductService_Update_FullMethodName = "/catalog.v1.ProductService/Update"
 	ProductService_Delete_FullMethodName = "/catalog.v1.ProductService/Delete"
+	ProductService_Search_FullMethodName = "/catalog.v1.ProductService/Search"
 )
 
 // ProductServiceClient is the client API for ProductService service.
@@ -36,6 +37,7 @@ type ProductServiceClient interface {
 	Create(ctx context.Context, in *CreateProductRequest, opts ...grpc.CallOption) (*Product, error)
 	Update(ctx context.Context, in *UpdateProductRequest, opts ...grpc.CallOption) (*Product, error)
 	Delete(ctx context.Context, in *DeleteProductRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	Search(ctx context.Context, in *SearchProductsRequest, opts ...grpc.CallOption) (*SearchProductsResponse, error)
 }
 
 type productServiceClient struct {
@@ -96,6 +98,16 @@ func (c *productServiceClient) Delete(ctx context.Context, in *DeleteProductRequ
 	return out, nil
 }
 
+func (c *productServiceClient) Search(ctx context.Context, in *SearchProductsRequest, opts ...grpc.CallOption) (*SearchProductsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SearchProductsResponse)
+	err := c.cc.Invoke(ctx, ProductService_Search_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ProductServiceServer is the server API for ProductService service.
 // All implementations must embed UnimplementedProductServiceServer
 // for forward compatibility.
@@ -105,6 +117,7 @@ type ProductServiceServer interface {
 	Create(context.Context, *CreateProductRequest) (*Product, error)
 	Update(context.Context, *UpdateProductRequest) (*Product, error)
 	Delete(context.Context, *DeleteProductRequest) (*emptypb.Empty, error)
+	Search(context.Context, *SearchProductsRequest) (*SearchProductsResponse, error)
 	mustEmbedUnimplementedProductServiceServer()
 }
 
@@ -129,6 +142,9 @@ func (UnimplementedProductServiceServer) Update(context.Context, *UpdateProductR
 }
 func (UnimplementedProductServiceServer) Delete(context.Context, *DeleteProductRequest) (*emptypb.Empty, error) {
 	return nil, status.Error(codes.Unimplemented, "method Delete not implemented")
+}
+func (UnimplementedProductServiceServer) Search(context.Context, *SearchProductsRequest) (*SearchProductsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method Search not implemented")
 }
 func (UnimplementedProductServiceServer) mustEmbedUnimplementedProductServiceServer() {}
 func (UnimplementedProductServiceServer) testEmbeddedByValue()                        {}
@@ -241,6 +257,24 @@ func _ProductService_Delete_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ProductService_Search_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SearchProductsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).Search(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ProductService_Search_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).Search(ctx, req.(*SearchProductsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ProductService_ServiceDesc is the grpc.ServiceDesc for ProductService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -267,6 +301,10 @@ var ProductService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Delete",
 			Handler:    _ProductService_Delete_Handler,
+		},
+		{
+			MethodName: "Search",
+			Handler:    _ProductService_Search_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

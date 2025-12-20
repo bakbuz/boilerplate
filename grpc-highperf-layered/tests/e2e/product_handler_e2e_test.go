@@ -188,8 +188,50 @@ func (r *InMemoryProductRepo) BulkInsertOneShot(ctx context.Context, list []*dom
 }
 
 func (r *InMemoryProductRepo) Search(ctx context.Context, filter *domain.ProductSearchFilter) (*domain.ProductSearchResult, error) {
-	// Not implemented for test
-	return &domain.ProductSearchResult{}, nil
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	var items []domain.ProductSummary
+	count := int64(0)
+
+	for _, p := range r.items {
+		if p.Deleted {
+			continue
+		}
+
+		// Filter by BrandId
+		if filter.BrandId != 0 && p.BrandId != filter.BrandId {
+			continue
+		}
+
+		// Filter by Name (contains)
+		if filter.Name != "" && !contains(p.Name, filter.Name) {
+			continue
+		}
+
+		// Add to result
+		if filter.Limit > 0 && len(items) >= filter.Limit {
+			// Just counting remaining for total, but for simple test this is enough
+		} else {
+			items = append(items, domain.ProductSummary{
+				Id:        p.Id,
+				Name:      p.Name,
+				Price:     p.Price,
+				BrandId:   int32(p.BrandId),
+				BrandName: "Test Brand", // Mock brand name
+			})
+		}
+		count++
+	}
+
+	return &domain.ProductSearchResult{
+		Total: count,
+		Items: items,
+	}, nil
+}
+
+func contains(s, substr string) bool {
+	return len(s) >= len(substr) && s[0:len(substr)] == substr // Very simple prefix check for test
 }
 
 func setupTestServer(t *testing.T) (catalogv1.ProductServiceClient, func()) {
@@ -309,6 +351,26 @@ func TestProductService_E2E(t *testing.T) {
 			}
 		}
 		require.True(t, found, "Created product should be in the list")
+	})
+
+	// Adım 5: Search Products
+	t.Run("Search Products", func(t *testing.T) {
+		req := &catalogv1.SearchProductsRequest{
+			Name:  "MSI",
+			Limit: 10,
+		}
+		resp, err := client.Search(ctx, req)
+		require.NoError(t, err)
+		require.GreaterOrEqual(t, len(resp.Items), 1)
+
+		found := false
+		for _, item := range resp.Items {
+			if item.Id == createdId {
+				found = true
+				break
+			}
+		}
+		require.True(t, found, "Created product should be in the search results")
 	})
 
 	// Adım 5: Delete Product

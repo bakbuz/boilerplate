@@ -58,10 +58,31 @@ message DeleteProductRequest {
   string id = 1;
 }
 
+message SearchProductsRequest {
+  int32 brand_id = 1;
+  string name = 2;
+  string last_seen_id = 3;
+  int32 limit = 4;
+}
+
+message ProductSummary {
+  string id = 1;
+  string name = 2;
+  double price = 3;
+  int32 brand_id = 4;
+  string brand_name = 5;
+}
+
+message SearchProductsResponse { 
+  int64 total = 1;
+  repeated ProductSummary items = 2;
+}
+
 service ProductService {
   rpc List(ListProductsRequest) returns (ListProductsResponse);
-  rpc Get(GetProductRequest) returns (Product);  
-  rpc Create(CreateProductRequest) returns (Product);  
+  rpc Get(GetProductRequest) returns (Product);
+  rpc Create(CreateProductRequest) returns (Product);
   rpc Update(UpdateProductRequest) returns (Product);
   rpc Delete(DeleteProductRequest) returns (google.protobuf.Empty);
+  rpc Search(SearchProductsRequest) returns (SearchProductsResponse);
 }
