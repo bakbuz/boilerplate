@@ -113,6 +113,5 @@ r:
 
 k6:
 	cls
-	k6 run -e GRPC_ADDR=127.0.0.1:50051 -e TOKEN="..." test.js
- tests/load/product/search.js
+	k6 run -e GRPC_ADDR=127.0.0.1:50051 -e TOKEN="..." tests/load/product/search.js
 
