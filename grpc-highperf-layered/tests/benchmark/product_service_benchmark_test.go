@@ -1,4 +1,4 @@
-package service_test
+package benchmark_test
 
 import (
 	"codegen/internal/domain"

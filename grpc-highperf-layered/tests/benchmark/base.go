@@ -1,4 +1,4 @@
-package service_test
+package benchmark_test
 
 /*
 func ptr[T any](v T) *T {
