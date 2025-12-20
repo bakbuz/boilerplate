@@ -20,6 +20,8 @@ export default () => {
     const data = {
         name: 'Product', // Common name to get results
         limit: 10,
+        // brand_id: 1, // Optional: filter by brand
+        // last_seen_id: "", // Optional: for pagination
     };
     const response = client.invoke('catalog.v1.ProductService/Search', data);
 

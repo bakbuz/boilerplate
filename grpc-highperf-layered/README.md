@@ -37,3 +37,6 @@ buf lint api/protos
 go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 golangci-lint --version
 golangci-lint run
+
+# ghz
+https://github.com/bojand/ghz/releases
