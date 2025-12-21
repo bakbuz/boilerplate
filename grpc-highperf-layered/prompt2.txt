@@ -38,6 +38,10 @@ Başla:
 grpc-highperf-layered/
 ├── api/
 │   ├── gen/
+│   │   ├── auth/
+│   │   │   └── v1/
+│   │   │       ├── auth.pb.go
+│   │   │       └── auth_grpc.pb.go
 │   │   ├── catalog/
 │   │   │   └── v1/
 │   │   │       ├── brand.pb.go
@@ -52,6 +56,9 @@ grpc-highperf-layered/
 │   │           ├── demo.pb.go
 │   │           └── demo_grpc.pb.go
 │   └── protos/
+│       ├── auth/
+│       │   └── v1/
+│       │       └── auth.proto
 │       ├── catalog/
 │       │   └── v1/
 │       │       ├── brand.proto
@@ -98,6 +105,7 @@ grpc-highperf-layered/
 │   │   └── product_service_test.go
 │   ├── transport/
 │   │   ├── handler/
+│   │   │   ├── auth_handler.go
 │   │   │   ├── base.go
 │   │   │   ├── brand_handler.go
 │   │   │   ├── demo_handler.go
@@ -105,13 +113,11 @@ grpc-highperf-layered/
 │   │   └── interceptor/
 │   │       ├── auth_interceptor.go
 │   │       └── log_interceptor.txt
-│   └── utility/
-│       └── object_pool/
-│           └── object_pool.go
 ├── migrations/
 │   ├── 000_queries.sql
 │   ├── 001_initial_schema.up.sql
-│   └── 002_initial_schema.down.sql
+│   ├── 002_initial_schema.down.sql
+│   └── 003_seed.sql
 ├── pkg/
 │   ├── errx/
 │   │   └── grpc_errors.go
@@ -129,16 +135,22 @@ grpc-highperf-layered/
 │       └── slug.go
 ├── tests/
 │   ├── benchmark/
-│   │   └── service/
-│   │       ├── base.go
-│   │       └── product_service_benchmark_test.go
+│   │   ├── base.go
+│   │   ├── brand_service_benchmark_test.go
+│   │   └── product_service_benchmark_test.go
 │   ├── e2e/
 │   │   ├── base.go
-│   │   ├── brand_e2e_test.go
-│   │   └── product_e2e_test.go
+│   │   ├── brand_handler_e2e_test.go
+│   │   └── product_handler_e2e_test.go
 │   └── load/
 │       ├── brand/
+│       │   ├── list.js
+│       │   └── list.sh
 │       └── product/
+│           ├── list.js
+│           ├── list.sh
+│           ├── search.js
+│           └── search.sh
 ├── scripts/
 │   ├── build.sh
 │   └── deploy.sh
