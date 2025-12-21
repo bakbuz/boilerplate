@@ -5,6 +5,9 @@ BINARY_OUTPUT=.bin/server
 OUTPUT_PATH=api/gen
 
 # Generate gRPC code
+proto:
+	buf generate
+
 buf-gen:
 	buf generate
 

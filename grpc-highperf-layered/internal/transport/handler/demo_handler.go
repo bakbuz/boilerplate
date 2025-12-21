@@ -23,12 +23,21 @@ func init() {
 	demos[2] = &demov1.Demo{Id: 3, Name: "Üç"}
 }
 
+func getDemoById(id int32) *demov1.Demo {
+	for _, demo := range demos {
+		if demo.Id == id {
+			return demo
+		}
+	}
+	return nil
+}
+
 func (h *demoHandler) List(context.Context, *demov1.ListDemosRequest) (*demov1.ListDemosResponse, error) {
 	return &demov1.ListDemosResponse{Items: demos}, nil
 }
 
 func (h *demoHandler) Get(ctx context.Context, req *demov1.GetDemoRequest) (*demov1.Demo, error) {
-	demo := demos[req.Id]
+	demo := getDemoById(req.Id)
 	return demo, nil
 }
 
@@ -42,7 +51,7 @@ func (h *demoHandler) Create(ctx context.Context, req *demov1.CreateDemoRequest)
 }
 
 func (h *demoHandler) Update(ctx context.Context, req *demov1.UpdateDemoRequest) (*demov1.Demo, error) {
-	demo := demos[req.Id]
+	demo := getDemoById(req.Id)
 
 	demo.Name = req.Name
 	demo.Description = req.Description
