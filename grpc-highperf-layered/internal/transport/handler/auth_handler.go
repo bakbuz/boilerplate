@@ -2,7 +2,6 @@ package handler
 
 import (
 	authv1 "codegen/api/gen/auth/v1"
-	"codegen/internal/service"
 	"context"
 
 	"github.com/rs/zerolog"
@@ -14,13 +13,11 @@ import (
 type authHandler struct {
 	authv1.UnimplementedAuthServiceServer
 	logger *zerolog.Logger
-	srv    service.AuthenticationService
 }
 
-func NewAuthHandler(logger *zerolog.Logger, srv service.AuthenticationService) *authHandler {
+func NewAuthHandler(logger *zerolog.Logger) *authHandler {
 	server := &authHandler{}
 	server.logger = logger
-	server.srv = srv
 
 	return server
 }
